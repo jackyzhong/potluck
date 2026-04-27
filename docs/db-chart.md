@@ -9,24 +9,6 @@ erDiagram
     USERS ||--o{ SPLITS : "owes money via"
 ```
 
-Table definitions:
-### `ledgers` (The Project Header)
-
-The "Global Registry" for all Potluck groups. Every row represents a unique event or trip.
-
-- **Purpose:** Acts as a secure, isolated container.
-    
-- **Key Logic:** The `id` (UUID) is the secret key in the URL. If a user has the link, they have access to this specific ledger's data.
-    
-
-### `users` (The Participants)
-
-Stores every person associated with a specific ledger.
-
-- **Purpose:** Tracks who is involved and their "claim" status.
-    
-- **Key Logic:** Supports "Placeholders" (`is_placeholder`). An organizer can add a name before the person actually joins the digital group.
-    
 
 ### `expenses` (The Transaction Head)
 
@@ -49,6 +31,12 @@ The most granular table. It breaks down an expense into individual debts.
 ## Table Field Specifications
 
 ### Table: `ledgers`
+
+The "Global Registry" for all Potluck groups. Every row represents a unique event or trip.
+
+- **Purpose:** Acts as a secure, isolated container.
+- **Key Logic:** The `id` (UUID) is the secret key in the URL. If a user has the link, they have access to this specific ledger's data.
+
 | Field | Type | Attributes | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | PK, Default: gen_random_uuid() | Unique identifier for the group. |
@@ -57,6 +45,12 @@ The most granular table. It breaks down an expense into individual debts.
 | `created_at` | TIMESTAMPTZ | Default: NOW() | Timestamp for audit/sorting. |
 
 ### Table: `users`
+
+Stores every person associated with a specific ledger.
+
+- **Purpose:** Tracks who is involved and their "claim" status.
+- **Key Logic:** Supports "Placeholders" (`is_placeholder`). An organizer can add a name before the person actually joins the digital group.
+
 | Field | Type | Attributes | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | PK, Default: gen_random_uuid() | Unique identifier for the participant. |
@@ -67,6 +61,12 @@ The most granular table. It breaks down an expense into individual debts.
 | `created_at` | TIMESTAMPTZ | Default: NOW() | Timestamp for audit trail. |
 
 ### Table: `expenses`
+
+Records the act of spending money.
+
+- **Purpose:** Documents the "Disbursement"—who fronted the cash for the group.
+- **Key Logic:** Stores the `total_amount_cents` as an **Integer** to prevent rounding errors.
+
 | Field | Type | Attributes | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | PK, Default: gen_random_uuid() | Unique identifier for the expense. |
