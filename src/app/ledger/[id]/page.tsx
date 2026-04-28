@@ -1,5 +1,5 @@
 // app/ledger/[id]/page.tsx
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/src/lib/supabase";
 import { notFound } from "next/navigation";
 import ActionMenu from "./ActionMenu";
 
