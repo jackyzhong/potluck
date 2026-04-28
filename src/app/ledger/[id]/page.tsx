@@ -1,4 +1,4 @@
-// app/ledger/[id]/page.tsx
+// src/app/ledger/[id]/page.tsx
 import { supabase } from "@/src/lib/supabase";
 import { notFound } from "next/navigation";
 import ActionMenu from "./ActionMenu";
@@ -10,15 +10,23 @@ export default async function LedgerPage({
 }) {
   const { id } = await params;
 
-  const { data: ledger, error } = await supabase
+  // Fetch ledger
+  const { data: ledger, error: ledgerError } = await supabase
     .from("ledgers")
     .select("*")
     .eq("id", id)
     .single();
 
-  if (error || !ledger) {
+  if (ledgerError || !ledger) {
     return notFound();
   }
+
+  // Fetch initial users
+  const { data: initialUsers } = await supabase
+    .from("users")
+    .select("*")
+    .eq("ledger_id", id)
+    .order("created_at", { ascending: true });
 
   return (
     <div className="min-h-screen bg-zinc-50 p-6 relative">
@@ -29,15 +37,13 @@ export default async function LedgerPage({
       </header>
 
       <main className="max-w-2xl mx-auto bg-white rounded-3xl shadow-sm p-6">
-        {/* The Participant list will go here */}
-        
         <div className="text-center py-20 text-zinc-400">
           No expenses yet. Start by adding one!
         </div>
       </main>
 
-      {/* Insert the interactive component here */}
-      <ActionMenu ledgerId={ledger.id} />
+      {/* Pass ledgerId and initialUsers to the client component */}
+      <ActionMenu ledgerId={ledger.id} initialUsers={initialUsers || []} />
     </div>
   );
 }
