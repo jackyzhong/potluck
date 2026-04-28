@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase"; // Adjust this path if your supabase.ts is elsewhere
+import { supabase } from "@/src/lib/supabase"; // Adjust this path if your supabase.ts is elsewhere
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import Link from "next/link";
 
