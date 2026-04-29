@@ -1,18 +1,43 @@
-// app/create-group/page.tsx
+// src/app/create-group/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/src/lib/supabase"; // Adjust this path if your supabase.ts is elsewhere
+import { supabase } from "@/src/lib/supabase";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import Link from "next/link";
+
+import { CURRENCY_LIST } from "@/src/lib/currencies";
 
 export default function CreateGroup() {
   const [groupName, setGroupName] = useState("");
   const [emoji, setEmoji] = useState("🍲");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  
+  // Currency States
+  const [currency, setCurrency] = useState("CAD");
+  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
+  const [currencySearch, setCurrencySearch] = useState("");
+  
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsCurrencyOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredCurrencies = CURRENCY_LIST.filter(c => 
+    c.code.toLowerCase().includes(currencySearch.toLowerCase()) || 
+    c.name.toLowerCase().includes(currencySearch.toLowerCase())
+  );
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) return;
@@ -23,7 +48,8 @@ export default function CreateGroup() {
       .insert([
         { 
           title: groupName, 
-          emoji: emoji 
+          emoji: emoji,
+          base_currency: currency
         }
       ])
       .select()
@@ -40,9 +66,9 @@ export default function CreateGroup() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col p-6 relative selection:bg-zinc-900 selection:text-white">
+    <div className="min-h-screen bg-zinc-50 flex flex-col p-6 relative selection:bg-zinc-900 selection:text-white overflow-y-auto">
       {/* Top Navigation */}
-      <nav className="max-w-2xl mx-auto w-full py-2 mb-4">
+      <nav className="max-w-2xl mx-auto w-full py-2 mb-4 shrink-0">
         <Link 
           href="/" 
           className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-2 w-fit"
@@ -54,9 +80,9 @@ export default function CreateGroup() {
         </Link>
       </nav>
 
-      <main className="max-w-md mx-auto w-full flex-1 flex flex-col justify-center pb-20">
+      <main className="max-w-md mx-auto w-full flex-1 flex flex-col pt-8 pb-20">
         {/* Main UI Card */}
-        <div className="bg-white rounded-3xl shadow-sm p-8 flex flex-col items-center text-center relative border border-zinc-100">
+        <div className="bg-white rounded-3xl shadow-sm p-8 flex flex-col items-center relative border border-zinc-100">
           
           {/* Emoji Picker Button */}
           <button 
@@ -78,17 +104,71 @@ export default function CreateGroup() {
             </div>
           )}
 
-          <h1 className="text-2xl font-bold text-zinc-900 mb-2">Name your Potluck</h1>
-          <p className="text-zinc-500 mb-8">What are we splitting today?</p>
+          <h1 className="text-2xl font-bold text-zinc-900 mb-2 text-center">Name your Potluck</h1>
+          <p className="text-zinc-500 mb-8 text-center">What are we splitting today?</p>
 
           <input
             type="text"
-            placeholder="e.g. Japan Trip 2026"
+            placeholder="e.g. Toronto Trip 2026"
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
-            className="w-full text-xl p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 outline-none transition-all text-center mb-6"
+            className="text-black w-full text-xl p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 outline-none transition-all text-center mb-6"
             autoFocus
           />
+
+          {/* Group Settings Section */}
+          <div className="w-full mb-8">
+            <h2 className="text-sm font-semibold text-zinc-900 mb-3 uppercase tracking-wider">Group Settings</h2>
+            
+            {/* Currency Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <label className="block text-sm text-zinc-500 mb-1">Base Currency</label>
+              <button
+                onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
+                className="w-full flex items-center justify-between p-4 bg-zinc-50 border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors"
+              >
+                <span className="font-medium text-zinc-900">{currency}</span>
+                <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {isCurrencyOpen && (
+                <div className="absolute top-full left-0 w-full mt-2 bg-white border border-zinc-200 rounded-xl shadow-xl z-10 overflow-hidden">
+                  <div className="p-2 border-b border-zinc-100">
+                    <input
+                      type="text"
+                      placeholder="Search currency..."
+                      value={currencySearch}
+                      onChange={(e) => setCurrencySearch(e.target.value)}
+                      className="w-full p-2 bg-zinc-50 rounded-lg outline-none text-sm"
+                    />
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    {filteredCurrencies.map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() => {
+                          setCurrency(c.code);
+                          setIsCurrencyOpen(false);
+                          setCurrencySearch("");
+                        }}
+                        className="w-full flex items-center justify-between p-3 hover:bg-zinc-50 text-left transition-colors"
+                      >
+                        <span className="font-medium text-zinc-900">{c.code}</span>
+                        <span className="text-sm text-zinc-500">{c.name}</span>
+                      </button>
+                    ))}
+                    {filteredCurrencies.length === 0 && (
+                      <div className="p-3 text-sm text-zinc-500 text-center">No currencies found</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Future settings can be added here, and the container will scroll */}
+          </div>
 
           <button
             onClick={handleCreateGroup}

@@ -10,23 +10,6 @@ erDiagram
 ```
 
 
-### `expenses` (The Transaction Head)
-
-Records the act of spending money.
-
-- **Purpose:** Documents the "Disbursement"—who fronted the cash for the group.
-    
-- **Key Logic:** Stores the `total_amount_cents` as an **Integer** to prevent rounding errors.
-    
-
-### `splits` (The Sub-Ledger)
-
-The most granular table. It breaks down an expense into individual debts.
-
-- **Purpose:** Resolves the Many-to-Many relationship between Expenses and Users.
-    
-- **Key Logic:** Every expense has multiple split rows. The sum of `share_cents` in this table must always equal the `total_amount_cents` in the `expenses` table to ensure the books balance.
-
 
 ## Table Field Specifications
 
@@ -78,6 +61,12 @@ Records the act of spending money.
 | `created_at` | TIMESTAMPTZ | Default: NOW() | Transaction date/time. |
 
 ### Table: `splits`
+
+The most granular table. It breaks down an expense into individual debts.
+
+- **Purpose:** Resolves the Many-to-Many relationship between Expenses and Users.
+- **Key Logic:** Every expense has multiple split rows. The sum of `share_cents` in this table must always equal the `total_amount_cents` in the `expenses` table to ensure the books balance.
+
 | Field | Type | Attributes | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | PK, Default: gen_random_uuid() | Unique identifier for the split line. |

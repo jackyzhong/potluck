@@ -23,7 +23,7 @@ export default function Home() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
           </span>
-          v0.1.0 MVP
+          v0.1.0 Alpha
         </div>
 
         <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-6">
@@ -33,7 +33,7 @@ export default function Home() {
         
         <p className="text-lg sm:text-xl text-zinc-500 mb-10 max-w-xl">
           The account-less, ad-free way to track group expenses. 
-          Create a ledger, share the link, and settle up instantly.
+          Create a group, share the link, and settle up instantly.
         </p>
 
         {/* Call to Action Button */}
