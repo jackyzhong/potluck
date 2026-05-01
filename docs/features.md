@@ -48,18 +48,27 @@ graph TD
 
 ---
 
-## 2. Feature: Advanced Split Logic
-**Problem:** Simple 50/50 splits are insufficient for complex group dynamics (e.g., one person ordered a steak, others shared appetizers).
+## 2 Feature: Split Logic & State Machine
 
-### Split Types
-* **Equally (Default):** `Total Amount / Number of Participants`.
-* **Percentage:** - Each participant is assigned a `%`.
-  - **Validation:** The sum of all percentages must equal exactly `100.00%`. The "Save" button remains disabled until this condition is met.
-* **Exact Amount:**
-  - Each participant is assigned a specific currency value.
-  - **Validation:** The sum of individual amounts must equal the `Total Transaction Amount`.
-  - **Audit Note:** Use integer math (cents) to ensure no "lost pennies" occur during calculation.
+**Core Principles**
+* **Integer Arithmetic:** All calculations occur in the smallest currency unit (cents) to prevent floating-point processing errors.
+* **Zero-Friction Default:** New expenses default to an equal split among all selected group members.
 
-### Multi-Currency Conversion
-- When an expense is entered in a non-base currency (e.g., JPY), the app fetches the exchange rate at the **time of entry**.
-- The "Home Currency" equivalent is stored alongside the original transaction to ensure the balance remains stable even if exchange rates fluctuate later.
+**State Definitions**
+* **Unlocked (Auto-Calculated):** The user's split amount is dynamically calculated by the system. Displayed in dark grey text to indicate automation.
+* **Locked (Manual Override):** The user's split amount is manually defined via Exact Amount or Percentage input. Displayed in solid black text.
+
+**The Recalculation Engine**
+* **Trigger:** The calculation engine fires on every keystroke that modifies an input value, or when a user is toggled via checkbox.
+* **Deduction:** The system sums all **Locked** amounts and subtracts this value from the Total Expense.
+* **Distribution:** The remaining balance is divided equally among all **Unlocked** users using a floor calculation (`Math.floor(remainingBalance / unlockedUsersCount)`).
+* **Penny Reconciliation:** The division remainder (the leftover pennies) is distributed sequentially—one cent at a time—to the top users in the **Unlocked** array until the mathematical sum perfectly matches the Total Expense.
+
+**User Interactions**
+* **Locking:** Typing any value into a user's input field instantly transitions their state from Unlocked to Locked.
+* **Unlocking:** Clearing the input field (leaving it blank) instantly transitions the user back to Unlocked, automatically restoring their dynamically calculated share.
+
+**Validation & Error Handling**
+* **Over-Allocation:** An impossible mathematical state occurs if the sum of Locked inputs strictly exceeds the Total Expense.
+* **UI Feedback:** When over-allocated, the bottom validation banner renders in red and displays the negative remainder (e.g., "-$10.00 Over Allocated").
+* **Submission Lock:** The confirmation button is dynamically disabled to prevent corrupted database insertions until the mathematical sum is corrected.
