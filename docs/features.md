@@ -48,7 +48,7 @@ graph TD
 
 ---
 
-## 2 Feature: Split Logic & State Machine
+## 2. Feature: Split Logic & State Machine
 
 **Core Principles**
 * **Integer Arithmetic:** All calculations occur in the smallest currency unit (cents) to prevent floating-point processing errors.
@@ -59,13 +59,13 @@ graph TD
 * **Locked (Manual Override):** The user's split amount is manually defined via Exact Amount or Percentage input. Displayed in solid black text.
 
 **The Recalculation Engine**
-* **Trigger:** The calculation engine fires on every keystroke that modifies an input value, or when a user is toggled via checkbox.
+* **Trigger:** The calculation engine fires after a user is done modifying an input value- so that means after they tap or click out of the number input box when creating a split.
 * **Deduction:** The system sums all **Locked** amounts and subtracts this value from the Total Expense.
 * **Distribution:** The remaining balance is divided equally among all **Unlocked** users using a floor calculation (`Math.floor(remainingBalance / unlockedUsersCount)`).
 * **Penny Reconciliation:** The division remainder (the leftover pennies) is distributed sequentially—one cent at a time—to the top users in the **Unlocked** array until the mathematical sum perfectly matches the Total Expense.
 
 **User Interactions**
-* **Locking:** Typing any value into a user's input field instantly transitions their state from Unlocked to Locked.
+* **Locking:** Typing a value into a user's input field and then clicking out transitions their state from Unlocked to Locked.
 * **Unlocking:** Clearing the input field (leaving it blank) instantly transitions the user back to Unlocked, automatically restoring their dynamically calculated share.
 
 **Validation & Error Handling**
