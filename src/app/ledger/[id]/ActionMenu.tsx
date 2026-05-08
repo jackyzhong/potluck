@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { CURRENCY_LIST, CURRENCIES } from "@/src/lib/currencies";
+import UserManagementModal from "./UserManagementModal";
 
 type User = {
   id: string;
@@ -26,14 +27,9 @@ export default function ActionMenu({
   
   // Modal states
   const [isManagingUsers, setIsManagingUsers] = useState(false);
-  const [isAddingUser, setIsAddingUser] = useState(false);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [expenseStep, setExpenseStep] = useState<1 | 2>(1);
   
-  // User Form states
-  const [newUserName, setNewUserName] = useState("");
-  const [isSubmittingUser, setIsSubmittingUser] = useState(false);
-
   // Expense Form states
   const [payerId, setPayerId] = useState("");
   const [description, setDescription] = useState("");
@@ -47,31 +43,11 @@ export default function ActionMenu({
   });
   const [isSubmittingExpense, setIsSubmittingExpense] = useState(false);
 
-  const handleAddUser = async () => {
-    if (!newUserName.trim()) return;
-    setIsSubmittingUser(true);
-
-    const { data, error } = await supabase
-      .from("users")
-      .insert([{ 
-        name: newUserName.trim(), 
-        ledger_id: ledgerId, 
-        is_placeholder: true 
-      }])
-      .select()
-      .single();
-
-    if (!error && data) {
-      setUsers([...users, data]);
-      setNewUserName("");
-      setIsAddingUser(false);
-      setIsManagingUsers(true);
-    } else {
-      console.error("Failed to add user:", error);
-    }
-    
-    setIsSubmittingUser(false);
-  };
+  // Split Form states
+  const [splitMode, setSplitMode] = useState<"EQUAL" | "EXACT" | "PERCENT">("EQUAL");
+  const [selectedSplitUsers, setSelectedSplitUsers] = useState<string[]>(initialUsers.map(u => u.id));
+  const [exactAmounts, setExactAmounts] = useState<Record<string, string>>({});
+  const [percentages, setPercentages] = useState<Record<string, string>>({});
 
   const handleNextExpenseStep = () => {
     if (!payerId || !amount || parseFloat(amount) <= 0) return;
@@ -84,7 +60,8 @@ export default function ActionMenu({
     const selectedCurrency = CURRENCIES[currency] || CURRENCIES[baseCurrency];
     const amountCents = Math.round(parseFloat(amount) * Math.pow(10, selectedCurrency.decimals));
 
-    const { error } = await supabase
+    // 1. Insert the Expense
+    const { error: expenseError } = await supabase
       .from("expenses")
       .insert([{
         ledger_id: ledgerId,
@@ -95,15 +72,24 @@ export default function ActionMenu({
         created_at: new Date(date).toISOString()
       }]);
 
-    if (!error) {
+    // Note: The database insertion for the `splits` table will go here 
+    // once we define the schema and wire up the math engine validation.
+
+    if (!expenseError) {
       setIsAddingExpense(false);
       setExpenseStep(1);
       setDescription("");
       setAmount("");
       setPayerId("");
+      
+      // Reset split states
+      setSplitMode("EQUAL");
+      setExactAmounts({});
+      setPercentages({});
+      
       router.refresh(); 
     } else {
-      console.error("Failed to add expense:", error);
+      console.error("Failed to add expense:", expenseError);
       alert("Failed to add expense.");
     }
     
@@ -112,87 +98,15 @@ export default function ActionMenu({
 
   return (
     <>
-      {/* 1. Manage Users Modal */}
-      {isManagingUsers && !isAddingUser && (
-        <div className="fixed inset-0 bg-black/20 z-20 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl mb-24 sm:mb-0 relative">
-            <button 
-              onClick={() => setIsManagingUsers(false)}
-              className="absolute top-6 right-6 text-zinc-400 hover:text-zinc-900"
-            >
-              ✕
-            </button>
-            
-            <h3 className="text-xl font-bold mb-4 text-zinc-900">Group Members</h3>
-            
-            <div className="max-h-60 overflow-y-auto mb-6 flex flex-col gap-2">
-              {users.length === 0 ? (
-                <p className="text-zinc-500 text-sm italic">No members yet.</p>
-              ) : (
-                users.map(user => (
-                  <div key={user.id} className="flex items-center gap-3 p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                    <div className="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center font-medium text-zinc-600">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="font-medium text-zinc-900">{user.name}</span>
-                  </div>
-                ))
-              )}
-            </div>
+      <UserManagementModal 
+        isOpen={isManagingUsers}
+        onClose={() => setIsManagingUsers(false)}
+        ledgerId={ledgerId}
+        users={users}
+        onUserAdded={(newUser) => setUsers([...users, newUser])}
+      />
 
-            <button 
-              onClick={() => {
-                setIsManagingUsers(false);
-                setIsAddingUser(true);
-              }}
-              className="w-full py-3 font-medium bg-zinc-100 text-zinc-900 hover:bg-zinc-200 rounded-xl transition-colors"
-            >
-              + Add Group Member
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 2. Add User Modal */}
-      {isAddingUser && (
-        <div className="fixed inset-0 bg-black/20 z-20 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl mb-24 sm:mb-0">
-            <h3 className="text-xl font-bold mb-2 text-zinc-900">Add Member</h3>
-            <p className="text-sm text-zinc-500 mb-4">Phone number search coming soon.</p>
-            
-            <input
-              type="text"
-              placeholder="Name"
-              value={newUserName}
-              onChange={(e) => setNewUserName(e.target.value)}
-              className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl mb-6 outline-none focus:border-zinc-900"
-              autoFocus
-            />
-            
-            <div className="flex gap-2">
-              <button 
-                onClick={() => {
-                  setIsAddingUser(false);
-                  setIsManagingUsers(true);
-                  setNewUserName("");
-                }}
-                className="flex-1 py-3 font-medium text-zinc-500 hover:bg-zinc-50 rounded-xl transition-colors"
-              >
-                Back
-              </button>
-              <button 
-                onClick={handleAddUser}
-                disabled={isSubmittingUser || !newUserName.trim()}
-                className="flex-1 py-3 font-medium bg-zinc-900 text-white rounded-xl disabled:bg-zinc-200 transition-colors"
-              >
-                {isSubmittingUser ? "Adding..." : "Add"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 3. Add Expense Modal */}
+      {/* Add Expense Modal */}
       {isAddingExpense && (
         <div className="fixed inset-0 bg-black/20 z-20 flex flex-col justify-end p-4">
           <div className="bg-white w-full max-w-md mx-auto rounded-3xl p-6 shadow-xl relative max-h-[85vh] overflow-y-auto">
@@ -304,12 +218,80 @@ export default function ActionMenu({
               </>
             ) : (
               <>
-                {/* Step 2: Splits Placeholder */}
-                <h3 className="text-xl font-bold mb-2 text-zinc-900">Split Expense</h3>
-                <p className="text-sm text-zinc-500 mb-6">Splitting logic will be built here.</p>
+                {/* Step 2: Split Expense UI */}
+                <h3 className="text-xl font-bold mb-6 text-zinc-900">Split Expense</h3>
                 
-                <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl mb-8 text-center text-zinc-500">
-                  Placeholder for user allocation toggles.
+                {/* Mode Selector */}
+                <div className="flex bg-zinc-100 p-1 rounded-xl mb-6">
+                  {["EQUAL", "EXACT", "PERCENT"].map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setSplitMode(mode as "EQUAL" | "EXACT" | "PERCENT")}
+                      className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                        splitMode === mode 
+                          ? "bg-white text-zinc-900 shadow-sm" 
+                          : "text-zinc-500 hover:text-zinc-700"
+                      }`}
+                    >
+                      {mode === "EQUAL" ? "Equally" : mode === "EXACT" ? "Exact Amount" : "Percentage"}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Allocation List */}
+                <div className="flex flex-col gap-3 mb-6 max-h-60 overflow-y-auto pr-2">
+                  {users.map(user => (
+                    <div key={user.id} className="flex items-center justify-between p-3 bg-zinc-50 border border-zinc-200 rounded-xl">
+                      <div className="font-medium text-zinc-900">{user.name}</div>
+                      
+                      {splitMode === "EQUAL" && (
+                        <input 
+                          type="checkbox"
+                          checked={selectedSplitUsers.includes(user.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedSplitUsers([...selectedSplitUsers, user.id]);
+                            } else {
+                              setSelectedSplitUsers(selectedSplitUsers.filter(id => id !== user.id));
+                            }
+                          }}
+                          className="w-5 h-5 accent-zinc-900"
+                        />
+                      )}
+
+                      {splitMode === "EXACT" && (
+                        <div className="relative w-1/3">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
+                          <input 
+                            type="number"
+                            placeholder="0.00"
+                            value={exactAmounts[user.id] || ""}
+                            onChange={(e) => setExactAmounts({...exactAmounts, [user.id]: e.target.value})}
+                            className="w-full pl-7 p-2 text-right bg-white border border-zinc-200 rounded-lg outline-none focus:border-zinc-900 text-sm"
+                          />
+                        </div>
+                      )}
+
+                      {splitMode === "PERCENT" && (
+                        <div className="relative w-1/3">
+                          <input 
+                            type="number"
+                            placeholder="0"
+                            value={percentages[user.id] || ""}
+                            onChange={(e) => setPercentages({...percentages, [user.id]: e.target.value})}
+                            className="w-full pr-7 p-2 text-right bg-white border border-zinc-200 rounded-lg outline-none focus:border-zinc-900 text-sm"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">%</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Status/Validation Banner */}
+                <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl mb-8 flex justify-between items-center text-sm">
+                  <span className="text-zinc-500">Total to split:</span>
+                  <span className="font-bold text-zinc-900">${parseFloat(amount).toFixed(2) || "0.00"}</span>
                 </div>
 
                 <div className="flex gap-2">
@@ -321,7 +303,7 @@ export default function ActionMenu({
                   </button>
                   <button 
                     onClick={handleCreateExpense}
-                    disabled={isSubmittingExpense}
+                    disabled={isSubmittingExpense || (splitMode === "EQUAL" && selectedSplitUsers.length === 0)}
                     className="flex-[2] py-4 font-medium bg-zinc-900 text-white rounded-xl disabled:bg-zinc-200 transition-colors"
                   >
                     {isSubmittingExpense ? "Saving..." : "Confirm & Save"}
