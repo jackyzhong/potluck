@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import ActionMenu from "./ActionMenu";
 import { formatCurrency } from "@/src/lib/currencies";
 
+import ExpenseCard from "./ExpenseCard";
+import { Split } from "./ExpenseModal";
+
 export default async function LedgerPage({
   params,
 }: {
@@ -39,6 +42,18 @@ export default async function LedgerPage({
   const initialUsers = users || [];
   const ledgerExpenses = expenses || [];
 
+  let allSplits: Split[] = [];
+  if (ledgerExpenses.length > 0) {
+    const expenseIds = ledgerExpenses.map(e => e.id);
+    const { data: splits } = await supabase
+      .from("splits")
+      .select("*")
+      .in("expense_id", expenseIds);
+    if (splits) {
+      allSplits = splits;
+    }
+  }
+
   // Create a quick lookup map for user names
   const userMap = new Map(initialUsers.map(u => [u.id, u.name]));
 
@@ -56,26 +71,20 @@ export default async function LedgerPage({
             No expenses yet. Start by adding one!
           </div>
         ) : (
-          ledgerExpenses.map((expense) => (
-            <div key={expense.id} className="bg-white rounded-3xl shadow-sm p-5 flex items-center justify-between border border-zinc-100">
-              <div className="flex flex-col">
-                <span className="font-semibold text-zinc-900">
-                  {expense.description || "Untitled Expense"}
-                </span>
-                <span className="text-sm text-zinc-500">
-                  Paid by {userMap.get(expense.payer_id) || "Unknown"}
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="font-bold text-zinc-900 block text-lg">
-                  {formatCurrency(expense.amount_cents, expense.original_currency)}
-                </span>
-                <span className="text-xs text-zinc-400">
-                  {new Date(expense.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                </span>
-              </div>
-            </div>
-          ))
+          ledgerExpenses.map((expense) => {
+            const expenseSplits = allSplits.filter(s => s.expense_id === expense.id);
+            return (
+              <ExpenseCard
+                key={expense.id}
+                expense={expense}
+                splits={expenseSplits}
+                users={initialUsers}
+                userMap={userMap}
+                ledgerId={ledger.id}
+                baseCurrency={ledger.base_currency || "CAD"}
+              />
+            );
+          })
         )}
       </main>
 
