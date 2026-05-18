@@ -6,13 +6,20 @@ import { formatCurrency } from "@/src/lib/currencies";
 
 import ExpenseCard from "./ExpenseCard";
 import { Split } from "./ExpenseModal";
+import LedgerTabs from "./LedgerTabs";
+import BalancesView from "./BalancesView";
+import { getExchangeRates } from "@/src/lib/balances";
 
 export default async function LedgerPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
+  const tab = typeof sp.tab === 'string' ? sp.tab : 'expenses';
 
   // Fetch ledger
   const { data: ledger, error: ledgerError } = await supabase
@@ -56,6 +63,11 @@ export default async function LedgerPage({
 
   // Create a quick lookup map for user names
   const userMap = new Map(initialUsers.map(u => [u.id, u.name]));
+  const baseCurrency = ledger.base_currency || "CAD";
+
+  // Get unique currencies used
+  const currenciesUsed = Array.from(new Set(ledgerExpenses.map(e => e.original_currency)));
+  const exchangeRates = await getExchangeRates(baseCurrency, currenciesUsed);
 
   return (
     <div className="min-h-screen bg-zinc-50 p-6 relative pb-32">
@@ -66,32 +78,46 @@ export default async function LedgerPage({
       </header>
 
       <main className="max-w-2xl mx-auto flex flex-col gap-4">
-        {ledgerExpenses.length === 0 ? (
-          <div className="bg-white rounded-3xl shadow-sm p-6 text-center py-20 text-zinc-400">
-            No expenses yet. Start by adding one!
-          </div>
+        <LedgerTabs />
+
+        {tab === "balances" ? (
+          <BalancesView 
+            expenses={ledgerExpenses}
+            splits={allSplits}
+            userMap={userMap}
+            baseCurrency={baseCurrency}
+            exchangeRates={exchangeRates}
+          />
         ) : (
-          ledgerExpenses.map((expense) => {
-            const expenseSplits = allSplits.filter(s => s.expense_id === expense.id);
-            return (
-              <ExpenseCard
-                key={expense.id}
-                expense={expense}
-                splits={expenseSplits}
-                users={initialUsers}
-                userMap={userMap}
-                ledgerId={ledger.id}
-                baseCurrency={ledger.base_currency || "CAD"}
-              />
-            );
-          })
+          <>
+            {ledgerExpenses.length === 0 ? (
+              <div className="bg-white rounded-3xl shadow-sm p-6 text-center py-20 text-zinc-400">
+                No expenses yet. Start by adding one!
+              </div>
+            ) : (
+              ledgerExpenses.map((expense) => {
+                const expenseSplits = allSplits.filter(s => s.expense_id === expense.id);
+                return (
+                  <ExpenseCard
+                    key={expense.id}
+                    expense={expense}
+                    splits={expenseSplits}
+                    users={initialUsers}
+                    userMap={userMap}
+                    ledgerId={ledger.id}
+                    baseCurrency={baseCurrency}
+                  />
+                );
+              })
+            )}
+          </>
         )}
       </main>
 
       <ActionMenu 
         ledgerId={ledger.id} 
         initialUsers={initialUsers} 
-        baseCurrency={ledger.base_currency || "CAD"} 
+        baseCurrency={baseCurrency} 
       />
     </div>
   );
