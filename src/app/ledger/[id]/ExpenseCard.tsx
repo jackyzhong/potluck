@@ -61,7 +61,7 @@ export default function ExpenseCard({
 
       {/* View Modal */}
       {isViewModalOpen && (
-        <div className="fixed inset-0 bg-black/20 z-40 flex flex-col justify-end p-4">
+        <div className="fixed inset-0 bg-black/20 z-40 flex flex-col justify-end sm:justify-center p-4">
           <div className="bg-white w-full max-w-md mx-auto rounded-3xl p-6 shadow-xl relative max-h-[85vh] overflow-y-auto">
             <button
               onClick={() => setIsViewModalOpen(false)}

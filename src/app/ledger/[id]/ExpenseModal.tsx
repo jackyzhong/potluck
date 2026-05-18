@@ -249,8 +249,31 @@ export default function ExpenseModal({
     setIsSubmittingExpense(false);
   };
 
+  const handleDeleteExpense = async () => {
+    if (!existingExpense) return;
+    
+    if (window.confirm("Are you sure you want to delete this expense? This action cannot be undone.")) {
+      setIsSubmittingExpense(true);
+      
+      const { error: expenseError } = await supabase
+        .from("expenses")
+        .delete()
+        .eq("id", existingExpense.id);
+        
+      if (expenseError) {
+        console.error("Failed to delete expense:", expenseError);
+        alert("Failed to delete the expense.");
+        setIsSubmittingExpense(false);
+        return;
+      }
+      
+      router.refresh();
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/20 z-50 flex flex-col justify-end p-4">
+    <div className="fixed inset-0 bg-black/20 z-50 flex flex-col justify-end sm:justify-center p-4">
       <div className="bg-white w-full max-w-md mx-auto rounded-3xl p-6 shadow-xl relative max-h-[85vh] overflow-y-auto">
         <button
           onClick={onClose}
@@ -258,6 +281,15 @@ export default function ExpenseModal({
         >
           ✕
         </button>
+        {existingExpense && (
+          <button
+            onClick={handleDeleteExpense}
+            disabled={isSubmittingExpense}
+            className="absolute top-6 right-14 text-red-500 hover:text-red-600 text-sm font-medium px-2 py-0.5 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            Delete
+          </button>
+        )}
 
         {expenseStep === 1 ? (
           <>
