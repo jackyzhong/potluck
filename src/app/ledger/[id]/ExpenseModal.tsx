@@ -124,16 +124,33 @@ export default function ExpenseModal({
 
   if (!isOpen) return null;
 
+  const selectedCurrency = CURRENCIES[currency] || CURRENCIES[baseCurrency];
+  const amountCentsForSplit = Math.round((parseFloat(amount) || 0) * Math.pow(10, selectedCurrency.decimals));
+
+  const exactAllocatedCents = Object.values(exactAmounts).reduce(
+    (sum, val) => sum + Math.round((parseFloat(val) || 0) * Math.pow(10, selectedCurrency.decimals)),
+    0
+  );
+  const exactRemainingCents = amountCentsForSplit - exactAllocatedCents;
+
+  const percentTotal = Object.values(percentages).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+  const isPercentBalanced = Math.abs(percentTotal - 100) <= 0.01;
+
+  const isSplitInvalid =
+    (splitMode === "EQUAL" && selectedSplitUsers.length === 0) ||
+    (splitMode === "EXACT" && exactRemainingCents !== 0) ||
+    (splitMode === "PERCENT" && !isPercentBalanced);
+
   const handleNextExpenseStep = () => {
     if (!payerId || !amount || parseFloat(amount) <= 0) return;
     setExpenseStep(2);
   };
 
   const handleSaveExpense = async () => {
+    if (isSplitInvalid) return;
     setIsSubmittingExpense(true);
 
-    const selectedCurrency = CURRENCIES[currency] || CURRENCIES[baseCurrency];
-    const amountCents = Math.round(parseFloat(amount) * Math.pow(10, selectedCurrency.decimals));
+    const amountCents = amountCentsForSplit;
 
     let expenseId = existingExpense?.id;
 
@@ -461,9 +478,43 @@ export default function ExpenseModal({
             </div>
 
             {/* Status/Validation Banner */}
-            <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl mb-8 flex justify-between items-center text-sm">
-              <span className="text-zinc-500">Total to split:</span>
-              <span className="font-bold text-zinc-900">${parseFloat(amount).toFixed(2) || "0.00"}</span>
+            <div
+              className={`p-4 border rounded-xl mb-8 flex justify-between items-center text-sm ${
+                isSplitInvalid ? "bg-red-50 border-red-200" : "bg-zinc-50 border-zinc-200"
+              }`}
+            >
+              {splitMode === "EQUAL" && (
+                <>
+                  <span className="text-zinc-500">Total to split:</span>
+                  <span className="font-bold text-zinc-900">
+                    ${(amountCentsForSplit / Math.pow(10, selectedCurrency.decimals)).toFixed(selectedCurrency.decimals)}
+                  </span>
+                </>
+              )}
+
+              {splitMode === "EXACT" && (
+                <>
+                  <span className={exactRemainingCents === 0 ? "text-zinc-500" : "text-red-600 font-medium"}>
+                    {exactRemainingCents === 0
+                      ? "Fully allocated"
+                      : `$${(Math.abs(exactRemainingCents) / Math.pow(10, selectedCurrency.decimals)).toFixed(selectedCurrency.decimals)} ${exactRemainingCents > 0 ? "remaining" : "over"}`}
+                  </span>
+                  <span className="font-bold text-zinc-900">
+                    ${(exactAllocatedCents / Math.pow(10, selectedCurrency.decimals)).toFixed(selectedCurrency.decimals)} / ${(amountCentsForSplit / Math.pow(10, selectedCurrency.decimals)).toFixed(selectedCurrency.decimals)}
+                  </span>
+                </>
+              )}
+
+              {splitMode === "PERCENT" && (
+                <>
+                  <span className={isPercentBalanced ? "text-zinc-500" : "text-red-600 font-medium"}>
+                    {isPercentBalanced
+                      ? "Fully allocated"
+                      : `${Math.abs(100 - percentTotal).toFixed(2)}% ${percentTotal < 100 ? "remaining" : "over"}`}
+                  </span>
+                  <span className="font-bold text-zinc-900">{percentTotal.toFixed(2)}% / 100%</span>
+                </>
+              )}
             </div>
 
             <div className="flex gap-2">
@@ -475,7 +526,7 @@ export default function ExpenseModal({
               </button>
               <button
                 onClick={handleSaveExpense}
-                disabled={isSubmittingExpense || (splitMode === "EQUAL" && selectedSplitUsers.length === 0)}
+                disabled={isSubmittingExpense || isSplitInvalid}
                 className="flex-[2] py-4 font-medium bg-zinc-900 text-white rounded-xl disabled:bg-zinc-200 transition-colors"
               >
                 {isSubmittingExpense ? "Saving..." : (existingExpense ? "Update Expense" : "Confirm & Save")}
