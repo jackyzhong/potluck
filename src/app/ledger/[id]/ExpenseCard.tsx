@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatCurrency } from "@/src/lib/currencies";
 import ExpenseModal, { Expense, Split } from "./ExpenseModal";
+import { useModalKeyboard } from "@/src/lib/useModalKeyboard";
 
 type User = {
   id: string;
@@ -29,6 +30,7 @@ export default function ExpenseCard({
 }: ExpenseCardProps) {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const viewModalRef = useModalKeyboard(isViewModalOpen, () => setIsViewModalOpen(false));
 
   const handleEditClick = () => {
     setIsViewModalOpen(false);
@@ -37,9 +39,10 @@ export default function ExpenseCard({
 
   return (
     <>
-      <div 
+      <button
+        type="button"
         onClick={() => setIsViewModalOpen(true)}
-        className="bg-white rounded-3xl shadow-sm p-5 flex items-center justify-between border border-zinc-100 cursor-pointer hover:bg-zinc-50 transition-colors"
+        className="w-full text-left bg-white rounded-3xl shadow-sm p-5 flex items-center justify-between border border-zinc-100 cursor-pointer hover:bg-zinc-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 transition-colors"
       >
         <div className="flex flex-col">
           <span className="font-semibold text-zinc-900">
@@ -57,20 +60,29 @@ export default function ExpenseCard({
             {new Date(expense.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
           </span>
         </div>
-      </div>
+      </button>
 
       {/* View Modal */}
       {isViewModalOpen && (
-        <div className="fixed inset-0 bg-black/20 z-40 flex flex-col justify-end sm:justify-center p-4">
+        <div
+          ref={viewModalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="expense-details-title"
+          className="fixed inset-0 bg-black/20 z-40 flex flex-col justify-end sm:justify-center p-4"
+        >
           <div className="bg-white w-full max-w-md mx-auto rounded-3xl p-6 shadow-xl relative max-h-[85vh] overflow-y-auto">
             <button
+              type="button"
               onClick={() => setIsViewModalOpen(false)}
+              data-modal-close
+              aria-label="Close"
               className="absolute top-6 right-6 text-zinc-400 hover:text-zinc-900"
             >
               ✕
             </button>
 
-            <h3 className="text-xl font-bold mb-2 text-zinc-900">Expense Details</h3>
+            <h3 id="expense-details-title" className="text-xl font-bold mb-2 text-zinc-900">Expense Details</h3>
             
             <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100 mb-6 mt-4">
               <div className="text-sm text-zinc-500 mb-1">Description</div>
@@ -104,12 +116,14 @@ export default function ExpenseCard({
 
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={() => setIsViewModalOpen(false)}
                 className="flex-1 py-4 font-medium text-zinc-500 hover:bg-zinc-50 rounded-xl border border-zinc-200 transition-colors"
               >
                 Close
               </button>
               <button
+                type="button"
                 onClick={handleEditClick}
                 className="flex-[2] py-4 font-medium bg-zinc-900 text-white rounded-xl transition-colors"
               >
