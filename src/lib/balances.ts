@@ -69,12 +69,13 @@ export function getUnsimplifiedDebts(
   return debts;
 }
 
-export function getSimplifiedDebts(
+// Each person's overall position, normalized to the base currency.
+// Positive means the group owes them; negative means they owe the group.
+export function getNetBalances(
   expenses: Expense[],
   splits: Split[],
   exchangeRates: Record<string, number>
-): Debt[] {
-  // Net balances: positive means they are owed money, negative means they owe money
+): Record<string, number> {
   const balances: Record<string, number> = {};
 
   for (const expense of expenses) {
@@ -90,6 +91,16 @@ export function getSimplifiedDebts(
       balances[split.user_id] = (balances[split.user_id] || 0) - splitAmountBase;
     }
   }
+
+  return balances;
+}
+
+export function getSimplifiedDebts(
+  expenses: Expense[],
+  splits: Split[],
+  exchangeRates: Record<string, number>
+): Debt[] {
+  const balances = getNetBalances(expenses, splits, exchangeRates);
 
   const debtors = Object.entries(balances)
     .filter(([_, bal]) => bal < 0)
