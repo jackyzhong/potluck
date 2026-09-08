@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { CURRENCY_LIST, CURRENCIES } from "@/src/lib/currencies";
+import { useModalKeyboard } from "@/src/lib/useModalKeyboard";
 
 type User = {
   id: string;
@@ -50,6 +51,8 @@ export default function ExpenseModal({
   const router = useRouter();
 
   const [expenseStep, setExpenseStep] = useState<1 | 2>(1);
+  const modalRef = useModalKeyboard(isOpen, onClose);
+  const currencyDropdownRef = useRef<HTMLDivElement>(null);
 
   // Expense Form states
   const [payerId, setPayerId] = useState("");
@@ -121,6 +124,33 @@ export default function ExpenseModal({
       setExpenseStep(1);
     }
   }, [isOpen, existingExpense, existingSplits, baseCurrency, users]);
+
+  // Close the currency dropdown on an outside click, or on Escape. The Escape
+  // listener runs in the capture phase so it beats the modal's own Escape
+  // handler — the dropdown closes first, leaving the modal open.
+  useEffect(() => {
+    if (!isCurrencyOpen) return;
+
+    function handleClickOutside(event: MouseEvent) {
+      if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target as Node)) {
+        setIsCurrencyOpen(false);
+      }
+    }
+
+    function handleEscapeCapture(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      event.preventDefault();
+      setIsCurrencyOpen(false);
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscapeCapture, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscapeCapture, true);
+    };
+  }, [isCurrencyOpen]);
 
   if (!isOpen) return null;
 
@@ -290,16 +320,26 @@ export default function ExpenseModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/20 z-50 flex flex-col justify-end sm:justify-center p-4">
+    <div
+      ref={modalRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="expense-modal-title"
+      className="fixed inset-0 bg-black/20 z-50 flex flex-col justify-end sm:justify-center p-4"
+    >
       <div className="bg-white w-full max-w-md mx-auto rounded-3xl p-6 shadow-xl relative max-h-[85vh] overflow-y-auto">
         <button
+          type="button"
           onClick={onClose}
+          data-modal-close
+          aria-label="Close"
           className="absolute top-6 right-6 text-zinc-400 hover:text-zinc-900"
         >
           ✕
         </button>
         {existingExpense && (
           <button
+            type="button"
             onClick={handleDeleteExpense}
             disabled={isSubmittingExpense}
             className="absolute top-6 right-14 text-red-500 hover:text-red-600 text-sm font-medium px-2 py-0.5 rounded-lg hover:bg-red-50 transition-colors"
@@ -309,8 +349,13 @@ export default function ExpenseModal({
         )}
 
         {expenseStep === 1 ? (
-          <>
-            <h3 className="text-xl font-bold mb-6 text-zinc-900">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleNextExpenseStep();
+            }}
+          >
+            <h3 id="expense-modal-title" className="text-xl font-bold mb-6 text-zinc-900">
               {existingExpense ? "Edit Expense" : "Add Expense"}
             </h3>
 
@@ -358,20 +403,29 @@ export default function ExpenseModal({
                     className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl outline-none focus:border-zinc-900"
                   />
                 </div>
-                <div className="w-1/3 relative">
+                <div className="w-1/3 relative" ref={currencyDropdownRef}>
                   <label className="block text-sm font-medium text-zinc-700 mb-1">Currency</label>
                   <button
+                    type="button"
                     onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
+                    aria-haspopup="listbox"
+                    aria-expanded={isCurrencyOpen}
                     className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl outline-none text-left flex justify-between items-center"
                   >
                     {currency}
                     <span className="text-xs">▼</span>
                   </button>
                   {isCurrencyOpen && (
-                    <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-zinc-200 rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto">
+                    <div
+                      role="listbox"
+                      className="absolute top-full right-0 mt-1 w-48 bg-white border border-zinc-200 rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto"
+                    >
                       {CURRENCY_LIST.map((c) => (
                         <button
                           key={c.code}
+                          type="button"
+                          role="option"
+                          aria-selected={c.code === currency}
                           onClick={() => {
                             setCurrency(c.code);
                             setIsCurrencyOpen(false);
@@ -399,23 +453,29 @@ export default function ExpenseModal({
             </div>
 
             <button
-              onClick={handleNextExpenseStep}
+              type="submit"
               disabled={!payerId || !amount || parseFloat(amount) <= 0}
               className="w-full mt-8 py-4 font-medium bg-zinc-900 text-white rounded-xl disabled:bg-zinc-200 transition-colors"
             >
               Next: Split Expense
             </button>
-          </>
+          </form>
         ) : (
-          <>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!isSubmittingExpense && !isSplitInvalid) handleSaveExpense();
+            }}
+          >
             {/* Step 2: Split Expense UI */}
-            <h3 className="text-xl font-bold mb-6 text-zinc-900">Split Expense</h3>
+            <h3 id="expense-modal-title" className="text-xl font-bold mb-6 text-zinc-900">Split Expense</h3>
 
             {/* Mode Selector */}
             <div className="flex bg-zinc-100 p-1 rounded-xl mb-6">
               {["EQUAL", "EXACT", "PERCENT"].map((mode) => (
                 <button
                   key={mode}
+                  type="button"
                   onClick={() => setSplitMode(mode as "EQUAL" | "EXACT" | "PERCENT")}
                   className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${splitMode === mode
                       ? "bg-white text-zinc-900 shadow-sm"
@@ -519,20 +579,21 @@ export default function ExpenseModal({
 
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={() => setExpenseStep(1)}
                 className="flex-1 py-4 font-medium text-zinc-500 hover:bg-zinc-50 rounded-xl border border-zinc-200 transition-colors"
               >
                 Back
               </button>
               <button
-                onClick={handleSaveExpense}
+                type="submit"
                 disabled={isSubmittingExpense || isSplitInvalid}
                 className="flex-[2] py-4 font-medium bg-zinc-900 text-white rounded-xl disabled:bg-zinc-200 transition-colors"
               >
                 {isSubmittingExpense ? "Saving..." : (existingExpense ? "Update Expense" : "Confirm & Save")}
               </button>
             </div>
-          </>
+          </form>
         )}
       </div>
     </div>
