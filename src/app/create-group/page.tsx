@@ -34,6 +34,20 @@ export default function CreateGroup() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Escape closes whichever popover is open.
+  useEffect(() => {
+    if (!isCurrencyOpen && !showEmojiPicker) return;
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setIsCurrencyOpen(false);
+      setShowEmojiPicker(false);
+    }
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isCurrencyOpen, showEmojiPicker]);
+
   const filteredCurrencies = CURRENCY_LIST.filter(c => 
     c.code.toLowerCase().includes(currencySearch.toLowerCase()) || 
     c.name.toLowerCase().includes(currencySearch.toLowerCase())
@@ -82,10 +96,19 @@ export default function CreateGroup() {
 
       <main className="max-w-md mx-auto w-full flex-1 flex flex-col pt-8 pb-20">
         {/* Main UI Card */}
-        <div className="bg-white rounded-3xl shadow-sm p-8 flex flex-col items-center relative border border-zinc-100">
-          
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleCreateGroup();
+          }}
+          className="bg-white rounded-3xl shadow-sm p-8 flex flex-col items-center relative border border-zinc-100"
+        >
+
           {/* Emoji Picker Button */}
-          <button 
+          <button
+            type="button"
+            aria-label="Choose an emoji for this group"
+            aria-expanded={showEmojiPicker}
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className="text-6xl mb-6 hover:scale-105 transition-transform bg-zinc-50 p-6 rounded-full border border-zinc-100 shadow-sm"
           >
@@ -124,6 +147,9 @@ export default function CreateGroup() {
             <div className="relative" ref={dropdownRef}>
               <label className="block text-sm text-zinc-500 mb-1">Base Currency</label>
               <button
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={isCurrencyOpen}
                 onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
                 className="w-full flex items-center justify-between p-4 bg-zinc-50 border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors"
               >
@@ -148,6 +174,7 @@ export default function CreateGroup() {
                     {filteredCurrencies.map((c) => (
                       <button
                         key={c.code}
+                        type="button"
                         onClick={() => {
                           setCurrency(c.code);
                           setIsCurrencyOpen(false);
@@ -171,7 +198,7 @@ export default function CreateGroup() {
           </div>
 
           <button
-            onClick={handleCreateGroup}
+            type="submit"
             disabled={!groupName.trim() || isLoading}
             className={`w-full py-4 rounded-full font-medium text-lg transition-all flex items-center justify-center gap-2
               ${groupName.trim() 
@@ -187,7 +214,7 @@ export default function CreateGroup() {
             )}
           </button>
 
-        </div>
+        </form>
       </main>
     </div>
   );
