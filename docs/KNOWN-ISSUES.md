@@ -60,6 +60,31 @@ incorrect, with nothing in the UI indicating it. This is HANDOFF priority #1 —
 the rate needs to be locked at expense-creation time and persisted, not looked
 up live, or historical balances will drift as rates move.
 
+### 1.5 Mixed currencies do not conserve money · Confirmed
+
+Every amount is converted independently and rounded to whole cents, so an
+expense's converted shares need not add back up to its converted total. The
+payer is credited one figure and the participants are charged another, and the
+difference is created or destroyed out of thin air.
+
+Minimal reproduction: an expense of `16344` at rate `1.37`, split evenly two
+ways. The payer is credited `round(16344 x 1.37) = 22391`; the two shares are
+charged `round(8172 x 1.37) x 2 = 22392`. One cent appears from nowhere. Across
+a ledger the drift accumulates and net balances stop summing to zero, which
+means the Balances tab can tell a group to move money that does not exist.
+
+Invisible in production today only because every rate is pegged at 1.0 (see
+1.4), where the arithmetic is exact integer maths.
+
+**Fix:** belongs with the rate-locking work in 1.4, not before it — the right
+answer depends on whether converted amounts get persisted per split. Whatever
+the approach, converted shares must be derived so they sum exactly to the
+converted total (distribute the remainder, the way the app's EQUAL split mode
+already does in cents).
+
+`src/lib/balances.test.ts` carries the acceptance test for this, currently
+skipped: `"mixed currencies conserve money"`. Unskip it when the fix lands.
+
 ---
 
 ## 2. Data integrity & access control
@@ -198,19 +223,17 @@ story needs a decision before the UI can exist.
 
 ## 5. Engineering & tooling
 
-### 5.1 There are no automated tests · Known
+### 5.1 Test coverage stops at the balance math · Partly resolved
 
-No test runner, no test script in `package.json`, no test files. Every
-regression in this codebase so far has been caught by reading the code or by
-driving a browser by hand. The silent-RLS bug (2.2) is exactly the kind of
-thing a test would have caught: the balance math is pure, deterministic and
-trivial to test.
+`npm test` now runs `src/lib/balances.test.ts` on Node's built-in runner with
+type stripping — no test dependencies. It covers the balance and payment
+arithmetic as randomized property tests over 300 generated ledgers, and it is
+what caught 1.5.
 
-**Fix:** highest-leverage starting point is `src/lib/balances.ts` — pure
-functions over plain data, no mocking needed. A property worth asserting
-directly: `getMemberBreakdown(...).netCents` must always equal
-`getNetBalances()[userId]`, which is what keeps a breakdown from contradicting
-the balance it explains.
+What is still uncovered: every React component, the Supabase call sites, and
+the RLS behaviour that caused 2.2. Those need a browser or a live database, so
+they remain manual. Adding a component test setup is the next step if this
+starts to bite.
 
 ### 5.2 Lint is not gating, and almost all of its noise is one generated file · Confirmed
 

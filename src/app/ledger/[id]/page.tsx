@@ -46,8 +46,16 @@ export default async function LedgerPage({
     .eq("ledger_id", id)
     .order("created_at", { ascending: false });
 
+  // Fetch payments (settlements between members)
+  const { data: payments } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("ledger_id", id)
+    .order("created_at", { ascending: false });
+
   const initialUsers = users || [];
   const ledgerExpenses = expenses || [];
+  const ledgerPayments = payments || [];
 
   let allSplits: Split[] = [];
   if (ledgerExpenses.length > 0) {
@@ -74,7 +82,10 @@ export default async function LedgerPage({
   const baseCurrency = ledger.base_currency || "CAD";
 
   // Get unique currencies used
-  const currenciesUsed = Array.from(new Set(ledgerExpenses.map(e => e.original_currency)));
+  const currenciesUsed = Array.from(new Set([
+    ...ledgerExpenses.map(e => e.original_currency),
+    ...ledgerPayments.map(p => p.original_currency)
+  ]));
   const exchangeRates = await getExchangeRates(baseCurrency, currenciesUsed);
 
   return (
@@ -93,6 +104,7 @@ export default async function LedgerPage({
             ledgerId={ledger.id}
             expenses={ledgerExpenses}
             splits={allSplits}
+            payments={ledgerPayments}
             users={initialUsers}
             userMap={userMap}
             baseCurrency={baseCurrency}

@@ -1,9 +1,22 @@
-import { Expense, Split } from "@/src/app/ledger/[id]/ExpenseModal";
+import type { Expense, Split } from "@/src/app/ledger/[id]/ExpenseModal";
 
 export type Debt = {
   debtorId: string;
   creditorId: string;
   amountCents: number;
+};
+
+// A settlement: money actually handed from one member to another, as opposed
+// to a cost being shared out.
+export type Payment = {
+  id: string;
+  ledger_id: string;
+  payer_id: string;
+  payee_id: string;
+  amount_cents: number;
+  original_currency: string;
+  note: string | null;
+  created_at: string;
 };
 
 export type BreakdownRow = {
@@ -13,13 +26,25 @@ export type BreakdownRow = {
   amountCents: number;
 };
 
+export type PaymentRow = {
+  id: string;
+  counterpartyId: string;
+  note: string | null;
+  createdAt: string;
+  amountCents: number;
+};
+
 // One member's side of the books: what they fronted, what they owe, and the
 // difference — which is the figure the Balances list shows for them.
 export type MemberBreakdown = {
   paid: BreakdownRow[];
   owed: BreakdownRow[];
+  paymentsMade: PaymentRow[];
+  paymentsReceived: PaymentRow[];
   paidTotalCents: number;
   owedTotalCents: number;
+  paymentsMadeTotalCents: number;
+  paymentsReceivedTotalCents: number;
   netCents: number;
 };
 
@@ -49,6 +74,7 @@ export async function getExchangeRates(baseCurrency: string, currenciesUsed: str
 export function getUnsimplifiedDebts(
   expenses: Expense[],
   splits: Split[],
+  payments: Payment[],
   exchangeRates: Record<string, number>
 ): Debt[] {
   // graph[debtor][creditor] = amount
@@ -67,6 +93,17 @@ export function getUnsimplifiedDebts(
         graph[split.user_id][expense.payer_id] = (graph[split.user_id][expense.payer_id] || 0) + amountInBase;
       }
     }
+  }
+
+  // A settlement is the same edge pointing the other way: paying down a debt
+  // and being owed that much are indistinguishable once the two are cancelled.
+  for (const payment of payments) {
+    const rate = exchangeRates[payment.original_currency] || 1.0;
+    const amountInBase = Math.round(payment.amount_cents * rate);
+
+    if (!graph[payment.payee_id]) graph[payment.payee_id] = {};
+    graph[payment.payee_id][payment.payer_id] =
+      (graph[payment.payee_id][payment.payer_id] || 0) + amountInBase;
   }
 
   // Cancel mutual debts
@@ -102,6 +139,7 @@ export function getUnsimplifiedDebts(
 export function getNetBalances(
   expenses: Expense[],
   splits: Split[],
+  payments: Payment[],
   exchangeRates: Record<string, number>
 ): Record<string, number> {
   const balances: Record<string, number> = {};
@@ -121,6 +159,16 @@ export function getNetBalances(
     }
   }
 
+  // Handing money over pays down what you owe; receiving it settles what you
+  // were owed.
+  for (const payment of payments) {
+    const rate = exchangeRates[payment.original_currency] || 1.0;
+    const amountInBase = Math.round(payment.amount_cents * rate);
+
+    balances[payment.payer_id] = (balances[payment.payer_id] || 0) + amountInBase;
+    balances[payment.payee_id] = (balances[payment.payee_id] || 0) - amountInBase;
+  }
+
   return balances;
 }
 
@@ -131,6 +179,7 @@ export function getMemberBreakdown(
   userId: string,
   expenses: Expense[],
   splits: Split[],
+  payments: Payment[],
   exchangeRates: Record<string, number>
 ): MemberBreakdown {
   const splitsByExpense = indexSplitsByExpense(splits);
@@ -164,21 +213,56 @@ export function getMemberBreakdown(
     }
   }
 
+  const paymentsMade: PaymentRow[] = [];
+  const paymentsReceived: PaymentRow[] = [];
+  let paymentsMadeTotalCents = 0;
+  let paymentsReceivedTotalCents = 0;
+
+  for (const payment of payments) {
+    if (payment.payer_id !== userId && payment.payee_id !== userId) continue;
+
+    const rate = exchangeRates[payment.original_currency] || 1.0;
+    const amountCents = Math.round(payment.amount_cents * rate);
+    const isPayer = payment.payer_id === userId;
+
+    const row: PaymentRow = {
+      id: payment.id,
+      counterpartyId: isPayer ? payment.payee_id : payment.payer_id,
+      note: payment.note,
+      createdAt: payment.created_at,
+      amountCents
+    };
+
+    if (isPayer) {
+      paymentsMade.push(row);
+      paymentsMadeTotalCents += amountCents;
+    } else {
+      paymentsReceived.push(row);
+      paymentsReceivedTotalCents += amountCents;
+    }
+  }
+
   return {
     paid,
     owed,
+    paymentsMade,
+    paymentsReceived,
     paidTotalCents,
     owedTotalCents,
-    netCents: paidTotalCents - owedTotalCents
+    paymentsMadeTotalCents,
+    paymentsReceivedTotalCents,
+    netCents:
+      paidTotalCents + paymentsMadeTotalCents - owedTotalCents - paymentsReceivedTotalCents
   };
 }
 
 export function getSimplifiedDebts(
   expenses: Expense[],
   splits: Split[],
+  payments: Payment[],
   exchangeRates: Record<string, number>
 ): Debt[] {
-  const balances = getNetBalances(expenses, splits, exchangeRates);
+  const balances = getNetBalances(expenses, splits, payments, exchangeRates);
 
   const debtors = Object.entries(balances)
     .filter(([_, bal]) => bal < 0)
