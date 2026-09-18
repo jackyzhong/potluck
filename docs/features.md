@@ -65,3 +65,50 @@ The split step offers three mutually-exclusive modes, chosen via a segmented con
 * **Percentage:** The organizer types a percentage per member. Each member's cents are computed as `round(total * pct / 100)`, except the last entered member, who instead absorbs whatever is left over (`total - sum of the others`) so the split sums exactly to the total.
 
 **Allocation Validation:** Exact Amount and Percentage modes show a running allocated/remaining total (in dollars for Exact Amount, in percent for Percentage) that turns red when the entries don't add up to the expense total. The "Confirm & Save" button is disabled until Exact Amount entries sum exactly to the expense total, or Percentage entries sum to 100% (within a small rounding tolerance) — this also rules out Percentage mode's last-entry logic ever producing a negative amount, since entries can no longer overshoot 100% at save time.
+
+## 3. Feature: Payments / Settlements
+
+**Core Principle:** a payment is a transfer between two members — it names who
+handed money over and who received it. It is not "money off what I owe": every
+member's net sums to zero across the group, and crediting nobody would break
+that, leaving creditors owed money the app never tells anyone to pay. See
+[payments-design.md](./payments-design.md) for the full reasoning.
+
+**Arithmetic.** A payment credits the payer and debits the payee by the same
+amount, which is the same shape as an expense whose entire split lands on one
+person. For the pairwise view it is an edge in the opposite direction, so the
+existing mutual-cancellation step nets it off with no special casing:
+
+* Paying part of a debt leaves the remainder.
+* Overpaying reverses who is owed.
+* Paying someone you owe nothing makes them your debtor.
+
+**Recording a payment.** Two entry points:
+
+* **Settle up**, on each row of the Transfers list. The debt on screen already
+  names the payer, the payee and the amount, so the form opens filled in and
+  the user only confirms. This is the intended path.
+* **Add Payment**, in the floating action menu, for payments that do not match
+  a suggested transfer — someone rounded up, paid early, or paid a person they
+  did not owe. No amount is validated against what is currently owed, because
+  all three of those are legitimate.
+
+With Simplify Debts on, the suggested transfers are not raw pairwise debts.
+Settling a simplified transfer is still correct — the arithmetic does not care
+— and is the point of simplification.
+
+**Currency.** Payments are recorded in the ledger's base currency only, until
+the exchange-rate work in [KNOWN-ISSUES.md](./KNOWN-ISSUES.md) §1.4 lands.
+Editing an existing payment writes back that payment's own currency rather than
+the ledger's current base, so changing the base later cannot silently relabel
+what was already recorded.
+
+**History.** Payments appear in the Activity list alongside expenses, in one
+chronological order, labelled "Settlement" and phrased "Alice paid Carol"
+rather than naming a single payer. A member's balance breakdown gains
+"Payments made" and "Payments received" sections, so the four totals shown
+still add up to the net above them.
+
+**Editing and deleting.** A payment is edited in place — the card already shows
+every field it has, so there is no separate details step. Deleting asks for
+confirmation, because removing a settlement puts the debt back.

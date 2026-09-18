@@ -1,16 +1,83 @@
 "use client";
 
-import { useMemo, useOptimistic, useTransition } from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { Expense, Split } from "./ExpenseModal";
-import { getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
+import { BreakdownRow, Payment, PaymentRow, getMemberBreakdown, getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
 import { formatCurrency } from "@/src/lib/currencies";
+import ExpenseDetailsModal from "./ExpenseDetailsModal";
+import PaymentModal, { PaymentPrefill } from "./PaymentModal";
+
+type User = {
+  id: string;
+  name: string;
+  is_placeholder: boolean;
+};
+
+const formatDay = (iso: string) =>
+  new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+function BreakdownLine({
+  row,
+  baseCurrency,
+  onOpen
+}: {
+  row: BreakdownRow;
+  baseCurrency: string;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="w-full flex justify-between items-baseline gap-3 py-1 px-1 -mx-1 text-sm text-left rounded hover:bg-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 transition-colors"
+    >
+      <span className="text-zinc-600 truncate">
+        <span className="underline decoration-zinc-300 underline-offset-2">
+          {row.description || "Untitled Expense"}
+        </span>
+        <span className="text-zinc-400"> · {formatDay(row.createdAt)}</span>
+      </span>
+      <span className="text-zinc-900 whitespace-nowrap">
+        {formatCurrency(row.amountCents, baseCurrency)}
+      </span>
+    </button>
+  );
+}
+
+function PaymentLine({
+  row,
+  direction,
+  name,
+  baseCurrency
+}: {
+  row: PaymentRow;
+  direction: "to" | "from";
+  name: string;
+  baseCurrency: string;
+}) {
+  return (
+    <div className="flex justify-between items-baseline gap-3 py-1 text-sm">
+      <span className="text-zinc-600 truncate">
+        {direction === "to" ? "To " : "From "}
+        {name}
+        {row.note ? ` · ${row.note}` : ""}
+        <span className="text-zinc-400"> · {formatDay(row.createdAt)}</span>
+      </span>
+      <span className="text-zinc-900 whitespace-nowrap">
+        {formatCurrency(row.amountCents, baseCurrency)}
+      </span>
+    </div>
+  );
+}
 
 interface BalancesViewProps {
   ledgerId: string;
   expenses: Expense[];
   splits: Split[];
+  payments: Payment[];
+  users: User[];
   userMap: Map<string, string>;
   baseCurrency: string;
   exchangeRates: Record<string, number>;
@@ -21,6 +88,8 @@ export default function BalancesView({
   ledgerId,
   expenses,
   splits,
+  payments,
+  users,
   userMap,
   baseCurrency,
   exchangeRates,
@@ -56,13 +125,13 @@ export default function BalancesView({
   };
 
   const simplifiedDebts = useMemo(
-    () => getSimplifiedDebts(expenses, splits, exchangeRates),
-    [expenses, splits, exchangeRates]
+    () => getSimplifiedDebts(expenses, splits, payments, exchangeRates),
+    [expenses, splits, payments, exchangeRates]
   );
 
   const unsimplifiedDebts = useMemo(
-    () => getUnsimplifiedDebts(expenses, splits, exchangeRates),
-    [expenses, splits, exchangeRates]
+    () => getUnsimplifiedDebts(expenses, splits, payments, exchangeRates),
+    [expenses, splits, payments, exchangeRates]
   );
 
   const debts = isSimplified ? simplifiedDebts : unsimplifiedDebts;
@@ -71,11 +140,53 @@ export default function BalancesView({
   // Each member's overall position, biggest creditor first. Members who were
   // never involved in an expense still appear, so the roster stays complete.
   const netPositions = useMemo(() => {
-    const balances = getNetBalances(expenses, splits, exchangeRates);
+    const balances = getNetBalances(expenses, splits, payments, exchangeRates);
     return Array.from(userMap.entries())
       .map(([userId, name]) => ({ userId, name, net: balances[userId] || 0 }))
       .sort((a, b) => b.net - a.net);
-  }, [expenses, splits, exchangeRates, userMap]);
+  }, [expenses, splits, payments, exchangeRates, userMap]);
+
+  const [openMemberId, setOpenMemberId] = useState<string | null>(null);
+
+  // Only the open member's rows are worth building, and they cost one pass.
+  const openBreakdown = useMemo(
+    () => (openMemberId ? getMemberBreakdown(openMemberId, expenses, splits, payments, exchangeRates) : null),
+    [openMemberId, expenses, splits, payments, exchangeRates]
+  );
+
+  // The details modal hosts the edit flow, so the selected expense outlives
+  // the modal being dismissed — clearing it here would unmount the editor the
+  // moment "Edit Expense" tries to open it.
+  const [detailExpenseId, setDetailExpenseId] = useState<string | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  const detailExpense = useMemo(
+    () => expenses.find((e) => e.id === detailExpenseId) ?? null,
+    [detailExpenseId, expenses]
+  );
+  const detailSplits = useMemo(
+    () => splits.filter((s) => s.expense_id === detailExpenseId),
+    [detailExpenseId, splits]
+  );
+
+  const openDetails = (expenseId: string) => {
+    setDetailExpenseId(expenseId);
+    setIsDetailsOpen(true);
+  };
+
+  // Settling a suggested transfer is the main way payments get recorded: the
+  // debt on screen already names the payer, the payee and the amount.
+  const [settlePrefill, setSettlePrefill] = useState<PaymentPrefill | null>(null);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+
+  const openSettleUp = (debt: { debtorId: string; creditorId: string; amountCents: number }) => {
+    setSettlePrefill({
+      payerId: debt.debtorId,
+      payeeId: debt.creditorId,
+      amountCents: debt.amountCents
+    });
+    setIsPaymentOpen(true);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -114,21 +225,176 @@ export default function BalancesView({
               Overall
             </h3>
             <div className="flex flex-col gap-2">
-              {netPositions.map(({ userId, name, net }) => (
-                <div key={userId} className="flex items-center justify-between px-1 py-1.5">
-                  <span className="font-medium text-zinc-900">{name}</span>
-                  {net === 0 ? (
-                    <span className="text-sm text-zinc-400">settled up</span>
-                  ) : (
-                    <span className="text-sm">
-                      <span className="text-zinc-500">{net > 0 ? "gets back" : "owes"} </span>
-                      <span className={`font-bold ${net > 0 ? "text-emerald-600" : "text-red-600"}`}>
-                        {formatCurrency(Math.abs(net), baseCurrency)}
+              {netPositions.map(({ userId, name, net }) => {
+                const isOpen = openMemberId === userId;
+                const rows = isOpen ? openBreakdown : null;
+                const hasRows =
+                  !!rows &&
+                  (rows.paid.length > 0 ||
+                    rows.owed.length > 0 ||
+                    rows.paymentsMade.length > 0 ||
+                    rows.paymentsReceived.length > 0);
+
+                return (
+                  <div key={userId}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenMemberId(isOpen ? null : userId)}
+                      aria-expanded={isOpen}
+                      aria-controls={`breakdown-${userId}`}
+                      className="w-full flex items-center justify-between gap-3 px-1 py-1.5 rounded-lg text-left hover:bg-zinc-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 transition-colors"
+                    >
+                      <span className="font-medium text-zinc-900 flex items-center gap-1.5">
+                        <span
+                          aria-hidden="true"
+                          className={`text-[10px] text-zinc-400 transition-transform ${isOpen ? "rotate-90" : ""}`}
+                        >
+                          ▶
+                        </span>
+                        {name}
                       </span>
-                    </span>
-                  )}
-                </div>
-              ))}
+                      {net === 0 ? (
+                        <span className="text-sm text-zinc-400">settled up</span>
+                      ) : (
+                        <span className="text-sm whitespace-nowrap">
+                          <span className="text-zinc-500">{net > 0 ? "gets back" : "owes"} </span>
+                          <span className={`font-bold ${net > 0 ? "text-emerald-600" : "text-red-600"}`}>
+                            {formatCurrency(Math.abs(net), baseCurrency)}
+                          </span>
+                        </span>
+                      )}
+                    </button>
+
+                    {isOpen && rows && (
+                      <div
+                        id={`breakdown-${userId}`}
+                        className="ml-2 mt-1 mb-2 pl-3 border-l-2 border-zinc-200"
+                      >
+                        {!hasRows ? (
+                          <p className="text-sm text-zinc-400 py-2">Not part of any expenses yet.</p>
+                        ) : (
+                          <>
+                            <div className="max-h-64 overflow-y-auto pr-1">
+                              {rows.paid.length > 0 && (
+                                <>
+                                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mt-2 mb-1">
+                                    Paid for the group
+                                  </div>
+                                  {rows.paid.map((row) => (
+                                    <BreakdownLine
+                                      key={`paid-${row.expenseId}`}
+                                      row={row}
+                                      baseCurrency={baseCurrency}
+                                      onOpen={() => openDetails(row.expenseId)}
+                                    />
+                                  ))}
+                                </>
+                              )}
+
+                              {rows.paymentsMade.length > 0 && (
+                                <>
+                                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mt-3 mb-1">
+                                    Payments made
+                                  </div>
+                                  {rows.paymentsMade.map((row) => (
+                                    <PaymentLine
+                                      key={`made-${row.id}`}
+                                      row={row}
+                                      direction="to"
+                                      name={userMap.get(row.counterpartyId) || "Unknown"}
+                                      baseCurrency={baseCurrency}
+                                    />
+                                  ))}
+                                </>
+                              )}
+
+                              {rows.owed.length > 0 && (
+                                <>
+                                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mt-3 mb-1">
+                                    Their share
+                                  </div>
+                                  {rows.owed.map((row) => (
+                                    <BreakdownLine
+                                      key={`owed-${row.expenseId}`}
+                                      row={row}
+                                      baseCurrency={baseCurrency}
+                                      onOpen={() => openDetails(row.expenseId)}
+                                    />
+                                  ))}
+                                </>
+                              )}
+
+                              {rows.paymentsReceived.length > 0 && (
+                                <>
+                                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mt-3 mb-1">
+                                    Payments received
+                                  </div>
+                                  {rows.paymentsReceived.map((row) => (
+                                    <PaymentLine
+                                      key={`received-${row.id}`}
+                                      row={row}
+                                      direction="from"
+                                      name={userMap.get(row.counterpartyId) || "Unknown"}
+                                      baseCurrency={baseCurrency}
+                                    />
+                                  ))}
+                                </>
+                              )}
+                            </div>
+
+                            <div className="border-t border-zinc-200 mt-2 pt-2 text-sm flex flex-col gap-1">
+                              <div className="flex justify-between gap-3">
+                                <span className="text-zinc-500">Total paid</span>
+                                <span className="text-zinc-900 whitespace-nowrap">
+                                  {formatCurrency(rows.paidTotalCents, baseCurrency)}
+                                </span>
+                              </div>
+                              {rows.paymentsMadeTotalCents > 0 && (
+                                <div className="flex justify-between gap-3">
+                                  <span className="text-zinc-500">Payments made</span>
+                                  <span className="text-zinc-900 whitespace-nowrap">
+                                    {formatCurrency(rows.paymentsMadeTotalCents, baseCurrency)}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex justify-between gap-3">
+                                <span className="text-zinc-500">Total share</span>
+                                <span className="text-zinc-900 whitespace-nowrap">
+                                  {rows.owedTotalCents > 0 ? "−" : ""}
+                                  {formatCurrency(rows.owedTotalCents, baseCurrency)}
+                                </span>
+                              </div>
+                              {rows.paymentsReceivedTotalCents > 0 && (
+                                <div className="flex justify-between gap-3">
+                                  <span className="text-zinc-500">Payments received</span>
+                                  <span className="text-zinc-900 whitespace-nowrap">
+                                    −{formatCurrency(rows.paymentsReceivedTotalCents, baseCurrency)}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex justify-between gap-3 font-semibold border-t border-zinc-100 pt-1">
+                                <span className="text-zinc-900">Net</span>
+                                <span
+                                  className={`whitespace-nowrap ${
+                                    rows.netCents > 0
+                                      ? "text-emerald-600"
+                                      : rows.netCents < 0
+                                        ? "text-red-600"
+                                        : "text-zinc-500"
+                                  }`}
+                                >
+                                  {rows.netCents < 0 ? "−" : ""}
+                                  {formatCurrency(Math.abs(rows.netCents), baseCurrency)}
+                                </span>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -157,14 +423,24 @@ export default function BalancesView({
               </div>
             ) : (
               debts.map((debt, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-                  <div className="flex flex-col">
+                <div key={idx} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+                  <div className="flex flex-col min-w-0">
                     <span className="font-semibold text-zinc-900">
                       {userMap.get(debt.debtorId) || "Unknown"} <span className="text-zinc-400 font-normal">owes</span> {userMap.get(debt.creditorId) || "Unknown"}
                     </span>
                   </div>
-                  <div className="font-bold text-lg text-zinc-900">
-                    {formatCurrency(debt.amountCents, baseCurrency)}
+                  {/* Wraps to its own line when the name pair leaves no room. */}
+                  <div className="flex items-center gap-3 shrink-0 ml-auto">
+                    <div className="font-bold text-lg text-zinc-900">
+                      {formatCurrency(debt.amountCents, baseCurrency)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openSettleUp(debt)}
+                      className="px-3 py-1.5 text-sm font-medium bg-white text-zinc-900 border border-zinc-200 rounded-lg hover:bg-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 transition-colors whitespace-nowrap"
+                    >
+                      Settle up
+                    </button>
                   </div>
                 </div>
               ))
@@ -172,6 +448,29 @@ export default function BalancesView({
           </div>
         </div>
       </div>
+
+      {isPaymentOpen && (
+        <PaymentModal
+          onClose={() => setIsPaymentOpen(false)}
+          ledgerId={ledgerId}
+          users={users}
+          baseCurrency={baseCurrency}
+          prefill={settlePrefill ?? undefined}
+        />
+      )}
+
+      {detailExpense && (
+        <ExpenseDetailsModal
+          isOpen={isDetailsOpen}
+          onClose={() => setIsDetailsOpen(false)}
+          expense={detailExpense}
+          splits={detailSplits}
+          users={users}
+          userMap={userMap}
+          ledgerId={ledgerId}
+          baseCurrency={baseCurrency}
+        />
+      )}
     </div>
   );
 }
