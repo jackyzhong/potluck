@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useOptimistic, useTransition } from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { Expense, Split } from "./ExpenseModal";
-import { getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
+import { getMemberBreakdown, getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
 import { formatCurrency } from "@/src/lib/currencies";
+
+const formatDay = (iso: string) =>
+  new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
 interface BalancesViewProps {
   ledgerId: string;
@@ -77,6 +80,14 @@ export default function BalancesView({
       .sort((a, b) => b.net - a.net);
   }, [expenses, splits, exchangeRates, userMap]);
 
+  const [openMemberId, setOpenMemberId] = useState<string | null>(null);
+
+  // Only the open member's rows are worth building, and they cost one pass.
+  const openBreakdown = useMemo(
+    () => (openMemberId ? getMemberBreakdown(openMemberId, expenses, splits, exchangeRates) : null),
+    [openMemberId, expenses, splits, exchangeRates]
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-white rounded-3xl shadow-sm p-6 border border-zinc-100 mb-2">
@@ -114,21 +125,127 @@ export default function BalancesView({
               Overall
             </h3>
             <div className="flex flex-col gap-2">
-              {netPositions.map(({ userId, name, net }) => (
-                <div key={userId} className="flex items-center justify-between px-1 py-1.5">
-                  <span className="font-medium text-zinc-900">{name}</span>
-                  {net === 0 ? (
-                    <span className="text-sm text-zinc-400">settled up</span>
-                  ) : (
-                    <span className="text-sm">
-                      <span className="text-zinc-500">{net > 0 ? "gets back" : "owes"} </span>
-                      <span className={`font-bold ${net > 0 ? "text-emerald-600" : "text-red-600"}`}>
-                        {formatCurrency(Math.abs(net), baseCurrency)}
+              {netPositions.map(({ userId, name, net }) => {
+                const isOpen = openMemberId === userId;
+                const rows = isOpen ? openBreakdown : null;
+                const hasRows = !!rows && (rows.paid.length > 0 || rows.owed.length > 0);
+
+                return (
+                  <div key={userId}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenMemberId(isOpen ? null : userId)}
+                      aria-expanded={isOpen}
+                      aria-controls={`breakdown-${userId}`}
+                      className="w-full flex items-center justify-between gap-3 px-1 py-1.5 rounded-lg text-left hover:bg-zinc-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 transition-colors"
+                    >
+                      <span className="font-medium text-zinc-900 flex items-center gap-1.5">
+                        <span
+                          aria-hidden="true"
+                          className={`text-[10px] text-zinc-400 transition-transform ${isOpen ? "rotate-90" : ""}`}
+                        >
+                          ▶
+                        </span>
+                        {name}
                       </span>
-                    </span>
-                  )}
-                </div>
-              ))}
+                      {net === 0 ? (
+                        <span className="text-sm text-zinc-400">settled up</span>
+                      ) : (
+                        <span className="text-sm whitespace-nowrap">
+                          <span className="text-zinc-500">{net > 0 ? "gets back" : "owes"} </span>
+                          <span className={`font-bold ${net > 0 ? "text-emerald-600" : "text-red-600"}`}>
+                            {formatCurrency(Math.abs(net), baseCurrency)}
+                          </span>
+                        </span>
+                      )}
+                    </button>
+
+                    {isOpen && rows && (
+                      <div
+                        id={`breakdown-${userId}`}
+                        className="ml-2 mt-1 mb-2 pl-3 border-l-2 border-zinc-200"
+                      >
+                        {!hasRows ? (
+                          <p className="text-sm text-zinc-400 py-2">Not part of any expenses yet.</p>
+                        ) : (
+                          <>
+                            <div className="max-h-64 overflow-y-auto pr-1">
+                              {rows.paid.length > 0 && (
+                                <>
+                                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mt-2 mb-1">
+                                    Paid for the group
+                                  </div>
+                                  {rows.paid.map((row) => (
+                                    <div key={`paid-${row.expenseId}`} className="flex justify-between items-baseline gap-3 py-1 text-sm">
+                                      <span className="text-zinc-600 truncate">
+                                        {row.description || "Untitled Expense"}
+                                        <span className="text-zinc-400"> · {formatDay(row.createdAt)}</span>
+                                      </span>
+                                      <span className="text-zinc-900 whitespace-nowrap">
+                                        {formatCurrency(row.amountCents, baseCurrency)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </>
+                              )}
+
+                              {rows.owed.length > 0 && (
+                                <>
+                                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mt-3 mb-1">
+                                    Their share
+                                  </div>
+                                  {rows.owed.map((row) => (
+                                    <div key={`owed-${row.expenseId}`} className="flex justify-between items-baseline gap-3 py-1 text-sm">
+                                      <span className="text-zinc-600 truncate">
+                                        {row.description || "Untitled Expense"}
+                                        <span className="text-zinc-400"> · {formatDay(row.createdAt)}</span>
+                                      </span>
+                                      <span className="text-zinc-900 whitespace-nowrap">
+                                        {formatCurrency(row.amountCents, baseCurrency)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </>
+                              )}
+                            </div>
+
+                            <div className="border-t border-zinc-200 mt-2 pt-2 text-sm flex flex-col gap-1">
+                              <div className="flex justify-between gap-3">
+                                <span className="text-zinc-500">Total paid</span>
+                                <span className="text-zinc-900 whitespace-nowrap">
+                                  {formatCurrency(rows.paidTotalCents, baseCurrency)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between gap-3">
+                                <span className="text-zinc-500">Total share</span>
+                                <span className="text-zinc-900 whitespace-nowrap">
+                                  {rows.owedTotalCents > 0 ? "−" : ""}
+                                  {formatCurrency(rows.owedTotalCents, baseCurrency)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between gap-3 font-semibold border-t border-zinc-100 pt-1">
+                                <span className="text-zinc-900">Net</span>
+                                <span
+                                  className={`whitespace-nowrap ${
+                                    rows.netCents > 0
+                                      ? "text-emerald-600"
+                                      : rows.netCents < 0
+                                        ? "text-red-600"
+                                        : "text-zinc-500"
+                                  }`}
+                                >
+                                  {rows.netCents < 0 ? "−" : ""}
+                                  {formatCurrency(Math.abs(rows.netCents), baseCurrency)}
+                                </span>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
