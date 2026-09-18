@@ -7,6 +7,7 @@ import { Expense, Split } from "./ExpenseModal";
 import { BreakdownRow, Payment, PaymentRow, getMemberBreakdown, getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
 import { formatCurrency } from "@/src/lib/currencies";
 import ExpenseDetailsModal from "./ExpenseDetailsModal";
+import PaymentModal, { PaymentPrefill } from "./PaymentModal";
 
 type User = {
   id: string;
@@ -171,6 +172,20 @@ export default function BalancesView({
   const openDetails = (expenseId: string) => {
     setDetailExpenseId(expenseId);
     setIsDetailsOpen(true);
+  };
+
+  // Settling a suggested transfer is the main way payments get recorded: the
+  // debt on screen already names the payer, the payee and the amount.
+  const [settlePrefill, setSettlePrefill] = useState<PaymentPrefill | null>(null);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+
+  const openSettleUp = (debt: { debtorId: string; creditorId: string; amountCents: number }) => {
+    setSettlePrefill({
+      payerId: debt.debtorId,
+      payeeId: debt.creditorId,
+      amountCents: debt.amountCents
+    });
+    setIsPaymentOpen(true);
   };
 
   return (
@@ -408,14 +423,24 @@ export default function BalancesView({
               </div>
             ) : (
               debts.map((debt, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-                  <div className="flex flex-col">
+                <div key={idx} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+                  <div className="flex flex-col min-w-0">
                     <span className="font-semibold text-zinc-900">
                       {userMap.get(debt.debtorId) || "Unknown"} <span className="text-zinc-400 font-normal">owes</span> {userMap.get(debt.creditorId) || "Unknown"}
                     </span>
                   </div>
-                  <div className="font-bold text-lg text-zinc-900">
-                    {formatCurrency(debt.amountCents, baseCurrency)}
+                  {/* Wraps to its own line when the name pair leaves no room. */}
+                  <div className="flex items-center gap-3 shrink-0 ml-auto">
+                    <div className="font-bold text-lg text-zinc-900">
+                      {formatCurrency(debt.amountCents, baseCurrency)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openSettleUp(debt)}
+                      className="px-3 py-1.5 text-sm font-medium bg-white text-zinc-900 border border-zinc-200 rounded-lg hover:bg-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 transition-colors whitespace-nowrap"
+                    >
+                      Settle up
+                    </button>
                   </div>
                 </div>
               ))
@@ -423,6 +448,16 @@ export default function BalancesView({
           </div>
         </div>
       </div>
+
+      {isPaymentOpen && (
+        <PaymentModal
+          onClose={() => setIsPaymentOpen(false)}
+          ledgerId={ledgerId}
+          users={users}
+          baseCurrency={baseCurrency}
+          prefill={settlePrefill ?? undefined}
+        />
+      )}
 
       {detailExpense && (
         <ExpenseDetailsModal
