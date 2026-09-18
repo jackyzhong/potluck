@@ -54,7 +54,7 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
    - **Expenses and splits too:** roughly half a day, because of one real wrinkle — `splits` has no `ledger_id` column, so its realtime stream can't be filtered per ledger server-side. Either denormalize `ledger_id` onto `splits` (also simplifies the two-step fetch in `page.tsx`) or accept that every connected client receives every group's split events. Prefer the former. Also debounce the refresh so a burst of split inserts doesn't trigger one refetch each.
    - **Caveats:** free tier is 200 concurrent connections / 2M messages per month — fine at this scale. And realtime can't be exercised against a local mock, so it has to be verified against the real project (i.e. on the Vercel deploy, not in a sandbox).
 
-3. **Payments / settlement tracker** — the next major feature (marking debts as paid/settled). Not yet designed or scoped.
+3. **Payments / settlement tracker** — the next major feature (marking debts as paid/settled). Now designed and approved: see [payments-design.md](./payments-design.md). Not yet built.
 4. Once #1 and #3 have real shape, do a follow-up PRD.md pass to formally record the claiming deprioritization, the multi-currency plan, and the new payments feature — keeping the "Documentation First" promise in `README.md` intact.
 
 ---
