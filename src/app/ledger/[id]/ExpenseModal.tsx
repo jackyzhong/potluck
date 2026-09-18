@@ -186,7 +186,7 @@ export default function ExpenseModal({
 
     if (existingExpense) {
       // UPDATE existing expense
-      const { error: updateError } = await supabase
+      const { data: updatedRows, error: updateError } = await supabase
         .from("expenses")
         .update({
           payer_id: payerId,
@@ -195,9 +195,13 @@ export default function ExpenseModal({
           original_currency: currency,
           created_at: new Date(date).toISOString()
         })
-        .eq("id", existingExpense.id);
+        .eq("id", existingExpense.id)
+        .select("id");
 
-      if (updateError) {
+      // A row the database declines to update comes back as success with no
+      // rows, so an empty result has to count as a failure — otherwise the
+      // edit silently does nothing and the splits below get rewritten anyway.
+      if (updateError || !updatedRows?.length) {
         console.error("Failed to update expense:", updateError);
         alert("Failed to update expense.");
         setIsSubmittingExpense(false);
