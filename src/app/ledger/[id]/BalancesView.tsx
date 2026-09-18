@@ -4,7 +4,7 @@ import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { Expense, Split } from "./ExpenseModal";
-import { BreakdownRow, getMemberBreakdown, getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
+import { BreakdownRow, Payment, PaymentRow, getMemberBreakdown, getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
 import { formatCurrency } from "@/src/lib/currencies";
 import ExpenseDetailsModal from "./ExpenseDetailsModal";
 
@@ -45,10 +45,37 @@ function BreakdownLine({
   );
 }
 
+function PaymentLine({
+  row,
+  direction,
+  name,
+  baseCurrency
+}: {
+  row: PaymentRow;
+  direction: "to" | "from";
+  name: string;
+  baseCurrency: string;
+}) {
+  return (
+    <div className="flex justify-between items-baseline gap-3 py-1 text-sm">
+      <span className="text-zinc-600 truncate">
+        {direction === "to" ? "To " : "From "}
+        {name}
+        {row.note ? ` · ${row.note}` : ""}
+        <span className="text-zinc-400"> · {formatDay(row.createdAt)}</span>
+      </span>
+      <span className="text-zinc-900 whitespace-nowrap">
+        {formatCurrency(row.amountCents, baseCurrency)}
+      </span>
+    </div>
+  );
+}
+
 interface BalancesViewProps {
   ledgerId: string;
   expenses: Expense[];
   splits: Split[];
+  payments: Payment[];
   users: User[];
   userMap: Map<string, string>;
   baseCurrency: string;
@@ -60,6 +87,7 @@ export default function BalancesView({
   ledgerId,
   expenses,
   splits,
+  payments,
   users,
   userMap,
   baseCurrency,
@@ -96,13 +124,13 @@ export default function BalancesView({
   };
 
   const simplifiedDebts = useMemo(
-    () => getSimplifiedDebts(expenses, splits, exchangeRates),
-    [expenses, splits, exchangeRates]
+    () => getSimplifiedDebts(expenses, splits, payments, exchangeRates),
+    [expenses, splits, payments, exchangeRates]
   );
 
   const unsimplifiedDebts = useMemo(
-    () => getUnsimplifiedDebts(expenses, splits, exchangeRates),
-    [expenses, splits, exchangeRates]
+    () => getUnsimplifiedDebts(expenses, splits, payments, exchangeRates),
+    [expenses, splits, payments, exchangeRates]
   );
 
   const debts = isSimplified ? simplifiedDebts : unsimplifiedDebts;
@@ -111,18 +139,18 @@ export default function BalancesView({
   // Each member's overall position, biggest creditor first. Members who were
   // never involved in an expense still appear, so the roster stays complete.
   const netPositions = useMemo(() => {
-    const balances = getNetBalances(expenses, splits, exchangeRates);
+    const balances = getNetBalances(expenses, splits, payments, exchangeRates);
     return Array.from(userMap.entries())
       .map(([userId, name]) => ({ userId, name, net: balances[userId] || 0 }))
       .sort((a, b) => b.net - a.net);
-  }, [expenses, splits, exchangeRates, userMap]);
+  }, [expenses, splits, payments, exchangeRates, userMap]);
 
   const [openMemberId, setOpenMemberId] = useState<string | null>(null);
 
   // Only the open member's rows are worth building, and they cost one pass.
   const openBreakdown = useMemo(
-    () => (openMemberId ? getMemberBreakdown(openMemberId, expenses, splits, exchangeRates) : null),
-    [openMemberId, expenses, splits, exchangeRates]
+    () => (openMemberId ? getMemberBreakdown(openMemberId, expenses, splits, payments, exchangeRates) : null),
+    [openMemberId, expenses, splits, payments, exchangeRates]
   );
 
   // The details modal hosts the edit flow, so the selected expense outlives
@@ -185,7 +213,12 @@ export default function BalancesView({
               {netPositions.map(({ userId, name, net }) => {
                 const isOpen = openMemberId === userId;
                 const rows = isOpen ? openBreakdown : null;
-                const hasRows = !!rows && (rows.paid.length > 0 || rows.owed.length > 0);
+                const hasRows =
+                  !!rows &&
+                  (rows.paid.length > 0 ||
+                    rows.owed.length > 0 ||
+                    rows.paymentsMade.length > 0 ||
+                    rows.paymentsReceived.length > 0);
 
                 return (
                   <div key={userId}>
@@ -243,6 +276,23 @@ export default function BalancesView({
                                 </>
                               )}
 
+                              {rows.paymentsMade.length > 0 && (
+                                <>
+                                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mt-3 mb-1">
+                                    Payments made
+                                  </div>
+                                  {rows.paymentsMade.map((row) => (
+                                    <PaymentLine
+                                      key={`made-${row.id}`}
+                                      row={row}
+                                      direction="to"
+                                      name={userMap.get(row.counterpartyId) || "Unknown"}
+                                      baseCurrency={baseCurrency}
+                                    />
+                                  ))}
+                                </>
+                              )}
+
                               {rows.owed.length > 0 && (
                                 <>
                                   <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mt-3 mb-1">
@@ -258,6 +308,23 @@ export default function BalancesView({
                                   ))}
                                 </>
                               )}
+
+                              {rows.paymentsReceived.length > 0 && (
+                                <>
+                                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mt-3 mb-1">
+                                    Payments received
+                                  </div>
+                                  {rows.paymentsReceived.map((row) => (
+                                    <PaymentLine
+                                      key={`received-${row.id}`}
+                                      row={row}
+                                      direction="from"
+                                      name={userMap.get(row.counterpartyId) || "Unknown"}
+                                      baseCurrency={baseCurrency}
+                                    />
+                                  ))}
+                                </>
+                              )}
                             </div>
 
                             <div className="border-t border-zinc-200 mt-2 pt-2 text-sm flex flex-col gap-1">
@@ -267,6 +334,14 @@ export default function BalancesView({
                                   {formatCurrency(rows.paidTotalCents, baseCurrency)}
                                 </span>
                               </div>
+                              {rows.paymentsMadeTotalCents > 0 && (
+                                <div className="flex justify-between gap-3">
+                                  <span className="text-zinc-500">Payments made</span>
+                                  <span className="text-zinc-900 whitespace-nowrap">
+                                    {formatCurrency(rows.paymentsMadeTotalCents, baseCurrency)}
+                                  </span>
+                                </div>
+                              )}
                               <div className="flex justify-between gap-3">
                                 <span className="text-zinc-500">Total share</span>
                                 <span className="text-zinc-900 whitespace-nowrap">
@@ -274,6 +349,14 @@ export default function BalancesView({
                                   {formatCurrency(rows.owedTotalCents, baseCurrency)}
                                 </span>
                               </div>
+                              {rows.paymentsReceivedTotalCents > 0 && (
+                                <div className="flex justify-between gap-3">
+                                  <span className="text-zinc-500">Payments received</span>
+                                  <span className="text-zinc-900 whitespace-nowrap">
+                                    −{formatCurrency(rows.paymentsReceivedTotalCents, baseCurrency)}
+                                  </span>
+                                </div>
+                              )}
                               <div className="flex justify-between gap-3 font-semibold border-t border-zinc-100 pt-1">
                                 <span className="text-zinc-900">Net</span>
                                 <span
