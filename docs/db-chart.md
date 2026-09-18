@@ -7,6 +7,8 @@ erDiagram
     USERS ||--o{ EXPENSES : "pays for"
     EXPENSES ||--|{ SPLITS : "is divided into"
     USERS ||--o{ SPLITS : "owes money via"
+    LEDGERS ||--o{ PAYMENTS : "records"
+    USERS ||--o{ PAYMENTS : "settles up via"
 ```
 
 
@@ -78,9 +80,34 @@ The most granular table. It breaks down an expense into individual debts.
 | `user_id` | UUID | FK -> users.id | Person who owes a portion. |
 | `amount_cents` | BIGINT | NOT NULL | Individual portion of the debt in cents. |
 
+### Table: `payments`
+
+Records money actually changing hands between two members, as opposed to a cost
+being shared out.
+
+- **Purpose:** lets a debt be closed out rather than sitting in Balances forever.
+- **Key Logic:** arithmetically a payment is an expense paid by the payer whose
+  entire split lands on the payee — it credits the payer and debits the payee by
+  the same amount. It is stored separately so the balance math never depends on
+  a synthetic `splits` row that does not mean what a split means. See
+  [payments-design.md](./payments-design.md).
+
+| Field | Type | Attributes | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | UUID | PK, Default: gen_random_uuid() | Unique identifier for the payment. |
+| `ledger_id` | UUID | FK -> ledgers.id, ON DELETE CASCADE | Group this settlement belongs to. Held directly on the row (unlike `splits`) so Realtime can filter payments per ledger. |
+| `payer_id` | UUID | FK -> users.id, NOT NULL | The member who handed money over. |
+| `payee_id` | UUID | FK -> users.id, NOT NULL | The member who received it. |
+| `amount_cents` | BIGINT | NOT NULL, CHECK (> 0) | Amount settled, in cents. Base currency only for now — see KNOWN-ISSUES 1.4. |
+| `original_currency`| TEXT | NOT NULL, Default: 'CAD' | Present for symmetry with `expenses`; v1 only writes the ledger's base currency. |
+| `note` | TEXT | Optional | Free-text note. Genuinely nullable, unlike `expenses.description`. |
+| `created_at` | TIMESTAMPTZ | NOT NULL, Default: NOW() | When the payment happened. Drives ordering in the Activity list. |
+
+A `payer_id <> payee_id` check constraint prevents paying yourself.
+
 ## Row Level Security
 
-RLS is enabled on all four tables. Access is deliberately open — the ledger's
+RLS is enabled on all five tables. Access is deliberately open — the ledger's
 UUID in the URL is the only secret — but **a missing policy is invisible from
 the app**: Postgres filters the rows out and PostgREST still answers `200` with
 an empty body, so a write that touched nothing is indistinguishable from one
@@ -93,9 +120,11 @@ policy here.
 | `users` | ✅ | ✅ | — | — |
 | `expenses` | ✅ | ✅ | ✅ | ✅ |
 | `splits` | ✅ | ✅ | — | ✅ |
+| `payments` | ✅ | ✅ | ✅ | ✅ |
 
-The app updates two tables in place: `expenses` (editing an expense's payer,
-amount, description, currency or date) and `ledgers` (the shared
-`simplify_debts` toggle). `splits` has no UPDATE policy because editing an
+The app updates three tables in place: `expenses` (editing an expense's payer,
+amount, description, currency or date), `ledgers` (the shared `simplify_debts`
+toggle) and `payments` (editing a settlement, planned for a later phase — the
+policy is in place ahead of it). `splits` has no UPDATE policy because editing an
 expense rewrites its splits as a DELETE followed by an INSERT rather than
 updating them.
