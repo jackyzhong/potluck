@@ -61,6 +61,10 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 
 ## Known repo hygiene items (not blocking, but noted)
 
+> Superseded by [KNOWN-ISSUES.md](./KNOWN-ISSUES.md), which carries these items
+> plus everything found since. Keep new findings there, not here — this file is
+> a snapshot of one session, that one is the running log.
+
 - Root [test_db.js](../test_db.js) imports `dotenv`, which isn't in `package.json` or `node_modules` — currently broken as committed. Either fix (`npm i -D dotenv`) or delete.
 - No `supabase/migrations` directory — the live DB schema has no version-controlled source of truth, which is exactly how `db-chart.md` drifted last time. Worth introducing migrations (Supabase CLI) before the next schema change, so this reconciliation doesn't have to happen again.
 - `AGENTS.md` contains an unusual instruction: *"This is NOT the Next.js you know... read `node_modules/next/dist/docs/` before writing any code."* That directory does exist, so it's not broken, but it implies a customized Next.js build — worth double-checking this still reflects intent, since it'll shape how the next thread approaches any Next.js-specific code.
