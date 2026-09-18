@@ -82,11 +82,13 @@ export default async function LedgerPage({
 
         {tab === "balances" ? (
           <BalancesView 
+            ledgerId={ledger.id}
             expenses={ledgerExpenses}
             splits={allSplits}
             userMap={userMap}
             baseCurrency={baseCurrency}
             exchangeRates={exchangeRates}
+            isSimplified={ledger.simplify_debts ?? true}
           />
         ) : (
           <>
