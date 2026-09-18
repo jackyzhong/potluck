@@ -5,7 +5,9 @@ import ActionMenu from "./ActionMenu";
 import { formatCurrency } from "@/src/lib/currencies";
 
 import ExpenseCard from "./ExpenseCard";
-import { Split } from "./ExpenseModal";
+import PaymentCard from "./PaymentCard";
+import { Expense, Split } from "./ExpenseModal";
+import { Payment } from "@/src/lib/balances";
 import LedgerTabs from "./LedgerTabs";
 import BalancesView from "./BalancesView";
 import { getExchangeRates } from "@/src/lib/balances";
@@ -19,7 +21,7 @@ export default async function LedgerPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
-  const tab = typeof sp.tab === 'string' ? sp.tab : 'expenses';
+  const tab = typeof sp.tab === 'string' ? sp.tab : 'activity';
 
   // Fetch ledger
   const { data: ledger, error: ledgerError } = await supabase
@@ -82,6 +84,28 @@ export default async function LedgerPage({
   const baseCurrency = ledger.base_currency || "CAD";
 
   // Get unique currencies used
+  // Expenses and settlements share one chronological history: a payment only
+  // makes sense next to the expenses it is paying off.
+  type ActivityItem =
+    | { kind: "expense"; id: string; createdAt: string; expense: Expense; splits: Split[] }
+    | { kind: "payment"; id: string; createdAt: string; payment: Payment };
+
+  const activity: ActivityItem[] = [
+    ...ledgerExpenses.map((expense): ActivityItem => ({
+      kind: "expense",
+      id: expense.id,
+      createdAt: expense.created_at,
+      expense,
+      splits: splitsByExpense.get(expense.id) ?? []
+    })),
+    ...ledgerPayments.map((payment): ActivityItem => ({
+      kind: "payment",
+      id: payment.id,
+      createdAt: payment.created_at,
+      payment
+    }))
+  ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
   const currenciesUsed = Array.from(new Set([
     ...ledgerExpenses.map(e => e.original_currency),
     ...ledgerPayments.map(p => p.original_currency)
@@ -113,25 +137,26 @@ export default async function LedgerPage({
           />
         ) : (
           <>
-            {ledgerExpenses.length === 0 ? (
+            {activity.length === 0 ? (
               <div className="bg-white rounded-3xl shadow-sm p-6 text-center py-20 text-zinc-400">
-                No expenses yet. Start by adding one!
+                Nothing here yet. Start by adding an expense!
               </div>
             ) : (
-              ledgerExpenses.map((expense) => {
-                const expenseSplits = splitsByExpense.get(expense.id) ?? [];
-                return (
+              activity.map((item) =>
+                item.kind === "expense" ? (
                   <ExpenseCard
-                    key={expense.id}
-                    expense={expense}
-                    splits={expenseSplits}
+                    key={item.id}
+                    expense={item.expense}
+                    splits={item.splits}
                     users={initialUsers}
                     userMap={userMap}
                     ledgerId={ledger.id}
                     baseCurrency={baseCurrency}
                   />
-                );
-              })
+                ) : (
+                  <PaymentCard key={item.id} payment={item.payment} userMap={userMap} />
+                )
+              )
             )}
           </>
         )}
