@@ -6,6 +6,33 @@ export type Debt = {
   amountCents: number;
 };
 
+export type BreakdownRow = {
+  expenseId: string;
+  description: string | null;
+  createdAt: string;
+  amountCents: number;
+};
+
+// One member's side of the books: what they fronted, what they owe, and the
+// difference — which is the figure the Balances list shows for them.
+export type MemberBreakdown = {
+  paid: BreakdownRow[];
+  owed: BreakdownRow[];
+  paidTotalCents: number;
+  owedTotalCents: number;
+  netCents: number;
+};
+
+function indexSplitsByExpense(splits: Split[]): Map<string, Split[]> {
+  const byExpense = new Map<string, Split[]>();
+  for (const split of splits) {
+    const bucket = byExpense.get(split.expense_id);
+    if (bucket) bucket.push(split);
+    else byExpense.set(split.expense_id, [split]);
+  }
+  return byExpense;
+}
+
 // Stub for fetching exchange rates.
 // In the future, this can be an external API call or DB query.
 // It should return a map of CurrencyCode -> Multiplier (to reach baseCurrency)
@@ -26,9 +53,10 @@ export function getUnsimplifiedDebts(
 ): Debt[] {
   // graph[debtor][creditor] = amount
   const graph: Record<string, Record<string, number>> = {};
+  const splitsByExpense = indexSplitsByExpense(splits);
 
   for (const expense of expenses) {
-    const expenseSplits = splits.filter(s => s.expense_id === expense.id);
+    const expenseSplits = splitsByExpense.get(expense.id) ?? [];
     const rate = exchangeRates[expense.original_currency] || 1.0; // Fallback to 1.0
 
     for (const split of expenseSplits) {
@@ -77,9 +105,10 @@ export function getNetBalances(
   exchangeRates: Record<string, number>
 ): Record<string, number> {
   const balances: Record<string, number> = {};
+  const splitsByExpense = indexSplitsByExpense(splits);
 
   for (const expense of expenses) {
-    const expenseSplits = splits.filter(s => s.expense_id === expense.id);
+    const expenseSplits = splitsByExpense.get(expense.id) ?? [];
     const rate = exchangeRates[expense.original_currency] || 1.0;
 
     // Payer is owed the total amount
@@ -93,6 +122,55 @@ export function getNetBalances(
   }
 
   return balances;
+}
+
+// The expense-by-expense story behind one member's net balance, newest first.
+// Amounts are rounded exactly the way getNetBalances rounds them, so the total
+// here always reconciles with the figure shown against that member's name.
+export function getMemberBreakdown(
+  userId: string,
+  expenses: Expense[],
+  splits: Split[],
+  exchangeRates: Record<string, number>
+): MemberBreakdown {
+  const splitsByExpense = indexSplitsByExpense(splits);
+
+  const paid: BreakdownRow[] = [];
+  const owed: BreakdownRow[] = [];
+  let paidTotalCents = 0;
+  let owedTotalCents = 0;
+
+  for (const expense of expenses) {
+    const rate = exchangeRates[expense.original_currency] || 1.0;
+    const row = {
+      expenseId: expense.id,
+      description: expense.description,
+      createdAt: expense.created_at
+    };
+
+    if (expense.payer_id === userId) {
+      const amountCents = Math.round(expense.amount_cents * rate);
+      paid.push({ ...row, amountCents });
+      paidTotalCents += amountCents;
+    }
+
+    let shareCents = 0;
+    for (const split of splitsByExpense.get(expense.id) ?? []) {
+      if (split.user_id === userId) shareCents += Math.round(split.amount_cents * rate);
+    }
+    if (shareCents !== 0) {
+      owed.push({ ...row, amountCents: shareCents });
+      owedTotalCents += shareCents;
+    }
+  }
+
+  return {
+    paid,
+    owed,
+    paidTotalCents,
+    owedTotalCents,
+    netCents: paidTotalCents - owedTotalCents
+  };
 }
 
 export function getSimplifiedDebts(
