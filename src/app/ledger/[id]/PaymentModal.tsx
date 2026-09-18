@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { CURRENCIES, formatCurrency } from "@/src/lib/currencies";
+import { Payment } from "@/src/lib/balances";
 import { useModalKeyboard } from "@/src/lib/useModalKeyboard";
 
 type User = {
@@ -29,6 +30,8 @@ interface PaymentModalProps {
   baseCurrency: string;
   /** Settling a suggested transfer fills the form in from that debt. */
   prefill?: PaymentPrefill;
+  /** Editing an existing settlement rather than recording a new one. */
+  existingPayment?: Payment;
 }
 
 export default function PaymentModal({
@@ -36,23 +39,28 @@ export default function PaymentModal({
   ledgerId,
   users,
   baseCurrency,
-  prefill
+  prefill,
+  existingPayment
 }: PaymentModalProps) {
   const router = useRouter();
   const modalRef = useModalKeyboard(true, onClose);
 
-  const currency = CURRENCIES[baseCurrency] || CURRENCIES.CAD;
+  // Edit in whatever currency the payment was recorded in, so an edit cannot
+  // silently relabel it if the ledger's base currency has since changed.
+  const currencyCode = existingPayment?.original_currency ?? baseCurrency;
+  const currency = CURRENCIES[currencyCode] || CURRENCIES.CAD;
 
-  const [payerId, setPayerId] = useState(prefill?.payerId ?? "");
-  const [payeeId, setPayeeId] = useState(prefill?.payeeId ?? "");
-  const [amount, setAmount] = useState(() =>
-    prefill ? (prefill.amountCents / Math.pow(10, currency.decimals)).toFixed(currency.decimals) : ""
-  );
-  const [note, setNote] = useState("");
+  const [payerId, setPayerId] = useState(existingPayment?.payer_id ?? prefill?.payerId ?? "");
+  const [payeeId, setPayeeId] = useState(existingPayment?.payee_id ?? prefill?.payeeId ?? "");
+  const [amount, setAmount] = useState(() => {
+    const cents = existingPayment?.amount_cents ?? prefill?.amountCents;
+    return cents === undefined ? "" : (cents / Math.pow(10, currency.decimals)).toFixed(currency.decimals);
+  });
+  const [note, setNote] = useState(existingPayment?.note ?? "");
   const [date, setDate] = useState(() => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
+    const when = existingPayment ? new Date(existingPayment.created_at) : new Date();
+    when.setMinutes(when.getMinutes() - when.getTimezoneOffset());
+    return when.toISOString().slice(0, 16);
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -64,25 +72,50 @@ export default function PaymentModal({
     if (isInvalid) return;
     setIsSubmitting(true);
 
+    const fields = {
+      payer_id: payerId,
+      payee_id: payeeId,
+      amount_cents: amountCents,
+      original_currency: currencyCode,
+      note: note.trim() || null,
+      created_at: new Date(date).toISOString()
+    };
+
+    // A row the database declines to write comes back as success with no rows,
+    // so an empty result has to count as a failure.
+    const { data, error } = existingPayment
+      ? await supabase.from("payments").update(fields).eq("id", existingPayment.id).select("id")
+      : await supabase
+          .from("payments")
+          .insert([{ ledger_id: ledgerId, ...fields }])
+          .select("id");
+
+    if (error || !data?.length) {
+      console.error("Failed to save payment:", error);
+      alert("Failed to save payment.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    router.refresh();
+    onClose();
+    setIsSubmitting(false);
+  };
+
+  const handleDelete = async () => {
+    if (!existingPayment) return;
+    if (!window.confirm("Delete this payment? This will put the debt back.")) return;
+
+    setIsSubmitting(true);
     const { data, error } = await supabase
       .from("payments")
-      .insert([
-        {
-          ledger_id: ledgerId,
-          payer_id: payerId,
-          payee_id: payeeId,
-          amount_cents: amountCents,
-          original_currency: baseCurrency,
-          note: note.trim() || null,
-          created_at: new Date(date).toISOString()
-        }
-      ])
+      .delete()
+      .eq("id", existingPayment.id)
       .select("id");
 
-    // A row the database declines to write comes back as success with no rows.
     if (error || !data?.length) {
-      console.error("Failed to record payment:", error);
-      alert("Failed to record payment.");
+      console.error("Failed to delete payment:", error);
+      alert("Failed to delete payment.");
       setIsSubmitting(false);
       return;
     }
@@ -113,6 +146,16 @@ export default function PaymentModal({
         >
           ✕
         </button>
+        {existingPayment && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isSubmitting}
+            className="absolute top-6 right-14 text-red-500 hover:text-red-600 text-sm font-medium px-2 py-0.5 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            Delete
+          </button>
+        )}
 
         <form
           onSubmit={(e) => {
@@ -121,7 +164,7 @@ export default function PaymentModal({
           }}
         >
           <h3 id="payment-modal-title" className="text-xl font-bold mb-1 text-zinc-900">
-            Record a Payment
+            {existingPayment ? "Edit Payment" : "Record a Payment"}
           </h3>
           <p className="text-sm text-zinc-500 mb-6">Money one member actually handed to another.</p>
 
@@ -175,7 +218,7 @@ export default function PaymentModal({
 
             <div>
               <label htmlFor="payment-amount" className="block text-sm font-medium text-zinc-700 mb-1">
-                Amount ({baseCurrency})
+                Amount ({currencyCode})
               </label>
               <input
                 id="payment-amount"
@@ -223,7 +266,7 @@ export default function PaymentModal({
               <span className="font-medium text-zinc-900">{payerName}</span> paid{" "}
               <span className="font-medium text-zinc-900">{payeeName}</span>{" "}
               <span className="font-medium text-zinc-900">
-                {formatCurrency(amountCents, baseCurrency)}
+                {formatCurrency(amountCents, currencyCode)}
               </span>
               .
             </p>
@@ -234,7 +277,7 @@ export default function PaymentModal({
             disabled={isSubmitting || isInvalid}
             className="w-full mt-6 py-4 font-medium bg-zinc-900 text-white rounded-xl disabled:bg-zinc-200 transition-colors"
           >
-            {isSubmitting ? "Saving..." : "Record Payment"}
+            {isSubmitting ? "Saving..." : existingPayment ? "Update Payment" : "Record Payment"}
           </button>
         </form>
       </div>
