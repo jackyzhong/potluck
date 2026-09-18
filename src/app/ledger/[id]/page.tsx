@@ -63,6 +63,14 @@ export default async function LedgerPage({
 
   // Create a quick lookup map for user names
   const userMap = new Map(initialUsers.map(u => [u.id, u.name]));
+
+  // Index the splits once rather than rescanning them for every expense card.
+  const splitsByExpense = new Map<string, Split[]>();
+  for (const split of allSplits) {
+    const bucket = splitsByExpense.get(split.expense_id);
+    if (bucket) bucket.push(split);
+    else splitsByExpense.set(split.expense_id, [split]);
+  }
   const baseCurrency = ledger.base_currency || "CAD";
 
   // Get unique currencies used
@@ -85,6 +93,7 @@ export default async function LedgerPage({
             ledgerId={ledger.id}
             expenses={ledgerExpenses}
             splits={allSplits}
+            users={initialUsers}
             userMap={userMap}
             baseCurrency={baseCurrency}
             exchangeRates={exchangeRates}
@@ -98,7 +107,7 @@ export default async function LedgerPage({
               </div>
             ) : (
               ledgerExpenses.map((expense) => {
-                const expenseSplits = allSplits.filter(s => s.expense_id === expense.id);
+                const expenseSplits = splitsByExpense.get(expense.id) ?? [];
                 return (
                   <ExpenseCard
                     key={expense.id}

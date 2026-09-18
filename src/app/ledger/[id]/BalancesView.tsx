@@ -4,16 +4,52 @@ import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { Expense, Split } from "./ExpenseModal";
-import { getMemberBreakdown, getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
+import { BreakdownRow, getMemberBreakdown, getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
 import { formatCurrency } from "@/src/lib/currencies";
+import ExpenseDetailsModal from "./ExpenseDetailsModal";
+
+type User = {
+  id: string;
+  name: string;
+  is_placeholder: boolean;
+};
 
 const formatDay = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+function BreakdownLine({
+  row,
+  baseCurrency,
+  onOpen
+}: {
+  row: BreakdownRow;
+  baseCurrency: string;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="w-full flex justify-between items-baseline gap-3 py-1 px-1 -mx-1 text-sm text-left rounded hover:bg-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 transition-colors"
+    >
+      <span className="text-zinc-600 truncate">
+        <span className="underline decoration-zinc-300 underline-offset-2">
+          {row.description || "Untitled Expense"}
+        </span>
+        <span className="text-zinc-400"> · {formatDay(row.createdAt)}</span>
+      </span>
+      <span className="text-zinc-900 whitespace-nowrap">
+        {formatCurrency(row.amountCents, baseCurrency)}
+      </span>
+    </button>
+  );
+}
 
 interface BalancesViewProps {
   ledgerId: string;
   expenses: Expense[];
   splits: Split[];
+  users: User[];
   userMap: Map<string, string>;
   baseCurrency: string;
   exchangeRates: Record<string, number>;
@@ -24,6 +60,7 @@ export default function BalancesView({
   ledgerId,
   expenses,
   splits,
+  users,
   userMap,
   baseCurrency,
   exchangeRates,
@@ -87,6 +124,26 @@ export default function BalancesView({
     () => (openMemberId ? getMemberBreakdown(openMemberId, expenses, splits, exchangeRates) : null),
     [openMemberId, expenses, splits, exchangeRates]
   );
+
+  // The details modal hosts the edit flow, so the selected expense outlives
+  // the modal being dismissed — clearing it here would unmount the editor the
+  // moment "Edit Expense" tries to open it.
+  const [detailExpenseId, setDetailExpenseId] = useState<string | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  const detailExpense = useMemo(
+    () => expenses.find((e) => e.id === detailExpenseId) ?? null,
+    [detailExpenseId, expenses]
+  );
+  const detailSplits = useMemo(
+    () => splits.filter((s) => s.expense_id === detailExpenseId),
+    [detailExpenseId, splits]
+  );
+
+  const openDetails = (expenseId: string) => {
+    setDetailExpenseId(expenseId);
+    setIsDetailsOpen(true);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -176,15 +233,12 @@ export default function BalancesView({
                                     Paid for the group
                                   </div>
                                   {rows.paid.map((row) => (
-                                    <div key={`paid-${row.expenseId}`} className="flex justify-between items-baseline gap-3 py-1 text-sm">
-                                      <span className="text-zinc-600 truncate">
-                                        {row.description || "Untitled Expense"}
-                                        <span className="text-zinc-400"> · {formatDay(row.createdAt)}</span>
-                                      </span>
-                                      <span className="text-zinc-900 whitespace-nowrap">
-                                        {formatCurrency(row.amountCents, baseCurrency)}
-                                      </span>
-                                    </div>
+                                    <BreakdownLine
+                                      key={`paid-${row.expenseId}`}
+                                      row={row}
+                                      baseCurrency={baseCurrency}
+                                      onOpen={() => openDetails(row.expenseId)}
+                                    />
                                   ))}
                                 </>
                               )}
@@ -195,15 +249,12 @@ export default function BalancesView({
                                     Their share
                                   </div>
                                   {rows.owed.map((row) => (
-                                    <div key={`owed-${row.expenseId}`} className="flex justify-between items-baseline gap-3 py-1 text-sm">
-                                      <span className="text-zinc-600 truncate">
-                                        {row.description || "Untitled Expense"}
-                                        <span className="text-zinc-400"> · {formatDay(row.createdAt)}</span>
-                                      </span>
-                                      <span className="text-zinc-900 whitespace-nowrap">
-                                        {formatCurrency(row.amountCents, baseCurrency)}
-                                      </span>
-                                    </div>
+                                    <BreakdownLine
+                                      key={`owed-${row.expenseId}`}
+                                      row={row}
+                                      baseCurrency={baseCurrency}
+                                      onOpen={() => openDetails(row.expenseId)}
+                                    />
                                   ))}
                                 </>
                               )}
@@ -289,6 +340,19 @@ export default function BalancesView({
           </div>
         </div>
       </div>
+
+      {detailExpense && (
+        <ExpenseDetailsModal
+          isOpen={isDetailsOpen}
+          onClose={() => setIsDetailsOpen(false)}
+          expense={detailExpense}
+          splits={detailSplits}
+          users={users}
+          userMap={userMap}
+          ledgerId={ledgerId}
+          baseCurrency={baseCurrency}
+        />
+      )}
     </div>
   );
 }
