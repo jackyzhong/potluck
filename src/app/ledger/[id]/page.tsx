@@ -154,7 +154,14 @@ export default async function LedgerPage({
                     baseCurrency={baseCurrency}
                   />
                 ) : (
-                  <PaymentCard key={item.id} payment={item.payment} userMap={userMap} />
+                  <PaymentCard
+                    key={item.id}
+                    payment={item.payment}
+                    users={initialUsers}
+                    userMap={userMap}
+                    ledgerId={ledger.id}
+                    baseCurrency={baseCurrency}
+                  />
                 )
               )
             )}

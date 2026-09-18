@@ -1,6 +1,6 @@
 # Payments / Settlement Tracking — Design
 
-Status: **phases 1-3 built; phase 4 (edit/delete) outstanding**. This records the decisions made before
+Status: **built** (all four phases). This records the decisions made before
 implementation so the reasoning survives the work. Update it if reality
 diverges.
 
@@ -174,6 +174,8 @@ audit against the balances they changed.
    arithmetic handles all three.
 3. **Editing and deleting payments is phase 4**, not v1. When it lands it needs
    the same `.select()`-on-write care as expenses, for the reason in §2.
+   *(Shipped. An edit preserves the payment's own `original_currency` rather
+   than stamping the ledger's current base onto it.)*
 
 ## 6. Phases
 
@@ -185,9 +187,11 @@ audit against the balances they changed.
    sections.~~ Done. The breakdown sections landed in phase 1 instead: the net
    already counted payments, so omitting the rows would have shown totals that
    did not add up.
-4. **Edit and delete.** Outstanding. `payments` already has its UPDATE and
-   DELETE policies. Note that `PaymentCard` is deliberately non-interactive
-   until this lands.
+4. ~~**Edit and delete.**~~ Done. A payment is edited in place rather than
+   behind a details view — the card already shows every field, so a details
+   modal would only repeat it. Delete asks for confirmation, since removing a
+   settlement puts the debt back. Both the update and the delete ask for the
+   affected rows back and treat an empty result as failure, per §2.
 
 ## 7. Testing
 
