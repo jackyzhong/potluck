@@ -1,26 +1,59 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useOptimistic, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/src/lib/supabase";
 import { Expense, Split } from "./ExpenseModal";
 import { getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
 import { formatCurrency } from "@/src/lib/currencies";
 
 interface BalancesViewProps {
+  ledgerId: string;
   expenses: Expense[];
   splits: Split[];
   userMap: Map<string, string>;
   baseCurrency: string;
   exchangeRates: Record<string, number>;
+  isSimplified: boolean;
 }
 
 export default function BalancesView({
+  ledgerId,
   expenses,
   splits,
   userMap,
   baseCurrency,
-  exchangeRates
+  exchangeRates,
+  isSimplified: savedSimplified
 }: BalancesViewProps) {
-  const [isSimplified, setIsSimplified] = useState(false);
+  const router = useRouter();
+  const [isSaving, startSaving] = useTransition();
+
+  // The setting belongs to the ledger, not to whoever is looking at it, so a
+  // toggle here changes what the whole group sees. Show the new value while
+  // the write is in flight; React restores the saved one if it never lands.
+  const [isSimplified, showSimplified] = useOptimistic(savedSimplified);
+
+  const handleToggle = () => {
+    const next = !isSimplified;
+    startSaving(async () => {
+      showSimplified(next);
+
+      const { data, error } = await supabase
+        .from("ledgers")
+        .update({ simplify_debts: next })
+        .eq("id", ledgerId)
+        .select("id");
+
+      if (error || !data?.length) {
+        console.error("Failed to save the Simplify Debts setting:", error);
+        alert("Couldn't save that for the group. Please try again.");
+        return;
+      }
+
+      router.refresh();
+    });
+  };
 
   const simplifiedDebts = useMemo(
     () => getSimplifiedDebts(expenses, splits, exchangeRates),
@@ -53,10 +86,15 @@ export default function BalancesView({
             <p className="text-sm text-zinc-500">How much people owe each other</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-zinc-700">Simplify Debts</span>
+            <span id="simplify-debts-label" className="text-sm font-medium text-zinc-700">Simplify Debts</span>
             <button
-              onClick={() => setIsSimplified(!isSimplified)}
-              className={`w-12 h-6 rounded-full transition-colors relative flex items-center ${
+              type="button"
+              role="switch"
+              aria-checked={isSimplified}
+              aria-labelledby="simplify-debts-label"
+              onClick={handleToggle}
+              disabled={isSaving}
+              className={`w-12 h-6 rounded-full transition-colors relative flex items-center disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 ${
                 isSimplified ? "bg-zinc-900" : "bg-zinc-300"
               }`}
             >
