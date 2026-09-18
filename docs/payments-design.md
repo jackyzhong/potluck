@@ -1,6 +1,6 @@
 # Payments / Settlement Tracking — Design
 
-Status: **approved, not yet built**. This records the decisions made before
+Status: **phases 1-3 built; phase 4 (edit/delete) outstanding**. This records the decisions made before
 implementation so the reasoning survives the work. Update it if reality
 diverges.
 
@@ -177,11 +177,17 @@ audit against the balances they changed.
 
 ## 6. Phases
 
-1. **Schema, RLS, balance math, tests.** No UI.
-2. **Recording:** payment modal, Settle up entry point, responsive action menu.
-3. **Display:** Activity tab rename, payment rows in the list, breakdown
-   sections.
-4. **Edit and delete.**
+1. ~~**Schema, RLS, balance math, tests.**~~ Done. Found and logged a
+   pre-existing rounding bug on the way (KNOWN-ISSUES 1.5).
+2. ~~**Recording:** payment modal, Settle up entry point, responsive action
+   menu.~~ Done.
+3. ~~**Display:** Activity tab rename, payment rows in the list, breakdown
+   sections.~~ Done. The breakdown sections landed in phase 1 instead: the net
+   already counted payments, so omitting the rows would have shown totals that
+   did not add up.
+4. **Edit and delete.** Outstanding. `payments` already has its UPDATE and
+   DELETE policies. Note that `PaymentCard` is deliberately non-interactive
+   until this lands.
 
 ## 7. Testing
 

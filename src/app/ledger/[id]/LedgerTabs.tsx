@@ -7,11 +7,11 @@ export default function LedgerTabs() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const currentTab = searchParams.get("tab") || "expenses";
+  const currentTab = searchParams.get("tab") || "activity";
 
   const setTab = (tab: string) => {
     const params = new URLSearchParams(searchParams);
-    if (tab === "expenses") {
+    if (tab === "activity") {
       params.delete("tab");
     } else {
       params.set("tab", tab);
@@ -23,14 +23,14 @@ export default function LedgerTabs() {
     <div className="flex justify-center mb-6">
       <div className="bg-zinc-200/50 p-1 rounded-full flex gap-1">
         <button
-          onClick={() => setTab("expenses")}
+          onClick={() => setTab("activity")}
           className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-            currentTab === "expenses"
+            currentTab === "activity"
               ? "bg-white text-zinc-900 shadow-sm"
               : "text-zinc-500 hover:text-zinc-700"
           }`}
         >
-          Expenses
+          Activity
         </button>
         <button
           onClick={() => setTab("balances")}
