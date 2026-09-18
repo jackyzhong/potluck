@@ -138,19 +138,13 @@ export default function BalancesView({
             {debts.length === 0 ? "Transfers" : `Transfers (${debts.length})`}
           </h3>
 
-          {isSimplified && (
+          {/* Only worth saying when simplifying would actually save someone a
+              payment — otherwise the toggle has nothing to offer. */}
+          {!isSimplified && transfersSaved > 0 && (
             <div className="bg-blue-50 text-blue-700 text-sm p-3 rounded-xl mb-4">
-              {transfersSaved > 0 ? (
-                <>
-                  <strong>Simplified debts enabled!</strong> Reduced {unsimplifiedDebts.length} transfers
-                  to {simplifiedDebts.length} — {transfersSaved} fewer payment{transfersSaved === 1 ? "" : "s"} to make.
-                </>
-              ) : (
-                <>
-                  <strong>Simplified debts enabled!</strong> This group already settles up in the fewest
-                  possible transfers, so nothing changed.
-                </>
-              )}
+              <strong>Turn on Simplify Debts</strong> to settle up in {simplifiedDebts.length}{" "}
+              transfer{simplifiedDebts.length === 1 ? "" : "s"} instead of {unsimplifiedDebts.length} —{" "}
+              {transfersSaved} fewer payment{transfersSaved === 1 ? "" : "s"} to make.
             </div>
           )}
 

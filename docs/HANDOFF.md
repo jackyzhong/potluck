@@ -27,12 +27,35 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 
 ---
 
+## Shipped since this handoff was written
+
+- **Split allocation validation** (old priority #1) — done. Exact/Percentage modes now show a running allocated/remaining total and block save until the split balances.
+- **Keyboard navigation** — shared `useModalKeyboard` hook: Escape closes, Tab is trapped inside the modal, focus returns to the opener. Dialog semantics on all three modals.
+- **Balances UI** — per-person "Overall" net positions, and the Transfers list now reports how many payments simplification saves.
+- **Expense edit was silently discarding changes** — `expenses` had RLS enabled but no UPDATE policy, so every edit updated zero rows and PostgREST still reported success. Policy added; the client now asks for the affected rows back and treats an empty result as a failure.
+- **Simplify Debts is now a ledger-wide setting** (`ledgers.simplify_debts`, default on) rather than per-viewer component state, so the whole group sees the same transfers.
+
+---
+
 ## Agreed priorities for upcoming work (in order)
 
-1. **Split allocation validation** (Exact/Percentage modes in `ExpenseModal.tsx`). Small, cheap, prevents bad data landing in `splits` — do this first, before/alongside starting payments work, not as a competing multi-week priority.
-2. **Multi-currency: lock the exchange rate at expense-creation time and persist it.** Needs a schema addition (e.g. `base_amount_cents` or `exchange_rate` column on `expenses`) so balances don't drift as rates change after the fact — this matters for the PRD's "Audit-Ready Accuracy" principle. Only *after* that's in place, wire `getExchangeRates()` to a real rate source (Frankfurter / exchangerate-api.com are fine for MVP volume).
+1. **Multi-currency: lock the exchange rate at expense-creation time and persist it.** Needs a schema addition (e.g. `base_amount_cents` or `exchange_rate` column on `expenses`) so balances don't drift as rates change after the fact — this matters for the PRD's "Audit-Ready Accuracy" principle. Only *after* that's in place, wire `getExchangeRates()` to a real rate source (Frankfurter / exchangerate-api.com are fine for MVP volume).
+2. **Supabase Realtime so shared state updates live.** Today `simplify_debts` is genuinely shared, but other members only see a change on their next page load. Same gap applies to a new expense — you add one, nobody else sees it until they reload.
+
+   **This is cheaper than it sounds.** The `supabase_realtime` publication already exists on the project with insert/update/delete enabled; it just has no tables in it. Enabling it is one statement:
+
+   ```sql
+   alter publication supabase_realtime add table ledgers, expenses, splits;
+   ```
+
+   Client side, it's a `supabase.channel(...).on('postgres_changes', {...}, () => router.refresh())` subscription in a `useEffect`. Existing RLS (`select` is open to `anon`) already permits the subscription, so no policy work.
+
+   - **Just the Simplify Debts toggle:** ~30 minutes. One table, filterable server-side by `id=eq.<ledgerId>`, one `router.refresh()` on event.
+   - **Expenses and splits too:** roughly half a day, because of one real wrinkle — `splits` has no `ledger_id` column, so its realtime stream can't be filtered per ledger server-side. Either denormalize `ledger_id` onto `splits` (also simplifies the two-step fetch in `page.tsx`) or accept that every connected client receives every group's split events. Prefer the former. Also debounce the refresh so a burst of split inserts doesn't trigger one refetch each.
+   - **Caveats:** free tier is 200 concurrent connections / 2M messages per month — fine at this scale. And realtime can't be exercised against a local mock, so it has to be verified against the real project (i.e. on the Vercel deploy, not in a sandbox).
+
 3. **Payments / settlement tracker** — the next major feature (marking debts as paid/settled). Not yet designed or scoped.
-4. Once #2 and #3 have real shape, do a follow-up PRD.md pass to formally record the claiming deprioritization, the multi-currency plan, and the new payments feature — keeping the "Documentation First" promise in `README.md` intact.
+4. Once #1 and #3 have real shape, do a follow-up PRD.md pass to formally record the claiming deprioritization, the multi-currency plan, and the new payments feature — keeping the "Documentation First" promise in `README.md` intact.
 
 ---
 
@@ -46,4 +69,4 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 
 ## Where things stand for the next thread
 
-Safe to start directly on priority #1 (split validation) or #2 (multi-currency rate locking) — both are scoped above. If picking up #3 (payments), it'll need its own design pass first (data model for settlement/payment records isn't defined yet). All three docs (`PRD.md`, `db-chart.md`, `features.md`) are accurate as of this handoff — trust them over any stale assumptions from before this pass.
+Safe to start directly on priority #1 (multi-currency rate locking) or #2 (realtime) — both are scoped above. If picking up #3 (payments), it'll need its own design pass first (data model for settlement/payment records isn't defined yet). All three docs (`PRD.md`, `db-chart.md`, `features.md`) are accurate as of this handoff — trust them over any stale assumptions from before this pass.
