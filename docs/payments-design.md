@@ -35,6 +35,29 @@ back the other way; paying someone you owe nothing makes them your debtor.
 
 `getSimplifiedDebts` needs no change at all — it derives from net balances.
 
+### Why a payment names two people
+
+It is tempting to model a payment as "money off what I owe" with no recipient —
+the way it feels to the person paying. That does not work, and the reason is
+worth recording so it does not get re-proposed.
+
+Every member's net sums to zero across the group. That is what makes the
+Balances tab's promise true: follow the transfers it lists and everyone is
+settled. If Alice records $20 against her total and nobody is credited, the
+sum drifts to +$20 — Carol still shows as owed $20, and no one is ever told to
+pay her. The books stop balancing and the tab starts describing a settlement
+that cannot happen.
+
+So the money has to land on someone. The options were to name the recipient
+(what is built), or to auto-allocate across whoever the payer owes. The second
+conserves money but can credit a person who never received anything: Alice
+hands Carol $20, the system splits it $15/$5 between Carol and Bob, and Bob's
+books now show $5 he never saw. In a tool whose whole job is reconciliation
+that is worse than asking one extra question.
+
+A transfer has two ends — this matches how the money actually moves, and how
+every payment app the user already knows works.
+
 ## 2. Storage: a `payments` table
 
 **Decision: payments live in their own table, not as a flagged row in

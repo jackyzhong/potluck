@@ -34,6 +34,10 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 - **Balances UI** — per-person "Overall" net positions, and the Transfers list now reports how many payments simplification saves.
 - **Expense edit was silently discarding changes** — `expenses` had RLS enabled but no UPDATE policy, so every edit updated zero rows and PostgREST still reported success. Policy added; the client now asks for the affected rows back and treats an empty result as a failure.
 - **Simplify Debts is now a ledger-wide setting** (`ledgers.simplify_debts`, default on) rather than per-viewer component state, so the whole group sees the same transfers.
+- **Balance drill-down** — clicking a member in Balances unfolds the expenses they fronted, the shares they owe and their payments, ending in the `paid − share = net` arithmetic that produces the figure above it. Expense rows open the expense.
+- **Payments / settlement tracking** (old priority #3) — done, all four phases. Recording, Settle-up from a suggested transfer, the Activity list, and edit/delete. Designed in [payments-design.md](./payments-design.md).
+- **The PRD.md pass** (old priority #4) — done. It now records the claiming deprioritization, the real state of multi-currency, and the settlement engine.
+- **A test suite** — `npm test` runs `src/lib/balances.test.ts` on Node's built-in runner with type stripping, no dependencies added. Randomized property tests over 300 generated ledgers; the load-bearing one asserts that settling every suggested transfer leaves every member at exactly zero.
 
 ---
 
@@ -54,8 +58,8 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
    - **Expenses and splits too:** roughly half a day, because of one real wrinkle — `splits` has no `ledger_id` column, so its realtime stream can't be filtered per ledger server-side. Either denormalize `ledger_id` onto `splits` (also simplifies the two-step fetch in `page.tsx`) or accept that every connected client receives every group's split events. Prefer the former. Also debounce the refresh so a burst of split inserts doesn't trigger one refetch each.
    - **Caveats:** free tier is 200 concurrent connections / 2M messages per month — fine at this scale. And realtime can't be exercised against a local mock, so it has to be verified against the real project (i.e. on the Vercel deploy, not in a sandbox).
 
-3. **Payments / settlement tracker** — the next major feature (marking debts as paid/settled). Now designed and approved: see [payments-design.md](./payments-design.md). Not yet built.
-4. Once #1 and #3 have real shape, do a follow-up PRD.md pass to formally record the claiming deprioritization, the multi-currency plan, and the new payments feature — keeping the "Documentation First" promise in `README.md` intact.
+3. **Fix the open access model.** Every RLS policy is `using (true)`, so anyone holding the anon key from the deployed bundle can read, alter or delete every ledger's data without knowing any URL. The "secret link" model is not actually enforced. Confirmed and detailed in [KNOWN-ISSUES.md](./KNOWN-ISSUES.md) §2.1 — this should be settled before the app is shared beyond people you trust.
+4. **Decide the remove-member story.** Members can be added but never removed or renamed, and the foreign keys from `expenses`/`splits`/`payments` to `users` have no `ON DELETE` clause, so anyone with activity cannot be deleted at all. The semantics need deciding before the UI can exist — soft-delete is likely right, not a cascade. See KNOWN-ISSUES §2.4 and §4.4.
 
 ---
 
@@ -73,4 +77,6 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 
 ## Where things stand for the next thread
 
-Safe to start directly on priority #1 (multi-currency rate locking) or #2 (realtime) — both are scoped above. If picking up #3 (payments), it'll need its own design pass first (data model for settlement/payment records isn't defined yet). All three docs (`PRD.md`, `db-chart.md`, `features.md`) are accurate as of this handoff — trust them over any stale assumptions from before this pass.
+Safe to start directly on priority #1 (multi-currency rate locking) or #2 (realtime) — both are scoped above. #1 now carries two linked defects: the stubbed rate source, and a confirmed rounding bug where converting each split independently does not conserve money (KNOWN-ISSUES §1.5). `src/lib/balances.test.ts` already holds the acceptance test for the second, shipped skipped — unskip it when the fix lands.
+
+`PRD.md`, `db-chart.md` and `features.md` are accurate as of this pass and now cover payments. [KNOWN-ISSUES.md](./KNOWN-ISSUES.md) is the running log of everything found but not fixed — read it before picking anything up; it is more current than this file, which is a snapshot.
