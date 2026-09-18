@@ -26,6 +26,7 @@ The "Global Registry" for all Potluck groups. Every row represents a unique even
 | `title` | TEXT | NOT NULL | Display name (e.g., "Japan 2026"). |
 | `base_currency` | TEXT | Default: 'CAD' | The currency used for the final settlement. |
 | `emoji` | TEXT | Optional | Emoji chosen by the organizer to represent the group. |
+| `simplify_debts` | BOOLEAN | NOT NULL, Default: true | Whether the Balances tab collapses debts into the fewest possible transfers. It belongs to the ledger rather than to a viewer, so toggling it changes the view for everyone in the group; other viewers pick the change up on their next load. |
 | `created_at` | TIMESTAMPTZ | Default: NOW() | Timestamp for audit/sorting. |
 
 ### Table: `users`
@@ -76,3 +77,25 @@ The most granular table. It breaks down an expense into individual debts.
 | `expense_id` | UUID | FK -> expenses.id | Parent transaction. |
 | `user_id` | UUID | FK -> users.id | Person who owes a portion. |
 | `amount_cents` | BIGINT | NOT NULL | Individual portion of the debt in cents. |
+
+## Row Level Security
+
+RLS is enabled on all four tables. Access is deliberately open — the ledger's
+UUID in the URL is the only secret — but **a missing policy is invisible from
+the app**: Postgres filters the rows out and PostgREST still answers `200` with
+an empty body, so a write that touched nothing is indistinguishable from one
+that succeeded. Every operation the app performs therefore needs a matching
+policy here.
+
+| Table | SELECT | INSERT | UPDATE | DELETE |
+| :--- | :---: | :---: | :---: | :---: |
+| `ledgers` | ✅ | ✅ | ✅ | — |
+| `users` | ✅ | ✅ | — | — |
+| `expenses` | ✅ | ✅ | ✅ | ✅ |
+| `splits` | ✅ | ✅ | — | ✅ |
+
+The app updates two tables in place: `expenses` (editing an expense's payer,
+amount, description, currency or date) and `ledgers` (the shared
+`simplify_debts` toggle). `splits` has no UPDATE policy because editing an
+expense rewrites its splits as a DELETE followed by an INSERT rather than
+updating them.
