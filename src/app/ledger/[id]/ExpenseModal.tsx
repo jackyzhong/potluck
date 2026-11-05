@@ -277,7 +277,7 @@ export default function ExpenseModal({
     }
     else if (splitMode === "PERCENT") {
       let allocatedCents = 0;
-      const percentEntries = Object.entries(percentages).filter(([_, val]) => parseFloat(val) > 0);
+      const percentEntries = Object.entries(percentages).filter(([, val]) => parseFloat(val) > 0);
 
       finalSplits = percentEntries.map(([userId, val], index) => {
         const isLast = index === percentEntries.length - 1;
