@@ -10,6 +10,7 @@ type User = {
   id: string;
   name: string;
   is_placeholder: boolean;
+  archived_at?: string | null;
 };
 
 export default function ActionMenu({
@@ -21,7 +22,9 @@ export default function ActionMenu({
   initialUsers: User[];
   baseCurrency: string;
 }) {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  // Read straight from the server-rendered props: member changes call
+  // router.refresh(), which re-renders the page with the new list.
+  const users = initialUsers;
 
   // Modal states
   const [isManagingUsers, setIsManagingUsers] = useState(false);
@@ -71,7 +74,6 @@ export default function ActionMenu({
         onClose={() => setIsManagingUsers(false)}
         ledgerId={ledgerId}
         users={users}
-        onUserAdded={(newUser) => setUsers([...users, newUser])}
       />
 
       <ExpenseModal

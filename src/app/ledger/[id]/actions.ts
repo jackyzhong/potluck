@@ -17,7 +17,7 @@ import {
   type ActionResult
 } from "@/src/lib/validation";
 
-export type Member = { id: string; name: string; is_placeholder: boolean };
+export type Member = { id: string; name: string; is_placeholder: boolean; archived_at: string | null };
 
 const SAVE_FAILED = "Something went wrong saving that. Please try again.";
 
@@ -54,11 +54,65 @@ export async function addMember(ledgerId: unknown, name: unknown): Promise<Actio
   const { data, error } = await db
     .from("users")
     .insert({ ledger_id: ledgerId, name: parsed.value, is_placeholder: true })
-    .select("id, name, is_placeholder")
+    .select("id, name, is_placeholder, archived_at")
     .single();
 
   if (error || !data) return failed("addMember", error);
   return { ok: true, data };
+}
+
+export async function renameMember(
+  ledgerId: unknown,
+  memberId: unknown,
+  name: unknown
+): Promise<ActionResult> {
+  if (!isUuid(ledgerId) || !isUuid(memberId)) return rejected("Invalid request.");
+  const parsed = parseMemberName(name);
+  if (!parsed.ok) return parsed;
+
+  const { data, error } = await db
+    .from("users")
+    .update({ name: parsed.value })
+    .eq("id", memberId)
+    .eq("ledger_id", ledgerId)
+    .select("id");
+
+  if (error) return failed("renameMember", error);
+  if (!data?.length) return rejected("That member is no longer in this group.");
+  return { ok: true, data: undefined };
+}
+
+/**
+ * Remove a member. Someone with no activity is deleted; anyone on an expense
+ * or payment is archived instead, so the balances they are part of still add
+ * up. The database decides which, atomically — see the archive_members migration.
+ */
+export async function removeMember(
+  ledgerId: unknown,
+  memberId: unknown
+): Promise<ActionResult<{ outcome: "deleted" | "archived" }>> {
+  if (!isUuid(ledgerId) || !isUuid(memberId)) return rejected("Invalid request.");
+
+  const { data, error } = await db.rpc("remove_member", { p_ledger_id: ledgerId, p_user_id: memberId });
+
+  if (error?.code === "P0002") return rejected("That member is no longer in this group.");
+  if (error || (data !== "deleted" && data !== "archived")) return failed("removeMember", error);
+  return { ok: true, data: { outcome: data } };
+}
+
+export async function restoreMember(ledgerId: unknown, memberId: unknown): Promise<ActionResult> {
+  if (!isUuid(ledgerId) || !isUuid(memberId)) return rejected("Invalid request.");
+
+  const { data, error } = await db
+    .from("users")
+    .update({ archived_at: null })
+    .eq("id", memberId)
+    .eq("ledger_id", ledgerId)
+    .select("id");
+
+  if (error) return failed("restoreMember", error);
+  if (!data?.length) return rejected("That member is no longer in this group.");
+  return { ok: true, data: undefined };
 }
 
 // --- Expenses --------------------------------------------------------------
