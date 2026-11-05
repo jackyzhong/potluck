@@ -26,17 +26,6 @@ afterwards will not re-divide it the way the author expected.
 **Fix:** persist the split mode on the expense (a `split_mode` column) rather
 than re-deriving it, and store the percentages used.
 
-### 1.3 Split state leaks between expenses in the edit modal · Observed
-
-In the same block, the `EQUAL` branch sets `selectedSplitUsers` but never
-clears `exactAmounts`/`percentages`, and the `EXACT` branch does the reverse.
-If `existingSplits` is empty, neither branch runs and the mode carries over
-from whatever was open previously. Switching split modes after opening a second
-expense can therefore surface the first expense's numbers.
-
-**Fix:** reset all four split states unconditionally before applying the
-inferred ones.
-
 ### 1.4 Multi-currency balances are silently wrong · Confirmed (pre-existing)
 
 `getExchangeRates()` in `src/lib/balances.ts` is a stub that pegs every
