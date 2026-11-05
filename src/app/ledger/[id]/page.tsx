@@ -2,7 +2,6 @@
 import { supabase } from "@/src/lib/supabase";
 import { notFound } from "next/navigation";
 import ActionMenu from "./ActionMenu";
-import { formatCurrency } from "@/src/lib/currencies";
 
 import ExpenseCard from "./ExpenseCard";
 import PaymentCard from "./PaymentCard";
@@ -117,7 +116,7 @@ export default async function LedgerPage({
       <header className="max-w-2xl mx-auto py-8">
         <div className="text-4xl mb-2">{ledger.emoji || "🍲"}</div>
         <h1 className="text-3xl font-bold text-zinc-900">{ledger.title}</h1>
-        <p className="text-zinc-500">Don't lose the link to this page! Share the link to invite others.</p>
+        <p className="text-zinc-500">Don&apos;t lose the link to this page! Share the link to invite others.</p>
       </header>
 
       <main className="max-w-2xl mx-auto flex flex-col gap-4">

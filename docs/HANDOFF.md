@@ -37,6 +37,7 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 - **Balance drill-down** — clicking a member in Balances unfolds the expenses they fronted, the shares they owe and their payments, ending in the `paid − share = net` arithmetic that produces the figure above it. Expense rows open the expense.
 - **Payments / settlement tracking** (old priority #3) — done, all four phases. Recording, Settle-up from a suggested transfer, the Activity list, and edit/delete. Designed in [payments-design.md](./payments-design.md).
 - **The PRD.md pass** (old priority #4) — done. It now records the claiming deprioritization, the real state of multi-currency, and the settlement engine.
+- **Pre-priority cleanup batch** (2026-11-05) — the live schema is now in [`supabase/migrations/`](../supabase/migrations/), verified by replaying it and diffing against the live catalog. Expense descriptions are genuinely optional, the key columns are NOT NULL, and duplicate split rows are blocked. The edit modal no longer leaks split values between expenses. The stale generated `src/types/*` files and the broken `test_db.js` are gone, taking lint from 36 problems to 1.
 - **A test suite** — `npm test` runs `src/lib/balances.test.ts` on Node's built-in runner with type stripping, no dependencies added. Randomized property tests over 300 generated ledgers; the load-bearing one asserts that settling every suggested transfer leaves every member at exactly zero.
 
 ---
@@ -71,8 +72,8 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 > plus everything found since. Keep new findings there, not here — this file is
 > a snapshot of one session, that one is the running log.
 
-- Root [test_db.js](../test_db.js) imports `dotenv`, which isn't in `package.json` or `node_modules` — currently broken as committed. Either fix (`npm i -D dotenv`) or delete.
-- No `supabase/migrations` directory — the live DB schema has no version-controlled source of truth, which is exactly how `db-chart.md` drifted last time. Worth introducing migrations (Supabase CLI) before the next schema change, so this reconciliation doesn't have to happen again.
+- ~~Root `test_db.js` imports `dotenv`, which isn't installed.~~ Deleted.
+- ~~No `supabase/migrations` directory.~~ Added; every schema change now goes in as a migration file.
 - `AGENTS.md` contains an unusual instruction: *"This is NOT the Next.js you know... read `node_modules/next/dist/docs/` before writing any code."* That directory does exist, so it's not broken, but it implies a customized Next.js build — worth double-checking this still reflects intent, since it'll shape how the next thread approaches any Next.js-specific code.
 
 ---
