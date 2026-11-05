@@ -56,7 +56,7 @@ inferred ones.
 
 `getExchangeRates()` in `src/lib/balances.ts` is a stub that pegs every
 currency at 1.0. A ledger mixing currencies produces balances that are simply
-incorrect, with nothing in the UI indicating it. This is HANDOFF priority #1 —
+incorrect, with nothing in the UI indicating it. This is HANDOFF priority #4 —
 the rate needs to be locked at expense-creation time and persisted, not looked
 up live, or historical balances will drift as rates move.
 
@@ -189,7 +189,7 @@ widens the gap.
 
 `ledgers.simplify_debts` is genuinely shared, but other members see a change
 only when they next load the page. The same applies to a newly added expense.
-Scoped in detail as HANDOFF priority #2: the `supabase_realtime` publication
+Scoped in detail as HANDOFF priority #3: the `supabase_realtime` publication
 already exists on the project with no tables in it, so enabling it is one
 statement plus a subscription. Roughly 30 minutes for the toggle alone, half a
 day to cover expenses and splits — the wrinkle being that `splits` has no
