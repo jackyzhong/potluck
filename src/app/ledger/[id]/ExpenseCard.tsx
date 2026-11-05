@@ -9,6 +9,7 @@ type User = {
   id: string;
   name: string;
   is_placeholder: boolean;
+  archived_at?: string | null;
 };
 
 interface ExpenseCardProps {

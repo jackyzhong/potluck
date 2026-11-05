@@ -50,6 +50,7 @@ Stores every person associated with a specific ledger.
 | `phone_number` | TEXT | Optional | **Reserved for a future feature.** Present in the live schema, ahead of any app code that uses it — likely prep for phone-based claiming/2FA (see PRD 5.1). |
 | `auth_user_id` | UUID | Optional | **Reserved for a future feature.** Present in the live schema, ahead of any app code that uses it. |
 | `created_at` | TIMESTAMPTZ | Default: NOW() | Timestamp for audit trail. |
+| `archived_at` | TIMESTAMPTZ | Optional | Set when a member with activity is removed. Archived members are hidden from pickers for new expenses and payments but stay on existing records and in balances. See `remove_member()` below and [features.md](./features.md) §1. |
 
 ### Table: `expenses`
 
@@ -125,6 +126,10 @@ So access control lives in those actions, not in policies:
   row id from another ledger does nothing.
 - **Every argument is untrusted.** Actions are reachable by a direct POST, so
   each one parses its input with `src/lib/validation.ts` before using it.
+- **Members are removed by `remove_member()`**, which deletes a member with
+  no activity and archives one with any (it tries the delete and falls back on
+  the foreign-key violation, so there is no check-then-delete race). Only the
+  secret key can execute it.
 - **Expenses are saved by `save_expense()`**, a database function that writes
   the expense and its splits in one transaction and re-checks ledger
   membership and that the shares sum to the total. Only the secret key can
