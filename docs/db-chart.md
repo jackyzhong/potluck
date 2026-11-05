@@ -109,26 +109,37 @@ being shared out.
 
 A `payer_id <> payee_id` check constraint prevents paying yourself.
 
-## Row Level Security
+## Access model
 
-RLS is enabled on all five tables. Access is deliberately open — the ledger's
-UUID in the URL is the only secret — but **a missing policy is invisible from
-the app**: Postgres filters the rows out and PostgREST still answers `200` with
-an empty body, so a write that touched nothing is indistinguishable from one
-that succeeded. Every operation the app performs therefore needs a matching
-policy here.
+The browser never talks to Supabase. Every read happens in the ledger page's
+server component, and every write goes through a server action in
+`src/app/ledger/[id]/actions.ts` or `src/app/create-group/actions.ts`. Both
+use one client, `src/lib/server/supabase.ts`, which holds the **secret key**
+and therefore bypasses row-level security.
 
-| Table | SELECT | INSERT | UPDATE | DELETE |
-| :--- | :---: | :---: | :---: | :---: |
-| `ledgers` | ✅ | ✅ | ✅ | — |
-| `users` | ✅ | ✅ | — | — |
-| `expenses` | ✅ | ✅ | ✅ | ✅ |
-| `splits` | ✅ | ✅ | — | ✅ |
-| `payments` | ✅ | ✅ | ✅ | ✅ |
+So access control lives in those actions, not in policies:
 
-The app updates three tables in place: `expenses` (editing an expense's payer,
-amount, description, currency or date), `ledgers` (the shared `simplify_debts`
-toggle) and `payments` (editing a settlement, planned for a later phase — the
-policy is in place ahead of it). `splits` has no UPDATE policy because editing an
-expense rewrites its splits as a DELETE followed by an INSERT rather than
-updating them.
+- **The ledger UUID in the URL is the credential.** Each action takes it
+  explicitly and scopes every row it touches to it (`.eq("ledger_id", …)` on
+  updates and deletes; the members referenced must belong to it). Passing a
+  row id from another ledger does nothing.
+- **Every argument is untrusted.** Actions are reachable by a direct POST, so
+  each one parses its input with `src/lib/validation.ts` before using it.
+- **Expenses are saved by `save_expense()`**, a database function that writes
+  the expense and its splits in one transaction and re-checks ledger
+  membership and that the shares sum to the total. Only the secret key can
+  execute it.
+
+### Row Level Security
+
+RLS is enabled on all five tables with **no policies**, and the public roles
+(`anon`, `authenticated`) have no grants, so the public key can read or write
+nothing. Supabase's default grants for future tables are revoked too, so a new
+table starts private.
+
+> **Rollout status:** the code is in place, but the migration that removes the
+> old open policies, `supabase/pending/revoke_public_access.sql`, is applied
+> only after the release is live with `SUPABASE_SECRET_KEY` set. Until then
+> the live database still has the old `using (true)` policies (one per
+> operation the old client code needed), and the public key still works
+> against it. See KNOWN-ISSUES §2.1.

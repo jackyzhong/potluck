@@ -2,7 +2,7 @@
 
 import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/src/lib/supabase";
+import { setSimplifyDebts } from "./actions";
 import { Expense, Split } from "./ExpenseModal";
 import { BreakdownRow, Payment, PaymentRow, getMemberBreakdown, getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
 import { formatCurrency } from "@/src/lib/currencies";
@@ -108,14 +108,8 @@ export default function BalancesView({
     startSaving(async () => {
       showSimplified(next);
 
-      const { data, error } = await supabase
-        .from("ledgers")
-        .update({ simplify_debts: next })
-        .eq("id", ledgerId)
-        .select("id");
-
-      if (error || !data?.length) {
-        console.error("Failed to save the Simplify Debts setting:", error);
+      const result = await setSimplifyDebts(ledgerId, next);
+      if (!result.ok) {
         alert("Couldn't save that for the group. Please try again.");
         return;
       }

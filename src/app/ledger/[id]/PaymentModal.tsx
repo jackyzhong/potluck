@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/src/lib/supabase";
+import { savePayment, deletePayment } from "./actions";
 import { CURRENCIES, formatCurrency } from "@/src/lib/currencies";
 import { Payment } from "@/src/lib/balances";
 import { useModalKeyboard } from "@/src/lib/useModalKeyboard";
@@ -72,27 +72,17 @@ export default function PaymentModal({
     if (isInvalid) return;
     setIsSubmitting(true);
 
-    const fields = {
-      payer_id: payerId,
-      payee_id: payeeId,
-      amount_cents: amountCents,
-      original_currency: currencyCode,
-      note: note.trim() || null,
-      created_at: new Date(date).toISOString()
-    };
+    const result = await savePayment(ledgerId, existingPayment?.id ?? null, {
+      payerId,
+      payeeId,
+      amountCents,
+      currency: currencyCode,
+      note,
+      createdAt: new Date(date).toISOString()
+    });
 
-    // A row the database declines to write comes back as success with no rows,
-    // so an empty result has to count as a failure.
-    const { data, error } = existingPayment
-      ? await supabase.from("payments").update(fields).eq("id", existingPayment.id).select("id")
-      : await supabase
-          .from("payments")
-          .insert([{ ledger_id: ledgerId, ...fields }])
-          .select("id");
-
-    if (error || !data?.length) {
-      console.error("Failed to save payment:", error);
-      alert("Failed to save payment.");
+    if (!result.ok) {
+      alert(result.error);
       setIsSubmitting(false);
       return;
     }
@@ -107,15 +97,10 @@ export default function PaymentModal({
     if (!window.confirm("Delete this payment? This will put the debt back.")) return;
 
     setIsSubmitting(true);
-    const { data, error } = await supabase
-      .from("payments")
-      .delete()
-      .eq("id", existingPayment.id)
-      .select("id");
+    const result = await deletePayment(ledgerId, existingPayment.id);
 
-    if (error || !data?.length) {
-      console.error("Failed to delete payment:", error);
-      alert("Failed to delete payment.");
+    if (!result.ok) {
+      alert(result.error);
       setIsSubmitting(false);
       return;
     }
