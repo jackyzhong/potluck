@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/src/lib/supabase";
+import { createLedger } from "./actions";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import Link from "next/link";
 
@@ -57,26 +57,15 @@ export default function CreateGroup() {
     if (!groupName.trim()) return;
     setIsLoading(true);
 
-    const { data, error } = await supabase
-      .from("ledgers")
-      .insert([
-        { 
-          title: groupName, 
-          emoji: emoji,
-          base_currency: currency
-        }
-      ])
-      .select()
-      .single();
+    const result = await createLedger({ title: groupName, emoji, baseCurrency: currency });
 
-    if (error) {
-      console.error("Error creating group:", error);
-      alert("Failed to create group. Please try again.");
+    if (!result.ok) {
+      alert(result.error);
       setIsLoading(false);
       return;
     }
 
-    router.push(`/ledger/${data.id}`);
+    router.push(`/ledger/${result.data.id}`);
   };
 
   return (

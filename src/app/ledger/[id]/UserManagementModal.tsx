@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/src/lib/supabase";
+import { addMember } from "./actions";
 import { useModalKeyboard } from "@/src/lib/useModalKeyboard";
 
 type User = {
@@ -31,22 +31,14 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users, 
     if (!newUserName.trim()) return;
     setIsSubmittingUser(true);
 
-    const { data, error } = await supabase
-      .from("users")
-      .insert([{ 
-        name: newUserName.trim(), 
-        ledger_id: ledgerId, 
-        is_placeholder: true 
-      }])
-      .select()
-      .single();
+    const result = await addMember(ledgerId, newUserName);
 
-    if (!error && data) {
-      onUserAdded(data); // Update parent state
+    if (result.ok) {
+      onUserAdded(result.data); // Update parent state
       setNewUserName("");
       setIsAddingUser(false); // Go back to list view
     } else {
-      console.error("Failed to add user:", error);
+      alert(result.error);
     }
     
     setIsSubmittingUser(false);

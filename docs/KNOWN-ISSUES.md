@@ -63,46 +63,29 @@ skipped: `"mixed currencies conserve money"`. Unskip it when the fix lands.
 
 ## 2. Data integrity & access control
 
-### 2.1 Every row in every table is readable and writable by anyone · Confirmed
+### 2.1 Every row in every table is readable and writable by anyone · Fix pending rollout
 
-RLS is enabled on all four tables, but every policy is `using (true)` /
-`with check (true)` for `anon` or `public`. The security model is supposed to
-be "the ledger UUID in the URL is the secret", but that is not what the
-policies enforce.
+Every RLS policy is `using (true)`, so anyone holding the public key from the
+deployed JavaScript can read, alter or delete every group's data without
+knowing any link. Confirmed as the `anon` role: every row of every table comes
+back with no ledger id supplied.
 
-Queried as the `anon` role — the role the publicly shipped key uses — with no
-ledger id supplied at all:
+**Fixed in code:** the browser no longer talks to Supabase. All reads and
+writes run on the server with the secret key, scoped to the ledger in the URL,
+and the public key needs no access. See [db-chart.md](./db-chart.md#access-model).
 
-| ledgers | expenses | users | splits |
-| ---: | ---: | ---: | ---: |
-| 16 | 37 | 36 | 114 |
+**Still open until the lockdown is applied.** The old policies stay live until
+`supabase/pending/revoke_public_access.sql` runs, and it must run *after* the
+release is deployed, or the old client code breaks:
 
-Every row, across every group. The same applies to writes: an anonymous client
-can update or delete any other group's expenses. Anyone who pulls the anon key
-out of the deployed JS bundle can enumerate, alter or wipe all data.
+1. Add `SUPABASE_SECRET_KEY` to Vercel (Production and Preview).
+2. Deploy, and check that creating a group, adding a member, saving, editing
+   and deleting an expense and a payment, and the Simplify Debts toggle all work.
+3. Apply the migration, move the file into `supabase/migrations/` under the
+   version Supabase records, and delete this entry.
 
-**Fix:** the URL secret has to be presented as a credential rather than assumed.
-Options include scoping policies to a ledger id passed as a request header or
-JWT claim, or moving writes behind server-side route handlers that hold a
-service role key and check the ledger id. This is the most serious item in this
-file and should be resolved before the app is shared beyond trusted users.
-
-### 2.2 A missing RLS policy fails silently, it does not error · Confirmed
-
-Postgres filters out rows no policy admits, and PostgREST reports that as
-`200` with an empty body. A write that touched nothing is indistinguishable
-from one that succeeded. This already caused a real bug: `expenses` had no
-UPDATE policy, so every expense edit silently discarded the user's changes
-while the UI reported success.
-
-Both known gaps (`expenses`, `ledgers`) now have UPDATE policies, and the two
-client call sites ask for the affected rows back and treat an empty result as
-failure. The hazard is structural, though — it recurs with any new table or
-operation.
-
-**Fix:** when adding a write path, add the policy in the same change, and use
-`.select()` on the write so a filtered-out result is detectable. The policy
-matrix is documented in [db-chart.md](./db-chart.md#row-level-security).
+Not yet covered: rate limiting. Anyone can still create ledgers or flood a
+ledger they know the link to. The server actions are the place to add it.
 
 ### 2.4 Foreign keys to `users` have no delete behaviour · Confirmed
 
@@ -126,11 +109,9 @@ with activity is likely the right answer, not a cascade.
 
 `ledgers.simplify_debts` is genuinely shared, but other members see a change
 only when they next load the page. The same applies to a newly added expense.
-Scoped in detail as HANDOFF priority #3: the `supabase_realtime` publication
-already exists on the project with no tables in it, so enabling it is one
-statement plus a subscription. Roughly 30 minutes for the toggle alone, half a
-day to cover expenses and splits — the wrinkle being that `splits` has no
-`ledger_id` column, so its stream cannot be filtered per ledger server-side.
+Scoped as HANDOFF priority #3. Since the access-model change (2.1) the
+public key has no table access, so this has to use Realtime broadcast from the
+server actions rather than database change feeds; see HANDOFF for the design.
 
 ### 4.2 Breakdown rows and expense details will disagree on currency · Observed
 
@@ -167,9 +148,12 @@ type stripping — no test dependencies. It covers the balance and payment
 arithmetic as randomized property tests over 300 generated ledgers, and it is
 what caught 1.5.
 
-What is still uncovered: every React component, the Supabase call sites, and
-the RLS behaviour that caused 2.2. Those need a browser or a live database, so
-they remain manual. Adding a component test setup is the next step if this
+`src/lib/validation.test.ts` covers the parsing every server action does on
+its input. The `save_expense()` database function was exercised against a
+local Postgres when written, but has no automated test.
+
+What is still uncovered: every React component and the server actions' calls
+to Supabase. Those need a browser or a live database, so they remain manual. Adding a component test setup is the next step if this
 starts to bite.
 
 ### 5.2 One lint error remains: form state set inside an effect · Confirmed
