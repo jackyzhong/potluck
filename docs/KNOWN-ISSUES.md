@@ -3,7 +3,8 @@
 A running list of things that are wrong, fragile, or worth improving — kept
 separate from [HANDOFF.md](./HANDOFF.md), which is a point-in-time snapshot of
 one work session. Add to this file whenever something is noticed but not fixed;
-delete an entry when it is genuinely resolved.
+delete an entry when it is genuinely resolved. Entry numbers are stable IDs
+that other docs cite, so gaps are expected — do not renumber.
 
 Each entry says how it was established. **Confirmed** means it was reproduced or
 queried directly against the live database; **observed** means it was read out
@@ -12,22 +13,6 @@ of the code and looks wrong but has not been exercised.
 ---
 
 ## 1. Correctness — affects users today
-
-### 1.1 Saving an expense with a blank description fails · Confirmed
-
-The Add Expense form labels the field **"Description (Optional)"** and
-`ExpenseModal` writes `description.trim() || null`, but `expenses.description`
-is `NOT NULL` in the database with no default. The insert is rejected, the user
-gets "Failed to add expense.", and nothing explains why.
-
-Verified directly as the `anon` role: an insert with `description = null`
-creates 0 rows, while the identical insert with text creates 1. Consistent with
-production data — all 37 expenses have a non-empty description, because it has
-never been possible to save one without.
-
-**Fix:** decide whether it is optional. If yes, `alter table expenses alter
-column description drop not null`. If no, make the field required in the form
-and drop the "(Optional)" label. Either way the two should agree.
 
 ### 1.2 Editing a percentage split silently converts it to exact amounts · Observed
 
@@ -130,16 +115,6 @@ operation.
 `.select()` on the write so a filtered-out result is detectable. The policy
 matrix is documented in [db-chart.md](./db-chart.md#row-level-security).
 
-### 2.3 Nothing prevents duplicate split rows · Observed
-
-There is no unique constraint on `splits (expense_id, user_id)`. Nothing in the
-current code produces duplicates, but nothing stops them either — and a
-duplicate would quietly double-count that person's share in every balance.
-`getMemberBreakdown` sums per-expense rather than assuming one row per person,
-specifically so the breakdown still reconciles if duplicates ever appear.
-
-**Fix:** `create unique index on splits (expense_id, user_id)`.
-
 ### 2.4 Foreign keys to `users` have no delete behaviour · Confirmed
 
 `splits.user_id` and `expenses.payer_id` reference `users(id)` with no
@@ -153,33 +128,6 @@ broken. It will block one the moment it is built.
 **Fix:** decide the semantics first. Deleting a member who owes money is
 probably wrong; soft-delete (an `archived` flag) or refusing to remove members
 with activity is likely the right answer, not a cascade.
-
-### 2.5 Columns are nullable that probably should not be · Observed
-
-`expenses.payer_id`, `splits.expense_id` and `splits.user_id` are all nullable.
-An expense with no payer or a split attached to nothing would break the balance
-math in ways that are hard to trace back. Meanwhile `expenses.description` is
-`NOT NULL` when the product treats it as optional (see 1.1) — the constraints
-appear to have been set by accident rather than by intent.
-
-**Fix:** audit the four tables against what the product actually requires.
-
----
-
-## 3. Schema process
-
-### 3.1 The live schema has no version-controlled source of truth · Known
-
-There is still no `supabase/migrations` directory. The schema lives only in the
-Supabase project, which is exactly how `db-chart.md` drifted out of sync once
-before. Two migrations were applied during this session
-(`allow_public_update_on_expenses`, `add_shared_simplify_debts_to_ledgers`);
-they exist in Supabase's own migration history but not in this repo, so a fresh
-project cannot be rebuilt from source.
-
-**Fix:** adopt the Supabase CLI and check in migrations before the next schema
-change. Worth doing soon — every session that changes the schema without it
-widens the gap.
 
 ---
 
