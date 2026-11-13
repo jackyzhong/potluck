@@ -6,9 +6,10 @@ Usage (after a `git merge` stops on docs/potluck-glow-redesign/PROGRESS.md):
 
 See PLAN.md, "Coordinating the build", step 5.
 
-Board hunks: per task row, keep whichever side moved it off `todo`.
+Board hunks: per task row, keep the side that is further along
+(todo < blocked < in progress < in review < done).
 Anything else (log entries): keep both, incoming side first (newest first).
-Refuses if a board row was changed on both sides.
+Refuses if both sides changed a row to the same status in different ways.
 """
 import re
 import sys
@@ -23,6 +24,19 @@ def task(line):
     return m.group(1) if m else None
 
 
+STATUS_ORDER = ["todo", "blocked", "in progress", "in review", "done"]
+
+
+def rank(line):
+    """How far along a board row is. The further-along side wins a conflict."""
+    cells = [c.strip() for c in line.split("|")]
+    status = cells[4] if len(cells) > 4 else ""
+    for i, name in reversed(list(enumerate(STATUS_ORDER))):
+        if status.startswith(name):
+            return i
+    return -1
+
+
 def resolve(m):
     ours, theirs = m.group(1).splitlines(), m.group(2).splitlines()
     if all(task(l) for l in ours + theirs):
@@ -35,12 +49,11 @@ def resolve(m):
                     order.append(t)
                     rows[t] = l
                 elif rows[t] != l:
-                    a_todo = "| todo |" in rows[t]
-                    b_todo = "| todo |" in l
-                    if a_todo and not b_todo:
+                    a, b = rank(rows[t]), rank(l)
+                    if b > a:
                         rows[t] = l
-                    elif not a_todo and not b_todo:
-                        sys.exit(f"both sides changed {t}")
+                    elif a == b:
+                        sys.exit(f"both sides changed {t} to different rows with the same status")
         return "\n".join(rows[t] for t in order) + "\n"
     out = m.group(2).rstrip("\n") + "\n\n" + m.group(1)
     return out if out.endswith("\n") else out + "\n"

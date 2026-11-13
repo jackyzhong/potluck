@@ -99,14 +99,49 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ### 2026-11-13 · review T06 · claude-opus-5-5
 **Status:** T06 ([PR #19](https://github.com/jackyzhong/potluck/pull/19)) merged into `glow`. T07 dispatched.
+**Changed:**
+- **Coordinator slip, now fixed.** The first merge attempt used the branch name from the worker's note, which was missing its `-impl` suffix. The merge silently did nothing, and commit `d5d045c` marked T06 done without its code. It was then merged for real. Coordinators: take the branch from `gh pr view N --json headRefName`, never from a report, and check `git merge-base --is-ancestor origin/<branch> HEAD` before marking anything done.
+- `scripts/resolve-progress-conflicts.py`: board conflicts now go to the side that is further along (todo < blocked < in progress < in review < done), instead of refusing whenever both sides changed a row.
 **Checked:**
-- Merged `glow`: npm test ✓ · lint ✓ · build ✓.
+- Merged `glow`: npm test ✓ (108 pass) · lint ✓ · build ✓.
 - The saved viewer is read through `useSyncExternalStore`: the server render shows `loading`, so there's no hydration mismatch.
 - Only the per-viewer numbers rerun when the viewer changes.
 - `setViewer` refuses archived and foreign ids.
 **Next session should know:**
 - Use `useViewer().status === "loading"` to keep wording neutral before the saved viewer is read.
 - `useGlowData().forViewer` is null until a viewer is picked.
+
+### 2026-11-13 · T06 · claude-sonnet-5-5
+**Status:** done → in review ([PR #19](https://github.com/jackyzhong/potluck/pull/19)).
+**Changed:**
+- `src/lib/glow/viewer.ts` + `viewer.test.ts` (new, pure): `viewerStorageKey`, guarded `readStoredViewer` / `writeStoredViewer` / `browserStorage`, `buildMemberOrder`, `pickableViewers`, `resolveViewer` (the docs/04 fallback rules). Re-exported from `src/lib/glow/index.ts`.
+- `src/components/glow/ViewerProvider.tsx` (client): `ViewerProvider`, `useViewer()`, `useGlowData()`.
+- `src/components/glow/WhichOneAreYou.tsx` (client): the D3 first-visit sheet, self-contained. Both are in the `components/glow` barrel.
+- `src/app/ledger/[id]/page.tsx`: wrapped the returned tree in `<ViewerProvider>` (import plus one wrapper; the page is still a server component and still does the reads; inner JSX not re-indented, to keep the diff small for T07).
+**Checked:** npm test ✓ (108 pass, 1 skipped as before; 18 new) · lint ✓ · build ✓ · visual:
+- Prompt compared with board 21 (phone sheet) at 390 wide, light and dark: layout, 36px avatars, 56px rows, 44px close, grabber, 28px top radius all match. Desktop card seen at about 800 wide, dark. Not shot at 1280 or on phone with the OS in dark.
+- Done-when, on the seeded Veld group with `npm run dev`:
+  - Prompt shows with nothing stored, not with a valid stored viewer, after a reload too.
+  - Picking Stephen saves `potluck:viewer:{id}`, shows no prompt, and the numbers equal the board 23 values (chips 45.17 / 45.16 / 45.16 / 33.54 / 16.38, bar 17.4% + 37.6%, paid CA$271.00).
+  - Switching to Alvin changed top-row balance, impact, share bar and chips with 0 fetches and 0 new resource requests. (Checked with a throwaway probe component calling `useViewer()` / `useGlowData()`; deleted before commit.)
+  - Stored unknown id, and a stored archived member (archived Angus in dev, then reseeded): no crash, prompt shows, `memberOrder` still has all 6, the archived member isn't offered.
+  - Storage that throws on read and write: no error, and a pick still applies for the visit (in-memory fallback).
+  - Esc dismisses the prompt and stores nothing; the old Add Expense modal still opens afterwards.
+- Not checked: a screen reader (the "Now viewing as …" live region is in the DOM and its text was read back); focus return after the prompt closes (nothing opened it, so there is nothing to return to).
+**Differs from the boards:** the prompt has no board. It follows board 21 with the heading, hint and a bookmark line; the desktop card is my choice. No swipe-down to close (T11/T07 own the shared sheet).
+**Decided:**
+- **Archived or deleted stored viewer shows the prompt**, like "nothing stored" (docs/04: "fall back as below"). I don't silently pick another member, because that would show someone else's balances as "yours". The stale value is left in storage until a pick overwrites it.
+- **Dismissing** (Esc, scrim, ✕) hides the prompt for this page load only and stores nothing; `viewerId` stays null and the page keeps neutral wording (D3). T07's pill should offer a way back to picking.
+- **`status: "loading"`** on the server render and first client render (storage isn't readable there). The saved id is read through `useSyncExternalStore`, so no hydration mismatch and no effect+setState. Viewer-relative UI should show neutral wording while `loading`. It also syncs across tabs via the `storage` event.
+- **`useGlowData()`** returns `{ data, currency, slots, totals, forViewer }`. `data`, `slots`, `totals` depend only on the rows; `forViewer` is `null` with no viewer, else `{ ledger, pairs, chips, counts, share }` from T03, recomputed only when the viewer or rows change. `memberOrder` is built from `users` with archived members included, in the same order as the avatar colours (`memberSlots`).
+- `setViewer(id)` ignores ids that aren't a current member and announces "Now viewing as {name}" in an `aria-live` region (docs/04), so T07's menu gets the announcement by calling it.
+- The sheet shows each member's group net ("gets back …" / "owes …" / "settled up", docs/06) like the viewer menu, using `Money`.
+- The page passes the same rows to `ViewerProvider` as to the existing client components, so they are serialised twice. Fine at this size.
+**New copy:** "Bookmark this page. The link is how you get back to this group." (D2 says the prompt mentions bookmarking; docs/06 has no string). The heading, hint, "gets back / owes / settled up", "Close" and "Now viewing as {name}" are from docs/06.
+**Next session should know:**
+- T07: use `useViewer()` for the pill (`viewer`, `pickable`, `setViewer`) and `useGlowData().totals` for each member's net. The first-visit sheet stays separate from your `ViewerSheet`; delete or fold it in later if you want one component.
+- T08 and the rest: numbers come from `useGlowData().forViewer` (null until a viewer exists). `forViewer.ledger` is `viewerLedger`'s output, in that function's order.
+- Dev server was started by port (`PORT=3106`) and stopped by port.
 
 ### 2026-11-13 · review T05, T20 · claude-opus-5-5
 **Status:** T05 ([PR #18](https://github.com/jackyzhong/potluck/pull/18)) and T20 ([PR #17](https://github.com/jackyzhong/potluck/pull/17)) merged into `glow`. T06 dispatched.
