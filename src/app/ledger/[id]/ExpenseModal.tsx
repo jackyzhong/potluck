@@ -84,19 +84,25 @@ export default function ExpenseModal({
         expenseDate.setMinutes(expenseDate.getMinutes() - expenseDate.getTimezoneOffset());
         setDate(expenseDate.toISOString().slice(0, 16));
 
+        // Start every split field from a clean slate. Each branch below only
+        // sets the fields its own mode uses, so anything not reset here would
+        // carry over from whichever expense was open before this one.
+        setSplitMode("EQUAL");
+        setSelectedSplitUsers(users.map(u => u.id));
+        setExactAmounts({});
+        setPercentages({});
+
         // Attempt to infer split mode based on existing splits
         if (existingSplits && existingSplits.length > 0) {
           const splitUserIds = existingSplits.map(s => s.user_id);
-          
+          setSelectedSplitUsers(splitUserIds);
+
           // Check if it looks equal
           const totalAmount = existingExpense.amount_cents;
           const baseAmount = Math.floor(totalAmount / existingSplits.length);
           const isMostlyEqual = existingSplits.every(s => Math.abs(s.amount_cents - baseAmount) <= 1);
 
-          if (isMostlyEqual) {
-            setSplitMode("EQUAL");
-            setSelectedSplitUsers(splitUserIds);
-          } else {
+          if (!isMostlyEqual) {
             // Default to EXACT if we can't be sure it's equal or percent
             setSplitMode("EXACT");
             const amounts: Record<string, string> = {};
@@ -271,7 +277,7 @@ export default function ExpenseModal({
     }
     else if (splitMode === "PERCENT") {
       let allocatedCents = 0;
-      const percentEntries = Object.entries(percentages).filter(([_, val]) => parseFloat(val) > 0);
+      const percentEntries = Object.entries(percentages).filter(([, val]) => parseFloat(val) > 0);
 
       finalSplits = percentEntries.map(([userId, val], index) => {
         const isLast = index === percentEntries.length - 1;

@@ -265,12 +265,12 @@ export function getSimplifiedDebts(
   const balances = getNetBalances(expenses, splits, payments, exchangeRates);
 
   const debtors = Object.entries(balances)
-    .filter(([_, bal]) => bal < 0)
+    .filter(([, bal]) => bal < 0)
     .map(([id, bal]) => ({ id, bal: -bal }))
     .sort((a, b) => b.bal - a.bal); // largest debtor first
 
   const creditors = Object.entries(balances)
-    .filter(([_, bal]) => bal > 0)
+    .filter(([, bal]) => bal > 0)
     .map(([id, bal]) => ({ id, bal }))
     .sort((a, b) => b.bal - a.bal); // largest creditor first
 
