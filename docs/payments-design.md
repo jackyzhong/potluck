@@ -68,7 +68,7 @@ synthetic split row, which is what Splitwise does internally and which gets the
 balance math for free. It was rejected because it makes the correctness of
 every balance depend on a `splits` row that does not mean what a split means —
 a payment written without its fake split row produces silently wrong balances,
-the same failure shape as the missing-RLS bug (KNOWN-ISSUES 2.2). It also puts
+the same failure shape as the missing-RLS bug (formerly KNOWN-ISSUES 2.2). It also puts
 payments within reach of `ExpenseModal`, whose split-mode inference is already
 known-buggy (KNOWN-ISSUES 1.2, 1.3) and would corrupt one.
 

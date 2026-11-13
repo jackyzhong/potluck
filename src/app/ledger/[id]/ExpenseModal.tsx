@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/src/lib/supabase";
+import { saveExpense, deleteExpense } from "./actions";
 import { CURRENCY_LIST, CURRENCIES } from "@/src/lib/currencies";
 import { useModalKeyboard } from "@/src/lib/useModalKeyboard";
 
@@ -188,72 +188,9 @@ export default function ExpenseModal({
 
     const amountCents = amountCentsForSplit;
 
-    let expenseId = existingExpense?.id;
-
-    if (existingExpense) {
-      // UPDATE existing expense
-      const { data: updatedRows, error: updateError } = await supabase
-        .from("expenses")
-        .update({
-          payer_id: payerId,
-          description: description.trim() || null,
-          amount_cents: amountCents,
-          original_currency: currency,
-          created_at: new Date(date).toISOString()
-        })
-        .eq("id", existingExpense.id)
-        .select("id");
-
-      // A row the database declines to update comes back as success with no
-      // rows, so an empty result has to count as a failure — otherwise the
-      // edit silently does nothing and the splits below get rewritten anyway.
-      if (updateError || !updatedRows?.length) {
-        console.error("Failed to update expense:", updateError);
-        alert("Failed to update expense.");
-        setIsSubmittingExpense(false);
-        return;
-      }
-      
-      // Delete old splits
-      const { error: deleteSplitsError } = await supabase
-        .from("splits")
-        .delete()
-        .eq("expense_id", existingExpense.id);
-        
-      if (deleteSplitsError) {
-        console.error("Failed to delete old splits:", deleteSplitsError);
-        alert("Failed to update splits.");
-        setIsSubmittingExpense(false);
-        return;
-      }
-    } else {
-      // INSERT new expense
-      const { data: expenseData, error: expenseError } = await supabase
-        .from("expenses")
-        .insert([{
-          ledger_id: ledgerId,
-          payer_id: payerId,
-          description: description.trim() || null,
-          amount_cents: amountCents,
-          original_currency: currency,
-          created_at: new Date(date).toISOString()
-        }])
-        .select()
-        .single();
-
-      if (expenseError || !expenseData) {
-        console.error("Failed to add expense:", expenseError);
-        alert("Failed to add expense.");
-        setIsSubmittingExpense(false);
-        return;
-      }
-      expenseId = expenseData.id;
-    }
-
-    if (!expenseId) return;
-
-    // Calculate new splits
-    let finalSplits: { expense_id: string; user_id: string; amount_cents: number }[] = [];
+    // Work out each person's share in cents. The server re-checks all of this,
+    // including that the shares add up to exactly the total.
+    let finalSplits: { userId: string; amountCents: number }[] = [];
 
     if (splitMode === "EQUAL") {
       const splitCount = selectedSplitUsers.length;
@@ -261,19 +198,17 @@ export default function ExpenseModal({
       const remainder = amountCents % splitCount;
 
       finalSplits = selectedSplitUsers.map((userId, index) => ({
-        expense_id: expenseId!,
-        user_id: userId,
-        amount_cents: baseAmount + (index < remainder ? 1 : 0)
+        userId,
+        amountCents: baseAmount + (index < remainder ? 1 : 0)
       }));
     }
     else if (splitMode === "EXACT") {
       finalSplits = Object.entries(exactAmounts)
         .map(([userId, val]) => ({
-          expense_id: expenseId!,
-          user_id: userId,
-          amount_cents: Math.round(parseFloat(val || "0") * Math.pow(10, selectedCurrency.decimals))
+          userId,
+          amountCents: Math.round(parseFloat(val || "0") * Math.pow(10, selectedCurrency.decimals))
         }))
-        .filter(s => s.amount_cents > 0);
+        .filter(s => s.amountCents > 0);
     }
     else if (splitMode === "PERCENT") {
       let allocatedCents = 0;
@@ -282,27 +217,33 @@ export default function ExpenseModal({
       finalSplits = percentEntries.map(([userId, val], index) => {
         const isLast = index === percentEntries.length - 1;
         if (isLast) {
-          return { expense_id: expenseId!, user_id: userId, amount_cents: amountCents - allocatedCents };
+          return { userId, amountCents: amountCents - allocatedCents };
         }
         const calcAmount = Math.round(amountCents * (parseFloat(val) / 100));
         allocatedCents += calcAmount;
-        return { expense_id: expenseId!, user_id: userId, amount_cents: calcAmount };
+        return { userId, amountCents: calcAmount };
       });
     }
 
-    // Insert new splits
-    const { error: splitsError } = await supabase
-      .from("splits")
-      .insert(finalSplits);
+    // The expense and its splits are saved together in one transaction, so a
+    // failure can no longer leave an expense without its splits.
+    const result = await saveExpense(ledgerId, existingExpense?.id ?? null, {
+      payerId,
+      description,
+      amountCents,
+      currency,
+      createdAt: new Date(date).toISOString(),
+      splits: finalSplits
+    });
 
-    if (splitsError) {
-      console.error("Failed to add splits:", splitsError);
-      alert("Expense saved, but failed to save splits.");
-    } else {
-      router.refresh();
-      onClose();
+    if (!result.ok) {
+      alert(result.error);
+      setIsSubmittingExpense(false);
+      return;
     }
 
+    router.refresh();
+    onClose();
     setIsSubmittingExpense(false);
   };
 
@@ -311,15 +252,10 @@ export default function ExpenseModal({
     
     if (window.confirm("Are you sure you want to delete this expense? This action cannot be undone.")) {
       setIsSubmittingExpense(true);
-      
-      const { error: expenseError } = await supabase
-        .from("expenses")
-        .delete()
-        .eq("id", existingExpense.id);
-        
-      if (expenseError) {
-        console.error("Failed to delete expense:", expenseError);
-        alert("Failed to delete the expense.");
+
+      const result = await deleteExpense(ledgerId, existingExpense.id);
+      if (!result.ok) {
+        alert(result.error);
         setIsSubmittingExpense(false);
         return;
       }

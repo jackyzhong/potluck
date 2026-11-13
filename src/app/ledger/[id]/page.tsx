@@ -1,5 +1,6 @@
 // src/app/ledger/[id]/page.tsx
-import { supabase } from "@/src/lib/supabase";
+import { db } from "@/src/lib/server/supabase";
+import { isUuid } from "@/src/lib/validation";
 import { notFound } from "next/navigation";
 import ActionMenu from "./ActionMenu";
 
@@ -22,8 +23,13 @@ export default async function LedgerPage({
   const sp = await searchParams;
   const tab = typeof sp.tab === 'string' ? sp.tab : 'activity';
 
+  // Anything that is not a UUID cannot be a ledger; don't send it to the database.
+  if (!isUuid(id)) {
+    return notFound();
+  }
+
   // Fetch ledger
-  const { data: ledger, error: ledgerError } = await supabase
+  const { data: ledger, error: ledgerError } = await db
     .from("ledgers")
     .select("*")
     .eq("id", id)
@@ -34,21 +40,21 @@ export default async function LedgerPage({
   }
 
   // Fetch users
-  const { data: users } = await supabase
+  const { data: users } = await db
     .from("users")
     .select("*")
     .eq("ledger_id", id)
     .order("created_at", { ascending: true });
 
   // Fetch expenses
-  const { data: expenses } = await supabase
+  const { data: expenses } = await db
     .from("expenses")
     .select("*")
     .eq("ledger_id", id)
     .order("created_at", { ascending: false });
 
   // Fetch payments (settlements between members)
-  const { data: payments } = await supabase
+  const { data: payments } = await db
     .from("payments")
     .select("*")
     .eq("ledger_id", id)
@@ -61,7 +67,7 @@ export default async function LedgerPage({
   let allSplits: Split[] = [];
   if (ledgerExpenses.length > 0) {
     const expenseIds = ledgerExpenses.map(e => e.id);
-    const { data: splits } = await supabase
+    const { data: splits } = await db
       .from("splits")
       .select("*")
       .in("expense_id", expenseIds);
