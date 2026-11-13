@@ -83,9 +83,44 @@ which doc and section, what it says, and what's actually true. `PLAN.md`
 **Next session should know:** traps, half-finished edges, follow-ups.
 ```
 
+Coordinator sessions (dispatching, reviewing, merging) use this instead:
+
+```
+### YYYY-MM-DD · review T##[–T##] · <model>
+**Status:** what was merged into `glow` (PR links), sent back, or dispatched.
+**Changed:** anything the coordinator changed itself (fixes on a PR, baseline fixes, PLAN.md).
+**Checked:** test / lint / build on merged `glow`; what you re-checked yourself, beyond the workers' logs.
+**Next session should know:** what's unblocked, what's in flight (branches, sessions), what waits on the owner.
+```
+
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · coordinator docs · claude-opus-5-5
+**Status:** done. No product code changed. The build no longer depends on any chat thread.
+**Changed:**
+- PLAN.md:
+  - "Start here" (the two roles).
+  - "Coordinating the build": finding the state, choosing tasks, the collision table, the brief template, the review checklist, merging, before you stop, and what only the owner does.
+  - "Access and tools": GitHub, env vars, Supabase including four ways to apply a migration to dev or hand it to the owner, Vercel, and what to do when a tool is missing.
+  - Branch names may carry a harness prefix.
+- `scripts/resolve-progress-conflicts.py`: the PROGRESS.md conflict resolver used for the T01–T04 merges.
+- `scripts/check-dev-env.mjs`: confirms `.env.local` points at dev and the key works, without printing it.
+- Coordinator log template above.
+- `AGENTS.md`, `docs/HANDOFF.md`, the Glow `README.md`: point at the above.
+**Checked:**
+- Resolver tested on a synthetic conflict. `check-dev-env.mjs` passes against dev.
+- Vercel is the only check on PRs (no `.github/`).
+- A fresh Sonnet agent with no chat history coordinated from the repo alone. It found the state, picked T05, and wrote a correct brief. It also reported gaps, and these are fixed in this commit:
+  - **Board edits:** claiming now happens on the task branch only. The coordinator no longer edits a task's row on `glow` before merging, so the same row is never changed on both sides.
+  - **Dev page:** T05's gallery is gated on `VERCEL_ENV`, not `NODE_ENV`. Previews are production builds, so it would otherwise 404 on the `glow` Preview.
+  - **T05 scope:** avatar colours count archived members; `Toast` is presentational only (T18 wires it).
+  - **Collision table:** rows for `src/components/glow/` and the gallery, plus a rule for `globals.css`.
+  - **Worktrees:** what to do when `glow` is checked out in another worktree.
+  - **Migrations:** the history row's `name` and `statements`, a `psql` option, and "ask the owner" as the fallback.
+  - **Smaller fixes:** model names, a stale header line, and the empty-decisions case in the brief template.
+**Next session should know:** a coordinator in any harness starts at `AGENTS.md`. Next up is T05, with T20 alongside if wanted. The finished T01–T04 worktrees under `.claude/worktrees/` can be removed.
 
 ### 2026-11-13 · review T01–T04 · claude-opus-5-5
 **Status:** T01–T04 merged into `glow` (PRs #12–#15).

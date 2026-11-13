@@ -6,7 +6,7 @@ It is written for a coding agent whose job is to **compare this design with the 
 
 Design canvas (owner-only link, for the human): https://claude.ai/artifact/GdXRHVxkfNGTeaNJBKkxPe
 
-> **Building this?** Start with [`PLAN.md`](./PLAN.md) (decisions and task list) and [`PROGRESS.md`](./PROGRESS.md) (status and session log). The spec below is what they point into.
+> **Building this?** Start with [`PLAN.md`](./PLAN.md) (decisions, task list, how to coordinate, access and tools) and [`PROGRESS.md`](./PROGRESS.md) (status and session log). The spec below is what they point into. The build runs on the `glow` branch.
 
 ## Read in this order
 

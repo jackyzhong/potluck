@@ -1,5 +1,7 @@
 # Handoff: Docs/Code Reconciliation Pass
 
+> **Current work (from 2026-11-13): the Glow UI redesign.** It is built on the `glow` branch and tracked in [`potluck-glow-redesign/PLAN.md`](./potluck-glow-redesign/PLAN.md) and [`PROGRESS.md`](./potluck-glow-redesign/PROGRESS.md). Start there. This file is the history of the earlier reconciliation pass and the priorities it set.
+
 **Context for the next thread:** This project (`docs/PRD.md`, `docs/db-chart.md`, `docs/features.md`) drifted from the actual `src/` implementation over time. We ran a reconciliation pass: audited the drift, then went through it decision-by-decision. This file is the state of that pass — read it first, then the three docs above, before picking up new work.
 
 **Repo/git state as of this handoff:** `main` branch, working tree clean, in sync with `origin/main` (`https://github.com/jackyzhong/potluck.git`). `.env.local` is correctly covered by `.gitignore` (`.env*`) and was never tracked — no secrets in history. Latest 2 commits already reflect the doc updates below (`Updated db-chart`, `Updated features`).

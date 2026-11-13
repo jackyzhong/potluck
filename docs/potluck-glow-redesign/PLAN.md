@@ -5,9 +5,20 @@ How the Glow redesign gets built, one small task per session. This file says
 should look like and compute**. [`PROGRESS.md`](./PROGRESS.md) says **where
 the work stands**.
 
-Written 2026-11-13 against `main` at `7b98618` (after the access-model and
-archive-members PRs). Change this file only when a decision changes or a
-task's scope has to change, and say so in the PROGRESS log when you do.
+First written 2026-11-13, from `main` at `7b98618`. This file holds the
+plan and the procedures. It never holds the current state: that's
+`PROGRESS.md`, and git (`origin/glow`). Change this file when a decision,
+a task's scope or a procedure changes, and say so in the PROGRESS log.
+
+**Start here.** Everything needed to continue the build is in this folder;
+no chat history is required. Two roles, in any harness or model:
+
+- **Task worker:** asked to do one task (e.g. "do T08"). Read
+  "How to work a task", then "Rules for every task", "Local setup",
+  "Access and tools", and your task's section.
+- **Coordinator:** asked to "continue the Glow build", or to pick the work
+  back up after a break. Read "Coordinating the build". It covers finding
+  the state, dispatching tasks, reviewing them, and merging into `glow`.
 
 ---
 
@@ -16,8 +27,11 @@ task's scope has to change, and say so in the PROGRESS log when you do.
 1. **Read [`PROGRESS.md`](./PROGRESS.md) first.** Take the first task in the
    board whose status is `todo` and whose dependencies are all `done`. Don't
    start a task another session has `in progress`.
-2. **Mark it claimed.** Set its status to `in progress` with your branch name,
-   commit just that change, and push.
+2. **Mark it claimed, on your own branch.** Cut your task branch from
+   `origin/glow` and set the task's status to `in progress` with your branch
+   name. Commit just that change and push the branch. Don't push board edits
+   straight to `glow`: until your PR merges, you own your task's row, and
+   only on your branch.
 3. **Read only what the task lists**, plus "Rules for every task" below. The
    spec is about 14k words; a task needs a few sections of it, not all of it.
 4. **Build it.** Stay inside the files the task names. If you have to touch
@@ -40,10 +54,241 @@ guess. A guess made in one session gets undone in the next.
 
 - `glow` is the integration branch, cut from `main`. Every task PR targets it,
   so production stays on the current UI until the whole redesign is ready.
-- Task branches are named `glow/T07-page-frame`, cut from the latest `glow`.
+- Task branches are cut from the latest `origin/glow`. Prefer
+  `glow/T07-page-frame`. A harness that adds its own prefix
+  (`claude/glow-t07-…`) is fine, as long as the task id is in the name.
 - When the board is all `done`, `glow` merges to `main` in one PR (task T21).
 - If `main` moves (realtime, fixes), merge `main` into `glow`; never rebase
   `glow`.
+
+---
+
+## Coordinating the build
+
+The coordinator keeps the build moving across sessions. It works out where
+things stand, hands tasks to workers (other sessions, other models or other
+harnesses), reviews their PRs, and merges them into `glow`. It writes little
+product code itself. Any model or harness can coordinate; a strong model is
+worth it here, because review is where mistakes get caught.
+
+Nothing about the build may live only in a chat. If it matters, it goes in
+this file, `PROGRESS.md`, a commit, or a PR.
+
+### 1. Find the state (every time you start)
+
+```bash
+git fetch origin
+git log --oneline -5 origin/glow
+git log --oneline origin/glow..origin/main   # main moved? merge it into glow (see Branches)
+gh pr list --base glow --state open          # task PRs waiting for review
+git branch -r | grep -i glow                 # task branches, including abandoned ones
+```
+
+Then read `PROGRESS.md`:
+
+- **Board:** what is `done`, `in review`, `in progress` or `blocked`.
+- **Open questions:** anything the owner has answered gets folded into this
+  file. Delete the question and note it in the log.
+- **The five newest log entries:** especially "Next session should know".
+
+**Reconcile what you find:**
+
+- **A task branch with no PR, and no worker still running.** In-flight work
+  shows up as branches and PRs, not on `glow`'s board, because workers claim
+  on their own branches. If the branch has useful commits, a new worker
+  continues from it (say so in the brief). If not, ignore it, and delete it
+  once you're sure it's dead.
+- **`in review`:** review it (step 4).
+- **A PR open into `glow` that the board doesn't mention:** review it anyway,
+  and fix the board.
+
+**Check the baseline is green** on `glow` before handing anything out:
+
+```bash
+git checkout glow && git pull --ff-only
+cp "$(git rev-parse --path-format=absolute --git-common-dir)/../.env.local" .env.local   # if missing
+node scripts/check-dev-env.mjs        # must pass before anything touches the database
+npm test && npm run lint && npm run build
+```
+
+If `git checkout glow` fails because `glow` is checked out in another
+worktree, run these in that worktree instead (`git worktree list` shows
+where). Or use a throwaway checkout:
+`git worktree add ../glow-coord glow`.
+
+If it's red, fix that first, as its own small commit on `glow` with a log
+entry. A check that was already failing makes every worker report a failure
+you can't tell apart from a real one.
+
+### 2. Pick what to hand out
+
+**Ready** means `todo` with every dependency `done` (see the board and
+"Order at a glance").
+
+Run up to three or four at once, and never more than you can review. Don't
+run two tasks together if they would collide on any of these:
+
+| Shared thing | Tasks that touch it | What to do |
+|---|---|---|
+| `src/app/ledger/[id]/page.tsx` | T07, T08, T09, T10, T11 | Run in sequence, or tell each brief to keep its page edit to a few lines |
+| `src/lib/validation.ts`, `actions.ts` | T04, T12, T13, T14, T15 | Run in sequence |
+| `src/app/globals.css`, `tokens.css` | T02, T05, T20 | Neither T05 nor T20 should need them. If one must (e.g. to map type sizes as utilities), say so in its brief, and keep the other off them |
+| `src/components/glow/` | T05, then most UI tasks add files | Fine together: one component per file. Two tasks changing the same existing component run in sequence |
+| `src/app/dev/glow/page.tsx` (the component gallery) | T05, and any task that adds a component to it | Fine together if each adds its own section. Expect a small conflict at the end of the file, resolved by keeping both |
+| The dev database | T01, T04, any task that saves through the UI | Tell each brief to test in its own throwaway group, delete it after, and leave the "Veld 2026" group alone |
+| `PROGRESS.md` | every task | Expected. Resolve on merge (step 5) |
+
+**Model choice:**
+- The well-specified, testable tasks run well on a cheaper mid-tier model
+  (e.g. Claude Sonnet): T01, T03,
+  T04, T05, T06, T09, T10, T15, T17 and T18.
+- The tasks that need judgement against the boards will come back with
+  visual gaps, so budget a review pass for them: T07, T08, T11, T13, T14,
+  T16 and T19.
+
+### 3. Write the brief
+
+Each worker starts cold. Give it the template below, filled in, plus a short
+background paragraph. The task details already live in this file, so the
+brief points to them rather than repeating them.
+
+> **Background:** Potluck (Next.js 16 with breaking changes, React 19,
+> Tailwind v4, Supabase, Vercel) is being redesigned ("Glow"). The build is
+> split into tasks in `docs/potluck-glow-redesign/PLAN.md`, tracked in
+> `PROGRESS.md`. Decisions D1–D22 are settled; don't ask about them. Task PRs
+> go into the `glow` branch, never `main`. Running in parallel right now:
+> *{other tasks and what they touch}*. Production Supabase (ref
+> `xjkvjfmdljdpynlumszz`) must never be touched.
+>
+> **Brief:** Do task **T## (*title*)** from
+> `docs/potluck-glow-redesign/PLAN.md`, and only that task.
+> 1. Read `AGENTS.md`. Then read these PLAN.md sections: "How to work a
+>    task", "Rules for every task", "Local setup", "Access and tools",
+>    decisions *{the D# the task names, if any}*, and the T## section,
+>    including its boards in `screens/` *{or: no boards}*. Read the
+>    PROGRESS.md board and newest log entries, then the files T## lists.
+> 2. Work on a branch cut from the latest `origin/glow`. Copy `.env.local`
+>    per "Local setup", and run `node scripts/check-dev-env.mjs` before
+>    anything touches the database. Claim the task on your branch ("How to
+>    work a task", step 2).
+> 3. Build what T## lists. *{Task-specific notes: collisions from the table
+>    above, relevant "Next session should know" items, where to resume if
+>    an earlier branch exists.}*
+> 4. Check every "Done when" item. `npm test`, `npm run lint` and
+>    `npm run build` must all pass.
+> 5. In PROGRESS.md, edit only the T## board row, and add your log entry at
+>    the top of the Log. Commit, push, and open a ready-for-review PR into
+>    `glow` (`gh pr create --base glow`).
+>
+> If you hit a decision the plan doesn't settle, add an Open question in
+> PROGRESS.md and stop rather than guess.
+
+Don't edit a task's board row on `glow` while it's open. The worker owns
+it on its branch, and two edits to one row make the merge conflict
+unresolvable by script. You change it once, after merging (step 5).
+
+### 4. Review each PR
+
+Read the diff, not just the worker's summary. A summary is a claim, not
+evidence. Check:
+
+- **Scope:** the base is `glow`, and the diff stays inside the task's files.
+  Anything outside them is explained in the log entry.
+- **Done when:** every item has evidence in the log entry. Re-check the
+  riskiest one yourself (re-run a test, open the page, query dev).
+- **Checks:** test, lint and build pass on the branch. Run them yourself if
+  in doubt.
+- **Money:** integer cents everywhere, and cents conserved (splits sum to
+  the total). Calculations come from `src/lib/glow/`; components don't
+  re-derive them.
+- **Data access:** no Supabase client in the browser. Every write goes
+  through a server action that validates input and is scoped to the ledger
+  (see "Rules for every task").
+- **UI:**
+  - Token utilities only, never raw hex. Copy comes from docs/06.
+  - Open it at 1280 and 390 wide, in light and dark, and compare with the
+    task's boards in `screens/`. This is where cheaper models fall short
+    most.
+- **Database tasks:**
+  - The migration file's version equals the version recorded on dev.
+  - Production's migration list is unchanged.
+  - The worker's throwaway data is gone.
+- **The worker's notes:** any new "Spec corrections" or "Open questions"
+  entries have been read and handled.
+
+**If a PR falls short:**
+- **Small fixes:** push them to the PR branch yourself.
+- **Anything bigger:** send it back with specific notes. Message the worker's
+  session if it's still around, or start a new worker on the same branch
+  with the notes in its brief.
+- **If the plan or brief misled the worker:** fix this file too, so the next
+  task doesn't repeat the mistake.
+
+### 5. Merge into `glow`
+
+Merge locally, one PR at a time. GitHub marks each PR merged once its
+commits are on `glow`.
+
+```bash
+git checkout glow && git pull --ff-only
+git merge --no-ff origin/<task-branch> -m "Merge <task-branch> into glow"
+# If only PROGRESS.md conflicts (the usual case):
+python3 scripts/resolve-progress-conflicts.py docs/potluck-glow-redesign/PROGRESS.md
+git add docs/potluck-glow-redesign/PROGRESS.md && git commit --no-edit
+```
+
+The script keeps both sides of each conflict. For a board row, it takes the
+side that moved the task off `todo`. For log entries, it keeps both, newest
+first. It refuses if both sides changed the same board row; resolve that by
+hand. A conflict in any other file means two tasks overlapped: resolve it by
+hand, and say how in your log entry.
+
+After the last merge of the batch:
+
+```bash
+npm test && npm run lint && npm run build     # on the merged result
+```
+
+Then, in `PROGRESS.md`:
+- Set each merged task to `done` with `[PR #N](link)`.
+- Add a coordinator entry at the top of the log, using the coordinator
+  template in PROGRESS.md (`### YYYY-MM-DD · review T## · <model>`).
+  Record:
+  - what you merged;
+  - what you fixed or sent back;
+  - what you checked yourself;
+  - what's now unblocked.
+
+Commit, then `git push origin glow`. The `glow` Preview redeploys in about
+a minute (see "Access and tools").
+
+### 6. Before you stop
+
+- Everything is committed and pushed. No work only in a local checkout, no
+  state only in a chat.
+- The board is true: every `in progress` row has a live branch or session.
+  Anything abandoned goes back to `todo`, with a log note on where its
+  branch stands.
+- Your log entry says what's next, and what's waiting on the owner.
+
+### What only the owner does
+
+Ask; don't do these yourself:
+
+- **Production:**
+  - anything against the production database;
+  - Vercel's Production environment;
+  - merging `glow` into `main` (T21).
+- **Secrets:**
+  - changing Vercel environment variables;
+  - creating or rotating Supabase keys;
+  - handing secrets to a cloud harness.
+- **Product calls:**
+  - changing a decision D1–D22;
+  - answering Open questions.
+- **Irreversible or paid:**
+  - deleting projects or branches other than finished task branches;
+  - anything that costs money.
 
 ---
 
@@ -150,8 +395,10 @@ That file must point at the **dev** Supabase project:
 | `potluck-dev` | `pooogudusmmfuztxaqfg` | Local dev, seeding, migrations under test, Vercel Preview |
 | `Potluck` (production) | `xjkvjfmdljdpynlumszz` | Production only. Never run the app, a seed or a migration against it from a task |
 
-If `NEXT_PUBLIC_SUPABASE_URL` in `.env.local` doesn't contain the dev ref,
-stop. Don't run the app.
+Then run `node scripts/check-dev-env.mjs`. It loads `.env.local` the way
+the app does, and confirms both that it points at the dev project and that
+the key works there. It never prints the key. If it fails, stop: don't run
+the app, a seed or a migration.
 
 The dev project has every migration in `supabase/migrations/` applied, its
 migration history uses the same version numbers as the files, and its schema
@@ -160,6 +407,118 @@ apply it to dev under the file's version and note it in the log.
 
 Seed the sample group with `node scripts/seed-dev.mjs` (built in T01). It
 prints the group's URL.
+
+---
+
+## Access and tools
+
+What the build touches outside the repo, and how to reach each thing from
+any harness. Where something needs the owner, it says so.
+
+### GitHub
+
+- **Repo:** `jackyzhong/potluck`. Integration branch `glow`, production
+  branch `main`.
+- **Pushing:** needs git credentials.
+- **PRs:** open with the `gh` CLI (`gh pr create --base glow`), or on the
+  web at `https://github.com/jackyzhong/potluck/compare/glow...<branch>`.
+- **CI:** Vercel builds a Preview for every pushed branch. There is no other
+  CI, so test and lint run locally.
+
+### Environment variables
+
+- **Where they live:** `.env.local` in the main checkout
+  (`/Users/jackyzhong/Desktop/Potluck/.env.local` on the owner's Mac). It is
+  never committed. Worktrees copy it (see "Local setup").
+- **What it holds:**
+  - `NEXT_PUBLIC_SUPABASE_URL`, the dev project's URL;
+  - `SUPABASE_SECRET_KEY`, the dev project's secret key;
+  - commented-out production lines. Leave them commented.
+- **Never** print, log or commit the secret key. To check a key works,
+  load it in a script and print only pass/fail. Don't echo it.
+- **A cloud or remote harness** has no copy. The owner must provide these
+  two values as that harness's secrets. Ask; don't work around it.
+
+### Supabase
+
+| Project | Ref | URL |
+|---|---|---|
+| `potluck-dev` | `pooogudusmmfuztxaqfg` | `https://pooogudusmmfuztxaqfg.supabase.co` |
+| `Potluck` (production) | `xjkvjfmdljdpynlumszz` | Never from a task |
+
+**Reading dev data:**
+- The app and scripts use the secret key through supabase-js.
+- Ad-hoc SQL needs an SQL tool: a Supabase MCP connector with `execute_sql`,
+  the dashboard's SQL editor, or `psql` with the dev connection string (the
+  owner gets it from Project Settings → Database).
+
+**Applying a migration to dev.** Use whichever of these you have. The
+version recorded on dev must equal the file's prefix
+(`supabase/migrations/<version>_<name>.sql`). The `name` recorded is the
+rest of the filename, without `.sql`. `statements` is a `text[]` and may be
+empty (`'{}'`). If you have none of these, write the migration, commit it,
+and ask the owner to apply it. Say so in the log, and leave every "applied
+to dev" item unchecked.
+
+1. **A Supabase MCP connector** (`apply_migration` on the dev project). It
+   stamps its own timestamp, so fix the version afterwards:
+   ```sql
+   update supabase_migrations.schema_migrations
+      set version = '<file version>' where version = '<stamped version>';
+   ```
+2. **The dashboard SQL editor** (owner signs in). Paste the file and run it.
+   Then record it:
+   ```sql
+   insert into supabase_migrations.schema_migrations (version, name, statements)
+   values ('<file version>', '<name>', '{}');
+   ```
+3. **`psql` with the dev connection string**, which the owner provides:
+   `psql "$DEV_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/<file>.sql`,
+   then the same `insert` as option 2.
+4. **The Supabase CLI.** It isn't installed and there's no `config.toml`. It
+   needs the owner's access token and the dev database password:
+   ```bash
+   npx supabase@latest link --project-ref pooogudusmmfuztxaqfg
+   npx supabase@latest db push
+   ```
+   It applies only the files missing from dev's history.
+
+**Check:**
+```sql
+select version, name from supabase_migrations.schema_migrations order by version;
+```
+Run it on dev; the new version should be last. Production's list must not
+change until T21. If you can read production's history read-only, confirm
+that. Otherwise say in the log that you couldn't.
+
+**Seeded data:**
+- `node scripts/seed-dev.mjs` (re)creates "Veld 2026" at a fixed id:
+  `/ledger/3894c472-c5d9-5a84-ad89-8f6aa3ea2361`.
+- It refuses to run against any host but dev.
+
+### Vercel
+
+- **Project:** `potluck`, under the `jackyzhongs-projects` team.
+- **Environment variables:** separate per environment.
+  - **Production** → production database.
+  - **Preview** → dev database.
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` is still set but unused.
+- **Previews:**
+  - Every pushed branch gets one.
+  - `glow` always lives at `https://potluck-git-glow-jackyzhongs-projects.vercel.app`.
+  - Each PR links its own Preview.
+  - Previews sit behind Vercel login (Deployment Protection), so a harness
+    without the owner's Vercel access can't open them. Use `npm run dev`
+    locally instead.
+- **Env var changes** take effect only on the next deploy. Push a commit or
+  redeploy.
+
+### Checking what you can't run
+
+If your harness lacks a tool (no browser, no SQL access, no Vercel access),
+do the rest of the task. In the log, name each "Done when" item you
+couldn't check and why. The coordinator or owner checks it before merging.
+Never mark an unchecked item as checked.
 
 ---
 
@@ -328,11 +687,17 @@ recommended option as a default (see "Decisions").
 **T05 · Foundation components** · M · depends on T02
 - **Build:** in `src/components/glow/`:
   - `Avatar` (palette from docs/02 "Member avatar palette", colour derived
-    from the member's position in ledger order)
+    from the member's position in ledger order, archived members included,
+    so nobody's colour changes when someone else is archived)
   - `Money`, `Kbd`, `Button`, `SegmentedControl`, `FilterChips`,
     `SearchField`, `Switch`, `StatusStrip`, `Toast`
-  - a dev-only preview page, `src/app/dev/glow/page.tsx`, that calls
-    `notFound()` in production and shows every variant.
+  - `Toast` is the presentational component only (look, variants, a11y
+    role). Wiring it into saves and errors is T18 (D15).
+  - a component gallery, `src/app/dev/glow/page.tsx`, showing every
+    variant. It calls `notFound()` only when
+    `process.env.VERCEL_ENV === "production"`. Vercel Preview builds also run
+    with `NODE_ENV=production`, so gating on `NODE_ENV` would hide it on the
+    `glow` Preview, where the owner looks at the work.
 - **Read:** `docs/03-components.md` "Foundations", `docs/02`.
 - **Done when:**
   - The preview page shows every variant in light and dark.
