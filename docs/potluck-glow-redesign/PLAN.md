@@ -59,7 +59,9 @@ guess. A guess made in one session gets undone in the next.
   (`claude/glow-t07-…`) is fine, as long as the task id is in the name.
 - When the board is all `done`, `glow` merges to `main` in one PR (task T21).
 - If `main` moves (realtime, fixes), merge `main` into `glow`; never rebase
-  `glow`.
+  `glow`. `main`'s `AGENTS.md` and `docs/HANDOFF.md` carry a short "go to
+  the `glow` branch" note. When merging `main` into `glow`, keep `glow`'s
+  version of those Glow sections.
 
 ---
 
