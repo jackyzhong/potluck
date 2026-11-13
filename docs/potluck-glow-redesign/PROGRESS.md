@@ -30,7 +30,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T04 | Schema: split mode, weights, created_by | T00a | done | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
 | T05 | Foundation components | T02 | done | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
 | T06 | Viewer state, first-visit prompt | T03, T05 | done | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
-| T07 | Page frame, viewing-as switcher | T06 | in review | PR_LINK |
+| T07 | Page frame, viewing-as switcher | T06 | in review | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
 | T08 | Activity hero, share card | T07 | todo | |
 | T09 | Ledger table and list | T07 | todo | |
 | T10 | Search and filters | T08, T09 | todo | |
@@ -98,7 +98,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 ---
 
 ### 2026-11-13 · T07 · claude-sonnet-5-5
-**Status:** done → in review (PR link on the board row).
+**Status:** done → in review ([PR #20](https://github.com/jackyzhong/potluck/pull/20)).
 **Changed:**
 - `src/app/ledger/[id]/GroupFrame.tsx` (new, client): the page frame. Header, tabs, the slots (below), `PhoneActionBar`, `ShortcutFooter`, and the open state of the three old modals (Add expense, Add payment, Manage members). `page.tsx` now returns `<ViewerProvider><GroupFrame …/></ViewerProvider>` and fills the slots with today's content.
 - `src/components/glow/` (new): `GroupHeader`, `GroupTabs` (+ `useGroupTab`, `parseTab`), `InvitePopover`, `PhoneActionBar`, `ShortcutFooter`, `ViewerPill` (+ `ViewerAvatarButton`), `ViewerMenu`, `ViewerSheet`, `ViewerChoices` (the list both share), `ViewerSwitcher` (state and focus return), `useDismiss`, `useIsPhone`. Added to the barrel; three icons added to `icons.tsx` (chevron, close, people).
