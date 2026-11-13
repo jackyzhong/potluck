@@ -43,7 +43,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
 | T18 | States and edge cases | T16 | todo | |
 | T19 | Accessibility and motion pass | T18 | todo | |
-| T20 | Home and create-group restyle | T02 | todo | |
+| T20 | Home and create-group restyle | T02 | in review | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
 | T21 | Ship | all | todo | |
 
 ---
@@ -96,6 +96,26 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T20 · claude-sonnet-5-5
+**Status:** done → in review (PR link on the board row).
+**Changed:**
+- `src/app/page.tsx`, `src/app/create-group/page.tsx`: every `zinc-*`, `white`, `black` and `green-*` class is now a token utility (`bg-bg`, `bg-surface`, `bg-surface-sunken`, `text-text`, `text-text-muted`, `border-line-strong`, `shadow-card`, `shadow-menu`, `bg-button-primary-bg`, `bg-button-disabled-bg`, …). Layout, copy and radii are unchanged (D22). No `dark:` variants.
+- Create-group: the emoji picker is third-party and can't read tokens, so the page tells it which theme is showing when it opens (`data-theme` on `<html>` if set, else the OS).
+**Checked:** npm test ✓ (77 pass, 1 skipped) · lint ✓ · build ✓ · visual:
+- `/` at 1280 and 390, light and dark (`data-theme` set by hand); `/create-group` at 390 dark and 1280 light, plus the currency dropdown and emoji picker open in light and dark.
+- OS dark with nothing stored (`potluck:theme` removed, reloaded): `--bg` is `#0F0F1A`, emoji picker is dark.
+- Plus Jakarta Sans shows on both pages.
+- Created a group through the UI against dev, which redirected to its ledger page. Deleted it afterwards (dev's only ledger is "Veld 2026"). Production not touched.
+- Not checked: `/create-group` at 1280 dark and 390 light as separate screenshots (same classes, covered by the others); keyboard focus order beyond the focus rings seen.
+**Differs from the boards:** n/a, no boards for these pages.
+**Decided:**
+- The "v0.1.0 Alpha" pulse dot was green, which the tokens don't have. It's `accent` (violet) now, in line with the "no green and red" rule in docs/02.
+- Shadows: the old `shadow-xl shadow-zinc-200` on the two primary buttons became `shadow-button`; the card uses `shadow-card`; the dropdown and emoji picker use `shadow-menu`.
+- Primary button hover is `hover:opacity-90` (there's no hover token).
+- Added `placeholder:text-text-muted` and `text-text` on the inputs, because the old hard-coded `text-black` would be unreadable on a dark field.
+**New copy:** none.
+**Next session should know:** the emoji picker's own palette (grey in dark) isn't a Glow token; replacing it is out of scope. The picker is placed with the existing `absolute mt-32` and overlaps the card at 390 wide, as it did before.
 
 ### 2026-11-13 · T05 · claude-sonnet-5-5
 **Status:** done → in review ([PR #18](https://github.com/jackyzhong/potluck/pull/18)).

@@ -9,10 +9,22 @@ import Link from "next/link";
 
 import { CURRENCY_LIST } from "@/src/lib/currencies";
 
+// The emoji picker is third-party and can't read our tokens, so tell it which
+// theme is showing: an explicit data-theme on <html> wins, otherwise the OS.
+function currentPickerTheme(): Theme {
+  const attr = document.documentElement.getAttribute("data-theme");
+  if (attr === "dark") return Theme.DARK;
+  if (attr === "light") return Theme.LIGHT;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? Theme.DARK
+    : Theme.LIGHT;
+}
+
 export default function CreateGroup() {
   const [groupName, setGroupName] = useState("");
   const [emoji, setEmoji] = useState("🍲");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [pickerTheme, setPickerTheme] = useState<Theme>(Theme.LIGHT);
   
   // Currency States
   const [currency, setCurrency] = useState("CAD");
@@ -69,12 +81,12 @@ export default function CreateGroup() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col p-6 relative selection:bg-zinc-900 selection:text-white overflow-y-auto">
+    <div className="min-h-screen bg-bg text-text flex flex-col p-6 relative selection:bg-button-primary-bg selection:text-button-primary-fg overflow-y-auto">
       {/* Top Navigation */}
       <nav className="max-w-2xl mx-auto w-full py-2 mb-4 shrink-0">
         <Link 
           href="/" 
-          className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-2 w-fit"
+          className="text-sm font-medium text-text-muted hover:text-text transition-colors flex items-center gap-2 w-fit"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -90,7 +102,7 @@ export default function CreateGroup() {
             e.preventDefault();
             handleCreateGroup();
           }}
-          className="bg-white rounded-3xl shadow-sm p-8 flex flex-col items-center relative border border-zinc-100"
+          className="bg-surface rounded-hero shadow-card p-8 flex flex-col items-center relative border border-line"
         >
 
           {/* Emoji Picker Button */}
@@ -98,65 +110,68 @@ export default function CreateGroup() {
             type="button"
             aria-label="Choose an emoji for this group"
             aria-expanded={showEmojiPicker}
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="text-6xl mb-6 hover:scale-105 transition-transform bg-zinc-50 p-6 rounded-full border border-zinc-100 shadow-sm"
+            onClick={() => {
+              if (!showEmojiPicker) setPickerTheme(currentPickerTheme());
+              setShowEmojiPicker(!showEmojiPicker);
+            }}
+            className="text-6xl mb-6 hover:scale-105 transition-transform bg-surface-sunken p-6 rounded-full border border-line shadow-button"
           >
             {emoji}
           </button>
           
           {showEmojiPicker && (
-            <div className="absolute top-0 z-20 mt-32 shadow-2xl rounded-xl overflow-hidden">
+            <div className="absolute top-0 z-20 mt-32 shadow-menu rounded-xl overflow-hidden">
               <EmojiPicker 
                 onEmojiClick={(data: EmojiClickData) => {
                   setEmoji(data.emoji);
                   setShowEmojiPicker(false);
                 }}
-                theme={Theme.LIGHT}
+                theme={pickerTheme}
               />
             </div>
           )}
 
-          <h1 className="text-2xl font-bold text-zinc-900 mb-2 text-center">Name your Potluck</h1>
-          <p className="text-zinc-500 mb-8 text-center">What are we splitting today?</p>
+          <h1 className="text-2xl font-bold text-text mb-2 text-center">Name your Potluck</h1>
+          <p className="text-text-muted mb-8 text-center">What are we splitting today?</p>
 
           <input
             type="text"
             placeholder="e.g. Toronto Trip 2026"
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
-            className="text-black w-full text-xl p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 outline-none transition-all text-center mb-6"
+            className="text-text placeholder:text-text-muted w-full text-xl p-4 bg-surface-sunken border border-line-strong rounded-2xl focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all text-center mb-6"
             autoFocus
           />
 
           {/* Group Settings Section */}
           <div className="w-full mb-8">
-            <h2 className="text-sm font-semibold text-zinc-900 mb-3 uppercase tracking-wider">Group Settings</h2>
+            <h2 className="text-sm font-semibold text-text mb-3 uppercase tracking-wider">Group Settings</h2>
             
             {/* Currency Dropdown */}
             <div className="relative" ref={dropdownRef}>
-              <label className="block text-sm text-zinc-500 mb-1">Base Currency</label>
+              <label className="block text-sm text-text-muted mb-1">Base Currency</label>
               <button
                 type="button"
                 aria-haspopup="listbox"
                 aria-expanded={isCurrencyOpen}
                 onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
-                className="w-full flex items-center justify-between p-4 bg-zinc-50 border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-surface-sunken border border-line-strong rounded-xl hover:bg-surface-muted transition-colors"
               >
-                <span className="font-medium text-zinc-900">{currency}</span>
-                <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="font-medium text-text">{currency}</span>
+                <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {isCurrencyOpen && (
-                <div className="absolute top-full left-0 w-full mt-2 bg-white border border-zinc-200 rounded-xl shadow-xl z-10 overflow-hidden">
-                  <div className="p-2 border-b border-zinc-100">
+                <div className="absolute top-full left-0 w-full mt-2 bg-surface border border-line-strong rounded-xl shadow-menu z-10 overflow-hidden">
+                  <div className="p-2 border-b border-line">
                     <input
                       type="text"
                       placeholder="Search currency..."
                       value={currencySearch}
                       onChange={(e) => setCurrencySearch(e.target.value)}
-                      className="w-full p-2 bg-zinc-50 rounded-lg outline-none text-sm"
+                      className="w-full p-2 bg-surface-sunken text-text placeholder:text-text-muted rounded-lg outline-none focus:ring-1 focus:ring-accent text-sm"
                     />
                   </div>
                   <div className="max-h-48 overflow-y-auto">
@@ -169,14 +184,14 @@ export default function CreateGroup() {
                           setIsCurrencyOpen(false);
                           setCurrencySearch("");
                         }}
-                        className="w-full flex items-center justify-between p-3 hover:bg-zinc-50 text-left transition-colors"
+                        className="w-full flex items-center justify-between p-3 hover:bg-surface-sunken text-left transition-colors"
                       >
-                        <span className="font-medium text-zinc-900">{c.code}</span>
-                        <span className="text-sm text-zinc-500">{c.name}</span>
+                        <span className="font-medium text-text">{c.code}</span>
+                        <span className="text-sm text-text-muted">{c.name}</span>
                       </button>
                     ))}
                     {filteredCurrencies.length === 0 && (
-                      <div className="p-3 text-sm text-zinc-500 text-center">No currencies found</div>
+                      <div className="p-3 text-sm text-text-muted text-center">No currencies found</div>
                     )}
                   </div>
                 </div>
@@ -191,8 +206,8 @@ export default function CreateGroup() {
             disabled={!groupName.trim() || isLoading}
             className={`w-full py-4 rounded-full font-medium text-lg transition-all flex items-center justify-center gap-2
               ${groupName.trim() 
-                ? "bg-zinc-900 text-white shadow-xl shadow-zinc-200 hover:bg-zinc-800 active:scale-95" 
-                : "bg-zinc-100 text-zinc-400 cursor-not-allowed"}
+                ? "bg-button-primary-bg text-button-primary-fg shadow-button hover:opacity-90 active:scale-95" 
+                : "bg-button-disabled-bg text-button-disabled-fg cursor-not-allowed"}
             `}
           >
             {isLoading ? "Creating..." : "Continue"}
