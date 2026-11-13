@@ -1,0 +1,208 @@
+/* Potluck "Glow" design tokens.
+   Light is the default; dark applies with [data-theme="dark"] on <html>, or automatically
+   via prefers-color-scheme when no explicit theme is set ([data-theme="system"] or none).
+   Every value here is taken from the mockups. Names are semantic so components never
+   reference raw hex. See docs/02-design-tokens.md for usage notes. */
+
+:root {
+  /* ---- type ---- */
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700; --fw-heavy: 800;
+
+  --text-hero: 60px;        /* owed amount, desktop */
+  --text-hero-phone: 54px;  /* owed amount, phone */
+  --text-amount-input: 48px;/* composer amount */
+  --text-detail-amount: 44px; /* details panel amount */
+  --text-inspector-amount: 32px;
+  --text-page-title: 24px;  /* group name, desktop */
+  --text-page-title-phone: 20px;
+  --text-panel-title: 20px; /* composer/details panel heading (22px on details) */
+  --text-card-title: 17px;  /* 18px on desktop Balances cards */
+  --text-body: 14px;        /* desktop */
+  --text-body-phone: 15px;
+  --text-meta: 13px;
+  --text-small: 12px;
+  --text-micro: 11px;       /* "Viewing as" caption */
+  --tracking-hero: -0.03em;
+  --tracking-title: -0.02em;
+  --tracking-label: 0.06em; /* UPPERCASE section labels */
+
+  /* ---- radius ---- */
+  --radius-hero: 24px;      /* gradient card, desktop cards */
+  --radius-card: 20px;      /* phone cards, menus */
+  --radius-chip: 16px;      /* hero person chips, split-mode track */
+  --radius-tile: 14px;      /* status strips, menu items, selected table row ends */
+  --radius-input: 12px;     /* inputs, split-mode selected pill */
+  --radius-check: 7px;
+  --radius-sheet: 28px;     /* bottom sheet top corners */
+  --radius-pill: 999px;     /* buttons, segmented control, search */
+
+  /* ---- spacing (4px grid) ---- */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px;
+  --page-pad-desktop: 24px; --page-pad-phone: 16px;
+  --card-pad-desktop: 20px; --card-pad-phone: 14px;
+
+  /* ---- sizes ---- */
+  --control-h: 44px;        /* header buttons, search, filter chips, minimum touch target */
+  --control-h-panel: 48px;  /* panel action buttons */
+  --control-h-phone-bar: 52px; /* phone bottom action bar */
+  --segment-h: 40px;
+  --row-h-table: 56px;
+  --row-h-list: 64px;
+  --avatar-hero: 38px; --avatar-row-phone: 36px; --avatar-list: 32px; --avatar-table: 28px;
+
+  /* ---- brand gradient (identical in both themes) ---- */
+  --glow-base: #4A35E8;
+  --glow-magenta: #A02C88;
+  --glow-indigo: #2A1FB0;
+  --gradient-glow:
+    radial-gradient(70% 140% at 100% 0%, var(--glow-magenta) 0%, rgba(160,44,136,0) 65%),
+    radial-gradient(80% 140% at 0% 100%, var(--glow-indigo) 0%, rgba(42,31,176,0) 70%),
+    var(--glow-base);
+  --gradient-glow-compact: /* phone / narrow cards */
+    radial-gradient(90% 120% at 100% 0%, var(--glow-magenta) 0%, rgba(160,44,136,0) 60%),
+    radial-gradient(100% 120% at 0% 100%, var(--glow-indigo) 0%, rgba(42,31,176,0) 70%),
+    var(--glow-base);
+  --on-glow: #FFFFFF;
+  --on-glow-tile: rgba(255,255,255,0.14);  /* chips/tiles/inputs on the gradient */
+  --on-glow-input: rgba(255,255,255,0.16);
+  --on-glow-avatar-fg: #2A1FB0;            /* letter inside white avatar on the gradient */
+
+  /* ---- motion (not specified in mockups; suggested) ---- */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 120ms; --dur-base: 180ms; --dur-panel: 240ms;
+}
+
+/* ================= LIGHT ================= */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --bg: #F7F7FA;
+  --surface: #FFFFFF;
+  --surface-sunken: #F4F4F9;     /* inputs, expanded breakdowns */
+  --surface-muted: #E9E9F0;      /* segmented track, filter chips, secondary buttons in header/inspector */
+  --surface-muted-2: #ECECF4;    /* secondary buttons + split-mode track inside the composer */
+  --segment-selected: #FFFFFF;
+  --segment-selected-shadow: 0 1px 3px rgba(20,20,43,0.12);
+
+  --text: #14142B;
+  --text-secondary: #4A4A63;     /* running balance column, inactive tab label */
+  --text-muted: #5C5C73;         /* meta lines, captions, table headers */
+  --line: #EEEEF3;
+  --line-table-row: #F1F1F5;
+  --line-strong: #D0D0DC;        /* header divider, kbd border */
+
+  --positive: #3F2FD0;           /* owed to the viewer / "gets back" / "+" impact */
+  --positive-soft: #F0EEFF;      /* selected table row, selected menu item, "lent" strip, "fully assigned" strip */
+  --positive-tag-bg: #ECE9FF;    /* "Payment" tag */
+  --positive-tag-fg: #3F2FD0;
+  --negative: #B4420A;           /* viewer owes / "owes" / "−" impact / Delete */
+  --negative-soft: #FFF1E6;      /* "left to assign" strip, "your share" strip */
+  --accent: #4A35E8;             /* switch on, checkbox checked */
+  --bar-share: #14142B;          /* share-of-spend bar: your share */
+  --bar-extra: #6A55F5;          /* share-of-spend bar: what you fronted */
+  --bar-track: #E9E9F0;
+
+  --button-primary-bg: #14142B;  --button-primary-fg: #FFFFFF;
+  --button-secondary-bg: #FFFFFF; /* header "Invite"/"Add payment": white with shadow */
+  --button-disabled-bg: #E0E0EA; --button-disabled-fg: #5C5C73;
+  --you-avatar-bg: #14142B; --you-avatar-fg: #FFFFFF;
+  --hero-owe-chip-bg: #14142B;   /* the person the viewer owes, inside the gradient card */
+
+  --kbd-bg: #FFFFFF; --kbd-border: #D0D0DC; --kbd-fg: #4A4A63;
+
+  --shadow-button: 0 1px 2px rgba(20,20,43,0.08), 0 4px 12px rgba(20,20,43,0.06);
+  --shadow-card: 0 1px 2px rgba(20,20,43,0.06), 0 8px 24px rgba(20,20,43,0.05);
+  --shadow-menu: 0 16px 40px rgba(20,20,43,0.18), 0 2px 6px rgba(20,20,43,0.08);
+  --shadow-glow: 0 12px 28px rgba(74,53,232,0.26);
+  --menu-border: none;
+  --overlay: rgba(20,20,43,0.45);
+  --sheet-grabber: #D0D0DC;
+
+  /* member avatar palette: background / foreground */
+  --member-1-bg: #FFE3D3; --member-1-fg: #5A2200; /* peach  (Jacky)   */
+  --member-2-bg: #DCEBFF; --member-2-fg: #0B2B55; /* blue   (Stephen) */
+  --member-3-bg: #FFDDEA; --member-3-fg: #4F0A2A; /* pink   (Angus)   */
+  --member-4-bg: #FFEDBF; --member-4-fg: #4A3000; /* yellow (Alvin)   */
+  --member-5-bg: #D5F5EC; --member-5-fg: #063B33; /* mint   (Matthew) */
+  --member-6-bg: #E4DDFF; --member-6-fg: #1D1147; /* lilac  (Jonah)   */
+}
+
+/* ================= DARK ================= */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0F0F1A;
+  --surface: #1C1C2E;
+  --surface-sunken: #26263C;
+  --surface-muted: #1C1C2E;      /* segmented track / filter chips sit on --bg */
+  --surface-muted-2: #2C2C44;
+  --segment-selected: #3A3A5E;
+  --segment-selected-shadow: none;
+
+  --text: #F2F2F8;
+  --text-secondary: #C3C3D6;
+  --text-muted: #A6A6BD;
+  --line: #2C2C44;
+  --line-table-row: #26263C;
+  --line-strong: #33334D;
+
+  --positive: #B3A6FF;
+  --positive-soft: #2A2A4A;
+  --positive-tag-bg: #2F2A5C;
+  --positive-tag-fg: #CFC7FF;
+  --negative: #FF9A6B;
+  --negative-soft: #3A2418;
+  --accent: #4A35E8;           /* mockups keep the light value; #6A55F5 is an option if more lift is wanted */
+  --bar-share: #F2F2F8;
+  --bar-extra: #7C68FF;
+  --bar-track: #33334D;
+
+  --button-primary-bg: #F2F2F8;  --button-primary-fg: #0F0F1A;
+  --button-secondary-bg: #1C1C2E;
+  --button-disabled-bg: #26263C; --button-disabled-fg: #A6A6BD;
+  --you-avatar-bg: #F2F2F8; --you-avatar-fg: #14142B;
+  --hero-owe-chip-bg: #0F0F1A;
+
+  --kbd-bg: #0F0F1A; --kbd-border: #4A4A70; --kbd-fg: #DADAE8;
+
+  --shadow-button: none;
+  --shadow-card: none;
+  --shadow-menu: 0 16px 40px rgba(0,0,0,0.55);
+  --shadow-glow: 0 12px 36px rgba(106,85,245,0.35);
+  --menu-border: 1px solid #33334D;
+  --overlay: rgba(0,0,0,0.6);
+  --sheet-grabber: #4A4A70;
+
+  --member-1-bg: #FFB38A; --member-1-fg: #4A1E00;
+  --member-2-bg: #9CC9FF; --member-2-fg: #0B2B55;
+  --member-3-bg: #FF9EC4; --member-3-fg: #4F0A2A;
+  --member-4-bg: #FFD166; --member-4-fg: #4A3000;
+  --member-5-bg: #7FE3D0; --member-5-fg: #063B33;
+  --member-6-bg: #B9A7FF; --member-6-fg: #1D1147;
+}
+
+/* Follow the OS when the user has not picked a theme. Keep in sync with the dark block above. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+    --bg: #0F0F1A; --surface: #1C1C2E; --surface-sunken: #26263C; --surface-muted: #1C1C2E; --surface-muted-2: #2C2C44;
+    --segment-selected: #3A3A5E; --segment-selected-shadow: none;
+    --text: #F2F2F8; --text-secondary: #C3C3D6; --text-muted: #A6A6BD;
+    --line: #2C2C44; --line-table-row: #26263C; --line-strong: #33334D;
+    --positive: #B3A6FF; --positive-soft: #2A2A4A; --positive-tag-bg: #2F2A5C; --positive-tag-fg: #CFC7FF;
+    --negative: #FF9A6B; --negative-soft: #3A2418; --accent: #4A35E8;
+    --bar-share: #F2F2F8; --bar-extra: #7C68FF; --bar-track: #33334D;
+    --button-primary-bg: #F2F2F8; --button-primary-fg: #0F0F1A; --button-secondary-bg: #1C1C2E;
+    --button-disabled-bg: #26263C; --button-disabled-fg: #A6A6BD;
+    --you-avatar-bg: #F2F2F8; --you-avatar-fg: #14142B; --hero-owe-chip-bg: #0F0F1A;
+    --kbd-bg: #0F0F1A; --kbd-border: #4A4A70; --kbd-fg: #DADAE8;
+    --shadow-button: none; --shadow-card: none; --shadow-menu: 0 16px 40px rgba(0,0,0,0.55);
+    --shadow-glow: 0 12px 36px rgba(106,85,245,0.35); --menu-border: 1px solid #33334D;
+    --overlay: rgba(0,0,0,0.6); --sheet-grabber: #4A4A70;
+    --member-1-bg: #FFB38A; --member-1-fg: #4A1E00; --member-2-bg: #9CC9FF; --member-2-fg: #0B2B55;
+    --member-3-bg: #FF9EC4; --member-3-fg: #4F0A2A; --member-4-bg: #FFD166; --member-4-fg: #4A3000;
+    --member-5-bg: #7FE3D0; --member-5-fg: #063B33; --member-6-bg: #B9A7FF; --member-6-fg: #1D1147;
+  }
+}
+
+/* Money is always tabular so columns and running balances line up. */
+.tabular { font-variant-numeric: tabular-nums; }

@@ -1,20 +1,103 @@
 @import "tailwindcss";
+@import "./tokens.css";
 
+/* Glow design tokens live in tokens.css (copied from
+   docs/potluck-glow-redesign/tokens/tokens.css). Light is the default, dark
+   comes from [data-theme="dark"] or the OS. Components use the Tailwind
+   utilities mapped below, never raw hex. */
+
+/* next/font loads Plus Jakarta Sans under a generated family name and exposes
+   it as --font-plus-jakarta (see layout.tsx). Put it first in the token stack. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  color-scheme: light;
+  --font-sans: var(--font-plus-jakarta), "Plus Jakarta Sans", ui-sans-serif,
+    system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
+/* Colour roles, shadows and radii become Tailwind utilities (bg-surface,
+   text-text-muted, border-line, shadow-card, rounded-hero, ...). `inline`
+   makes each utility read the token directly, so a theme swap on <html>
+   reaches it. Tailwind also writes each mapped name back onto :root as
+   `--shadow-card: var(--shadow-card)` and the like. That line sits in a CSS
+   layer, and the unlayered tokens.css values win over it, so it is harmless.
+   Don't "fix" it by renaming tokens. `font-sans` needs no mapping: --font-sans
+   comes from tokens.css and the override above. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-muted-2: var(--surface-muted-2);
+  --color-segment-selected: var(--segment-selected);
+
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-line: var(--line);
+  --color-line-table-row: var(--line-table-row);
+  --color-line-strong: var(--line-strong);
+
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-positive-tag-bg: var(--positive-tag-bg);
+  --color-positive-tag-fg: var(--positive-tag-fg);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+  --color-accent: var(--accent);
+  --color-bar-share: var(--bar-share);
+  --color-bar-extra: var(--bar-extra);
+  --color-bar-track: var(--bar-track);
+
+  --color-button-primary-bg: var(--button-primary-bg);
+  --color-button-primary-fg: var(--button-primary-fg);
+  --color-button-secondary-bg: var(--button-secondary-bg);
+  --color-button-disabled-bg: var(--button-disabled-bg);
+  --color-button-disabled-fg: var(--button-disabled-fg);
+  --color-you-avatar-bg: var(--you-avatar-bg);
+  --color-you-avatar-fg: var(--you-avatar-fg);
+  --color-hero-owe-chip-bg: var(--hero-owe-chip-bg);
+
+  --color-kbd-bg: var(--kbd-bg);
+  --color-kbd-border: var(--kbd-border);
+  --color-kbd-fg: var(--kbd-fg);
+
+  --color-overlay: var(--overlay);
+  --color-sheet-grabber: var(--sheet-grabber);
+
+  --color-on-glow: var(--on-glow);
+  --color-on-glow-tile: var(--on-glow-tile);
+  --color-on-glow-input: var(--on-glow-input);
+  --color-on-glow-avatar-fg: var(--on-glow-avatar-fg);
+
+  --color-member-1-bg: var(--member-1-bg);
+  --color-member-1-fg: var(--member-1-fg);
+  --color-member-2-bg: var(--member-2-bg);
+  --color-member-2-fg: var(--member-2-fg);
+  --color-member-3-bg: var(--member-3-bg);
+  --color-member-3-fg: var(--member-3-fg);
+  --color-member-4-bg: var(--member-4-bg);
+  --color-member-4-fg: var(--member-4-fg);
+  --color-member-5-bg: var(--member-5-bg);
+  --color-member-5-fg: var(--member-5-fg);
+  --color-member-6-bg: var(--member-6-bg);
+  --color-member-6-fg: var(--member-6-fg);
+
+  --shadow-button: var(--shadow-button);
+  --shadow-card: var(--shadow-card);
+  --shadow-menu: var(--shadow-menu);
+  --shadow-glow: var(--shadow-glow);
+
+  --radius-hero: var(--radius-hero);
+  --radius-card: var(--radius-card);
+  --radius-chip: var(--radius-chip);
+  --radius-tile: var(--radius-tile);
+  --radius-input: var(--radius-input);
+  --radius-check: var(--radius-check);
+  --radius-sheet: var(--radius-sheet);
+  --radius-pill: var(--radius-pill);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
 }
