@@ -46,7 +46,7 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 
 > Reordered on 2026-11-05: access control and member removal now come first, realtime third, multi-currency last. Multi-currency is still the PRD's P0 gap and mixed-currency groups stay silently wrong until it lands.
 
-1. **Fix the open access model.** *Code done (2026-11-05), rollout pending.* All database access moved to the server: reads in the page's server component, writes in server actions that validate every argument and scope every row to the ledger in the URL, using the secret key. Expense saves are a single transaction (`save_expense()`). What's left is the rollout order in [KNOWN-ISSUES.md](./KNOWN-ISSUES.md) §2.1: set `SUPABASE_SECRET_KEY` in Vercel, deploy, verify, *then* apply `supabase/pending/revoke_public_access.sql`.
+1. **Fix the open access model.** *Done (2026-11-05), locked down live 2026-11-13.* All database access moved to the server: reads in the page's server component, writes in server actions that validate every argument and scope every row to the ledger in the URL, using the secret key. Expense saves are a single transaction (`save_expense()`). The open policies and the public roles' grants were removed by `supabase/migrations/20261113204541_revoke_public_access.sql`, applied once the release was live on Vercel with `SUPABASE_SECRET_KEY` set. Rate limiting is still missing; see [KNOWN-ISSUES.md](./KNOWN-ISSUES.md) §2.5.
 2. **Decide the remove-member story.** *Done (2026-11-05).* Members can be renamed, and removed: deleted if they have no activity, archived otherwise (hidden from pickers for new records, kept on existing ones and in balances), and restored from a "Removed" list. See [features.md](./features.md) §1.
 3. **Supabase Realtime so shared state updates live.** Today `simplify_debts` is genuinely shared, but other members only see a change on their next page load. Same gap applies to a new expense — you add one, nobody else sees it until they reload.
 
@@ -80,6 +80,6 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 
 ## Where things stand for the next thread
 
-Priority #1 (the open access model) is code-complete and waiting on its rollout steps; #2 (remove-member) is done; #3 (realtime) is next. Multi-currency (now #4) carries two linked defects: the stubbed rate source, and a confirmed rounding bug where converting each split independently does not conserve money (KNOWN-ISSUES §1.5). `src/lib/balances.test.ts` already holds the acceptance test for the second, shipped skipped — unskip it when the fix lands.
+Priority #1 (the open access model) is done and live; #2 (remove-member) is done; #3 (realtime) is next. Multi-currency (now #4) carries two linked defects: the stubbed rate source, and a confirmed rounding bug where converting each split independently does not conserve money (KNOWN-ISSUES §1.5). `src/lib/balances.test.ts` already holds the acceptance test for the second, shipped skipped — unskip it when the fix lands.
 
 `PRD.md`, `db-chart.md` and `features.md` are accurate as of this pass and now cover payments. [KNOWN-ISSUES.md](./KNOWN-ISSUES.md) is the running log of everything found but not fixed — read it before picking anything up; it is more current than this file, which is a snapshot.

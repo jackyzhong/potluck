@@ -1,13 +1,9 @@
 -- Remove all public access to the tables (KNOWN-ISSUES §2.1).
 --
--- !! Do not apply this until the server-actions release is live on Vercel with
--- !! SUPABASE_SECRET_KEY set. The previous release talks to the database with
--- !! the public key, and this migration is what stops that key working; apply
--- !! it early and production breaks. Order of operations:
--- !!   1. add SUPABASE_SECRET_KEY to Vercel,
--- !!   2. deploy the release and check it works,
--- !!   3. apply this, then move it into supabase/migrations/ under the version
--- !!      Supabase records for it.
+-- Applied 2026-11-13, after the server-actions release was live on Vercel
+-- with SUPABASE_SECRET_KEY set and Supabase's logs showed production traffic
+-- using only the secret key. Applying it before that release would have broken
+-- production, since the previous client talked to the database directly.
 --
 -- Every policy was `using (true)`, so anyone holding the public key from the
 -- deployed JavaScript could read, change or delete every group's data without
