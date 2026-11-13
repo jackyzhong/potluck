@@ -22,7 +22,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 
 | Task | Title | Depends on | Status | Branch / PR |
 |---|---|---|---|---|
-| T00a | Confirm decisions | | todo (owner) | |
+| T00a | Confirm decisions | | done | accepted as defaults, 2026-11-13 |
 | T00b | Dev database, `glow` branch | | todo (owner) | |
 | T01 | Seed script | T00b | todo | |
 | T02 | Tokens, font, theme plumbing | T00a | todo | |
@@ -87,10 +87,21 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
 
+### 2026-11-13 · T00a · claude-opus-5-5
+**Status:** done.
+**Changed:** PLAN.md "Decisions". The owner accepted every recommended option
+(D1–D22) as a default, to ship sooner. The status column became "Built in",
+which maps each decision to the tasks that implement it, so changing one later
+shows what to rework.
+**Next session should know:** decisions are settled; don't ask about them.
+T00b (dev database, `glow` branch) is still the owner's, and blocks any task
+that runs the app or applies a migration. T02 and T03 can start without it.
+
 ### 2026-11-13 · plan · claude-opus-5-5
 **Status:** PLAN.md and PROGRESS.md written. No code changed.
-**Checked:** `node fixtures/reference.mjs --check` passes. Decisions D1–D22 are
-proposed, not confirmed. The dev database doesn't exist yet.
+**Checked:** `node fixtures/reference.mjs --check` passes. Decisions D1–D22 were
+proposed at this point (accepted in the T00a entry above). The dev database
+doesn't exist yet.
 **Decided:** an integration branch (`glow`) instead of a feature flag. Production
 keeps the current UI until T21, and no task has to keep old and new UI working
 side by side behind a switch.

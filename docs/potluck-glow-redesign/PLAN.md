@@ -155,34 +155,46 @@ prints the group's URL.
 ## Decisions
 
 The spec leaves these open (docs/07 §B and §C). Each one is settled here so
-sessions don't each guess differently. Status `proposed` means the owner
-hasn't confirmed it yet. **No build task starts until T00a marks all of
-them `confirmed`.**
+sessions don't each guess differently.
 
-| # | Question | Decision | Status |
+**All accepted as defaults on 2026-11-13.** The owner chose to ship with the
+recommended option for every decision rather than debate each one up front.
+They are working choices, not final product calls, and any of them can be
+revisited later.
+
+**To change a decision:**
+1. Edit its row here.
+2. Add a log entry in `PROGRESS.md` saying what changed and why.
+3. Look at "Built in": if those tasks are already `done`, add a follow-up
+   task for the rework instead of editing a finished task's scope.
+
+Building to a decision is not a reason to stop and ask. Only a situation no
+decision covers is.
+
+| # | Question | Decision | Built in |
 |---|---|---|---|
-| D1 | Hero chips (pairwise) vs. the simplified plan can disagree (07 B1) | Activity shows pairwise; Balances shows the simplified plan with the caption "Simplified: fewer payments, same totals" | proposed |
-| D2 | "Don't lose the link" warning vs. Invite (07 B2) | Invite opens a popover with Copy link plus the reminder text. The first-visit prompt also mentions bookmarking | proposed |
-| D3 | First-visit "Which one are you?" prompt (07 B3) | Build it. Until someone picks, use neutral wording (no "you") | proposed |
-| D4 | Theme control (07 B4) | Follow the system by default. Add System / Light / Dark to the viewing-as menu, saved per device | proposed |
-| D5 | Equal-split remainder (07 B5) | The first members in ledger order take the extra cents. This is already the app's rule; keep it | proposed |
-| D6 | Percent rounding: the spec uses largest remainder, the app gives the leftover to the last person | Use largest remainder (`splitByWeight` in `fixtures/reference.mjs`) for Percent and Shares. It only affects new saves | proposed |
-| D7 | Date vs. date-time (07 B6) | Date picker, still written to `expenses.created_at`. "Today" uses the current time; any other day uses local noon. No new column | proposed |
-| D8 | Multi-currency (07 B7) | Out of scope. The currency pill works as today's select does. No conversion work | proposed |
-| D9 | Signed-in "view as" (07 B8) | Not applicable yet. Keep the viewer behind `useViewer()` so accounts can replace it later | proposed |
-| D10 | "Trip so far" title (07 B9) | "So far" | proposed |
-| D11 | Zero-value chips (07 B10) | Hide members who are square with the viewer | proposed |
-| D12 | "Added by" in details (05 gap 2) | Add `expenses.created_by` (nullable), set from the viewer at save. Older rows show no "added by" | proposed |
-| D13 | Reopening the split mode on edit (05 gap 1, KNOWN-ISSUES 1.2) | Add `expenses.split_mode` and `splits.weight`. Old rows (no mode) open in Exact | proposed |
-| D14 | Delete confirmation and Undo (07 C) | Delete asks first, inline in the panel: "Delete this expense? This can't be undone." No Undo on delete | proposed |
-| D15 | Toasts (07 C) | One polite toast for success messages, no Undo in this round. Errors show inline, replacing every `alert()` | proposed |
-| D16 | Add payment panel (07 C) | Use the composer shell: "From [●] to [●]", amount on the gradient card, date, note, Save. Mark paid opens it prefilled | proposed |
-| D17 | Shares split body (07 C) | Integer steppers per member, default 1, minimum 0 | proposed |
-| D18 | URL shape (04 suggests `/g/[id]`) | Keep `/ledger/[id]`. Add `?tab=`, `?e=` (selected expense) and `?panel=add` | proposed |
-| D19 | Phone back button (no groups list exists) | Leave it out for now | proposed |
-| D20 | Phone search and filters | Not in this round (desktop and tablet only) | proposed |
-| D21 | Keyboard shortcuts | Build the full table in docs/04. The spec says some already exist; only Escape does | proposed |
-| D22 | Home page and create-group page | Out of scope, apart from picking up the new font and tokens (T20) | proposed |
+| D1 | Hero chips (pairwise) vs. the simplified plan can disagree (07 B1) | Activity shows pairwise; Balances shows the simplified plan with the caption "Simplified: fewer payments, same totals" | T08, T16 |
+| D2 | "Don't lose the link" warning vs. Invite (07 B2) | Invite opens a popover with Copy link plus the reminder text. The first-visit prompt also mentions bookmarking | T07 |
+| D3 | First-visit "Which one are you?" prompt (07 B3) | Build it. Until someone picks, use neutral wording (no "you") | T06 |
+| D4 | Theme control (07 B4) | Follow the system by default. Add System / Light / Dark to the viewing-as menu, saved per device | T02, T07 |
+| D5 | Equal-split remainder (07 B5) | The first members in ledger order take the extra cents. This is already the app's rule; keep it | T03 |
+| D6 | Percent rounding: the spec uses largest remainder, the app gives the leftover to the last person | Use largest remainder (`splitByWeight` in `fixtures/reference.mjs`) for Percent and Shares. It only affects new saves | T03, T14 |
+| D7 | Date vs. date-time (07 B6) | Date picker, still written to `expenses.created_at`. "Today" uses the current time; any other day uses local noon. No new column | T13 |
+| D8 | Multi-currency (07 B7) | Out of scope. The currency pill works as today's select does. No conversion work | T13 |
+| D9 | Signed-in "view as" (07 B8) | Not applicable yet. Keep the viewer behind `useViewer()` so accounts can replace it later | T06 |
+| D10 | "Trip so far" title (07 B9) | "So far" | T08 |
+| D11 | Zero-value chips (07 B10) | Hide members who are square with the viewer | T08 |
+| D12 | "Added by" in details (05 gap 2) | Add `expenses.created_by` (nullable), set from the viewer at save. Older rows show no "added by" | T04, T12, T13 |
+| D13 | Reopening the split mode on edit (05 gap 1, KNOWN-ISSUES 1.2) | Add `expenses.split_mode` and `splits.weight`. Old rows (no mode) open in Exact | T04, T12, T14 |
+| D14 | Delete confirmation and Undo (07 C) | Delete asks first, inline in the panel: "Delete this expense? This can't be undone." No Undo on delete | T12 |
+| D15 | Toasts (07 C) | One polite toast for success messages, no Undo in this round. Errors show inline, replacing every `alert()` | T18 (and every task with a write) |
+| D16 | Add payment panel (07 C) | Use the composer shell: "From [●] to [●]", amount on the gradient card, date, note, Save. Mark paid opens it prefilled | T15, T16 |
+| D17 | Shares split body (07 C) | Integer steppers per member, default 1, minimum 0 | T14 |
+| D18 | URL shape (04 suggests `/g/[id]`) | Keep `/ledger/[id]`. Add `?tab=`, `?e=` (selected expense) and `?panel=add` | T11 |
+| D19 | Phone back button (no groups list exists) | Leave it out for now | T07 |
+| D20 | Phone search and filters | Not in this round (desktop and tablet only) | T10 |
+| D21 | Keyboard shortcuts | Build the full table in docs/04. The spec says some already exist; only Escape does | T17 |
+| D22 | Home page and create-group page | Out of scope, apart from picking up the new font and tokens (T20) | T20 |
 
 ---
 
@@ -215,8 +227,8 @@ should read the diff closely, or run the task on a stronger model.
 
 ### Phase 0: owner, before any build task
 
-**T00a · Confirm the decisions.** The owner reads "Decisions" and marks each
-one `confirmed`, or edits it. Done when no row says `proposed`.
+**T00a · Confirm the decisions.** Done 2026-11-13: the owner accepted every
+recommended option as a default (see "Decisions").
 
 **T00b · Dev database.** The owner sets up a dev database:
 1. Create a second Supabase project, `potluck-dev`. The free tier allows two
