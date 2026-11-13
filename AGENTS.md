@@ -6,4 +6,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Glow redesign work
 
-If you were asked to work on the Glow UI redesign, read `docs/potluck-glow-redesign/PLAN.md` first, then `docs/potluck-glow-redesign/PROGRESS.md`. Pick up the next open task there and record what you did in the log before you finish.
+The Glow UI redesign is built task by task on the `glow` branch, and everything needed to continue it is in the repo; no chat history is required.
+
+- Read `docs/potluck-glow-redesign/PLAN.md` first ("Start here" at the top says which sections your role needs), then `docs/potluck-glow-redesign/PROGRESS.md` for where the work stands.
+- **Asked to do one task** (e.g. "do T08"): follow "How to work a task" in PLAN.md. Your PR goes into `glow`, never `main`.
+- **Asked to continue the build or pick it back up:** you are the coordinator. Follow "Coordinating the build" in PLAN.md.
+- Never touch the production Supabase project (ref `xjkvjfmdljdpynlumszz`). Local runs and Vercel Preview use the dev project (`pooogudusmmfuztxaqfg`).
+- Record what you did in the PROGRESS.md log before you finish. Anything that matters goes in the repo, not only in the chat.
