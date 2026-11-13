@@ -29,7 +29,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T03 | Viewer calculation layer | T00a | done | [PR #14](https://github.com/jackyzhong/potluck/pull/14) |
 | T04 | Schema: split mode, weights, created_by | T00a | done | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
 | T05 | Foundation components | T02 | done | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
-| T06 | Viewer state, first-visit prompt | T03, T05 | todo | |
+| T06 | Viewer state, first-visit prompt | T03, T05 | in progress | `claude/glow-t06-viewer-e193ca-impl` |
 | T07 | Page frame, viewing-as switcher | T06 | todo | |
 | T08 | Activity hero, share card | T07 | todo | |
 | T09 | Ledger table and list | T07 | todo | |
