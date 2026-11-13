@@ -27,7 +27,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T01 | Seed script | T00b | todo | |
 | T02 | Tokens, font, theme plumbing | T00a | todo | |
 | T03 | Viewer calculation layer | T00a | todo | |
-| T04 | Schema: split mode, weights, created_by | T00a | in review | `claude/glow-t04-schema-022910` (PR link below once open) |
+| T04 | Schema: split mode, weights, created_by | T00a | in review | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
 | T05 | Foundation components | T02 | todo | |
 | T06 | Viewer state, first-visit prompt | T03, T05 | todo | |
 | T07 | Page frame, viewing-as switcher | T06 | todo | |
@@ -88,7 +88,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 ---
 
 ### 2026-11-13 · T04 · claude-sonnet-5-5
-**Status:** done → in review (PR into `glow`).
+**Status:** done → in review ([PR #13](https://github.com/jackyzhong/potluck/pull/13)).
 **Changed:**
 - `supabase/migrations/20261113224445_split_mode_weights_created_by.sql`: adds `expenses.split_mode` (check), `splits.weight` (numeric, check `>= 0`) and `expenses.created_by` (plain FK to `users`). Drops and recreates `save_expense()` with `p_split_mode` and `p_created_by` (both default null) and a `weight` key in each split. Same revoke/grant to `service_role`.
 - `src/lib/validation.ts`, `src/app/ledger/[id]/actions.ts`: `parseExpenseInput` and `saveExpense` carry `splitMode`, `createdBy` and per-split `weight`.
