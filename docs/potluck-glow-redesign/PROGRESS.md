@@ -95,7 +95,8 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 **Checked:**
 - `.env.local`, loaded through `@next/env` as the app loads it, resolves to the dev URL, and its secret key reads all five dev tables (200 responses, 0 rows).
 - `npm run dev` in this worktree with the copied `.env.local`: the home page returns 200, and a missing ledger returns 404.
-- Vercel: Preview `NEXT_PUBLIC_SUPABASE_URL` is the dev URL, and Production is still the production URL. The Preview secret key is sensitive, so its value can't be read back. It was checked through a Preview deploy instead (see the next entry, or PR #11's checks).
+- Vercel: Preview `NEXT_PUBLIC_SUPABASE_URL` is the dev URL, and Production is still the production URL. The Preview secret key is sensitive and can't be read back, so it was checked live instead: a Preview deploy built after the change served `/ledger/<unknown id>`, and the dev project's edge log shows the request from Vercel (IAD) using a `sb_secret_` key and getting 406, which is PostgREST's "no rows" answer. A rejected key would get 401.
+- Merged `main` (#10, #11) into `glow`, so `glow` has the lockdown migration in `supabase/migrations/`.
 **Next session should know:** T01 is unblocked. Anything that runs the app hits the empty dev database until T01 seeds it.
 
 ### 2026-11-13 · T00b · claude-opus-5-5
