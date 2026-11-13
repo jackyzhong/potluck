@@ -64,7 +64,7 @@ Places where `docs/01`–`08` turned out to be wrong or stale. Each entry says
 which doc and section, what it says, and what's actually true. `PLAN.md`
 "Spec facts that changed" lists the ones known when the plan was written.
 
-_None yet._
+- **docs/05 "Splitting rules", Equal.** It says the app may let the payer absorb the leftover cents and tells the agent to check. Checked: `ExpenseModal` gives one extra cent each to the first `total % n` people in the order they were *selected*, not ledger order, and the payer takes nothing special. D5 (ledger order) is the rule for the new code; `splitEqually` implements it. (T03, 2026-11-13)
 
 ---
 
@@ -86,6 +86,32 @@ _None yet._
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T03 · claude-sonnet-5-5
+**Status:** done → in review (PR link on the board).
+**Changed:**
+- `src/lib/glow/split.ts`: `splitEqually` (D5), `splitByWeight` (D6, largest remainder), `splitAmounts` (one entry point for all four modes), `equalSplitExtraCentMembers` (for the remainder note).
+- `src/lib/glow/ledger.ts`: `events`, `impact`, `memberTotals`, `viewerLedger`, `pairwise`, `visibleChips` (D11), `heroCounts`, `shareOfSpend`, `composerImpact`. Types are the app's `Expense`, `Split`, `Payment`. `memberTotals` reuses `getMemberBreakdown` from `balances.ts`; `balances.ts` is unchanged.
+- `src/lib/glow/index.ts`: re-exports both.
+- `src/lib/glow/fixture-adapter.ts`: test-only. Turns `veld-2026.json` into the app's row types, and holds the test copy of the CAD formatter (the real `Money` formatter is T05's).
+- `src/lib/glow/split.test.ts`, `ledger.test.ts`: every value in `expected.json` for Jacky and Stephen, the composer examples, plus property tests (300–500 seeds each).
+**Checked:** npm test ✓ (65 pass, 1 skipped, the existing multi-currency skip) · build ✓ (needed `.env.local` copied from the main checkout; it points at the dev project) · lint ✗ **but not from this task**: the one error is `ExpenseModal.tsx:80` (`react-hooks/set-state-in-effect`, KNOWN-ISSUES 5.2), which T21 removes along with the file. `npx eslint src/lib/glow` is clean. Visual check not applicable (no UI).
+**Differs from the boards:** n/a.
+**Decided:**
+- Signatures take plain data: `GroupData = { memberOrder, expenses, splits, payments }`. `memberOrder` is the member ids in ledger order, **archived members included** (they stay in history and totals). T06's `useGlowData()` builds it from `users`.
+- Everything is at par (rate 1), like the app today (D8). `memberTotals` passes no exchange rates to `getMemberBreakdown`.
+- `pairwise` returns every member, zeros included, so the chips still sum to net. `visibleChips` drops the zeros for the hero (D11). `heroCounts` returns ids (`owesYou`, `youOwe`, `square`), not copy: T08 writes the sub-line from docs/06, including the "everyone owes you" case.
+- `composerImpact` returns `{ cents, kind: "owed" | "owe" | "none", involved }`. Involved with a zero impact (you pay for yourself only) gets "none", the "doesn't change your balance" line.
+- Events sort by parsed instant, then id by code unit. `reference.mjs` compares the timestamp strings, which would misorder Postgres's `+00:00` or fractional-second forms against `Z`.
+- `splitByWeight` scales weights to integers (up to 4 decimals) so remainder ties are exact. Same output as `reference.mjs` on the fixtures. Empty or all-zero weights, and no participants, give `{}`.
+- An id the member order doesn't list still gets its share (appended after the known ones), so cents always sum to the total.
+- Differences from `reference.mjs` that don't change any fixture value: a payer of a 0-cent expense counts as involved (docs/05 says payer or split row); `shareOfSpend` returns 0% instead of NaN for a group with no expenses.
+**New copy:** none.
+**Next session should know:**
+- T13 must call `splitEqually`, not copy the old ExpenseModal loop (see Spec corrections).
+- `fixture-adapter.ts` lives in `src/lib/glow/` and imports `node:fs`. Nothing in the app imports it; don't.
+- The viewer's "Paid back" / "You've paid back" tile (docs/05) is `-received` / `sent` from `memberTotals`; nothing new is needed for T16.
+- Anything running `npm run build` in a fresh worktree needs `.env.local` (see PLAN "Local setup"), or "Collecting page data" fails.
 
 ### 2026-11-13 · T00b (finish) · claude-opus-5-5
 **Status:** done.
