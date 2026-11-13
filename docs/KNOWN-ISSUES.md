@@ -63,29 +63,13 @@ skipped: `"mixed currencies conserve money"`. Unskip it when the fix lands.
 
 ## 2. Data integrity & access control
 
-### 2.1 Every row in every table is readable and writable by anyone · Fix pending rollout
+### 2.5 Server actions have no rate limiting · Known
 
-Every RLS policy is `using (true)`, so anyone holding the public key from the
-deployed JavaScript can read, alter or delete every group's data without
-knowing any link. Confirmed as the `anon` role: every row of every table comes
-back with no ledger id supplied.
-
-**Fixed in code:** the browser no longer talks to Supabase. All reads and
-writes run on the server with the secret key, scoped to the ledger in the URL,
-and the public key needs no access. See [db-chart.md](./db-chart.md#access-model).
-
-**Still open until the lockdown is applied.** The old policies stay live until
-`supabase/pending/revoke_public_access.sql` runs, and it must run *after* the
-release is deployed, or the old client code breaks:
-
-1. Add `SUPABASE_SECRET_KEY` to Vercel (Production and Preview).
-2. Deploy, and check that creating a group, adding a member, saving, editing
-   and deleting an expense and a payment, and the Simplify Debts toggle all work.
-3. Apply the migration, move the file into `supabase/migrations/` under the
-   version Supabase records, and delete this entry.
-
-Not yet covered: rate limiting. Anyone can still create ledgers or flood a
-ledger they know the link to. The server actions are the place to add it.
+Since the access-model change, the public key has no table access and every
+read and write goes through server actions scoped to the ledger in the URL.
+What those actions do not do is limit how often they are called: anyone can
+still create ledgers in bulk, or flood a ledger whose link they know with
+expenses and members. The server actions are the place to add it.
 
 ## 4. Product & UX
 
@@ -93,7 +77,7 @@ ledger they know the link to. The server actions are the place to add it.
 
 `ledgers.simplify_debts` is genuinely shared, but other members see a change
 only when they next load the page. The same applies to a newly added expense.
-Scoped as HANDOFF priority #3. Since the access-model change (2.1) the
+Scoped as HANDOFF priority #3. Since the access-model change the
 public key has no table access, so this has to use Realtime broadcast from the
 server actions rather than database change feeds; see HANDOFF for the design.
 
