@@ -32,7 +32,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T06 | Viewer state, first-visit prompt | T03, T05 | done | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
 | T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
 | T08 | Activity hero, share card | T07 | todo | |
-| T09 | Ledger table and list | T07 | todo | |
+| T09 | Ledger table and list | T07 | in progress | `claude/glow-t09-ledger` |
 | T10 | Search and filters | T08, T09 | todo | |
 | T11 | Right panel, drawer, sheet | T07 | todo | |
 | T12 | Expense details | T09, T11, T04 | todo | |
