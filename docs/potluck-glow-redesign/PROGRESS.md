@@ -43,7 +43,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
 | T18 | States and edge cases | T16 | todo | |
 | T19 | Accessibility and motion pass | T18 | todo | |
-| T20 | Home and create-group restyle | T02 | in progress (`claude/glow-t20-home-7af12c`) | |
+| T20 | Home and create-group restyle | T02 | in review | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
 | T21 | Ship | all | todo | |
 
 ---
