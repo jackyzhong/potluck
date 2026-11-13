@@ -11,6 +11,7 @@ import { Payment } from "@/src/lib/balances";
 import LedgerTabs from "./LedgerTabs";
 import BalancesView from "./BalancesView";
 import { getExchangeRates } from "@/src/lib/balances";
+import { ViewerProvider } from "@/src/components/glow/ViewerProvider";
 
 export default async function LedgerPage({
   params,
@@ -118,6 +119,14 @@ export default async function LedgerPage({
   const exchangeRates = await getExchangeRates(baseCurrency, currenciesUsed);
 
   return (
+    <ViewerProvider
+      ledgerId={ledger.id}
+      currency={baseCurrency}
+      users={initialUsers}
+      expenses={ledgerExpenses}
+      splits={allSplits}
+      payments={ledgerPayments}
+    >
     <div className="min-h-screen bg-zinc-50 p-6 relative pb-32">
       <header className="max-w-2xl mx-auto py-8">
         <div className="text-4xl mb-2">{ledger.emoji || "🍲"}</div>
@@ -180,5 +189,6 @@ export default async function LedgerPage({
         baseCurrency={baseCurrency} 
       />
     </div>
+    </ViewerProvider>
   );
 }
