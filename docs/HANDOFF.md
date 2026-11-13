@@ -46,7 +46,7 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 
 > Reordered on 2026-11-05: access control and member removal now come first, realtime third, multi-currency last. Multi-currency is still the PRD's P0 gap and mixed-currency groups stay silently wrong until it lands.
 
-1. **Fix the open access model.** Every RLS policy is `using (true)`, so anyone holding the anon key from the deployed bundle can read, alter or delete every ledger's data without knowing any URL. The "secret link" model is not actually enforced. Confirmed and detailed in [KNOWN-ISSUES.md](./KNOWN-ISSUES.md) §2.1 — this should be settled before the app is shared beyond people you trust.
+1. **Fix the open access model.** *Code done (2026-11-05), rollout pending.* All database access moved to the server: reads in the page's server component, writes in server actions that validate every argument and scope every row to the ledger in the URL, using the secret key. Expense saves are a single transaction (`save_expense()`). What's left is the rollout order in [KNOWN-ISSUES.md](./KNOWN-ISSUES.md) §2.1: set `SUPABASE_SECRET_KEY` in Vercel, deploy, verify, *then* apply `supabase/pending/revoke_public_access.sql`.
 2. **Decide the remove-member story.** Members can be added but never removed or renamed, and the foreign keys from `expenses`/`splits`/`payments` to `users` have no `ON DELETE` clause, so anyone with activity cannot be deleted at all. The semantics need deciding before the UI can exist — soft-delete is likely right, not a cascade. See KNOWN-ISSUES §2.4 and §4.4.
 3. **Supabase Realtime so shared state updates live.** Today `simplify_debts` is genuinely shared, but other members only see a change on their next page load. Same gap applies to a new expense — you add one, nobody else sees it until they reload.
 
@@ -56,7 +56,7 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
    alter publication supabase_realtime add table ledgers, expenses, splits;
    ```
 
-   Client side, it's a `supabase.channel(...).on('postgres_changes', {...}, () => router.refresh())` subscription in a `useEffect`. Realtime enforces RLS on what each subscriber receives, so the subscription has to work under whatever access model priority #1 lands — today's open `select` policy would permit it with no policy work, but that policy is exactly what #1 replaces. Design this after #1, not from the current policies.
+   Client side, it's a `supabase.channel(...).on('postgres_changes', {...}, () => router.refresh())` subscription in a `useEffect`. **Revised by #1:** the public key no longer has any table access, so `postgres_changes` subscriptions from the browser receive nothing, and the publication statement above no longer applies. Use Realtime **broadcast** instead: after each successful write, the server action sends a contentless "changed" message on a channel named after the ledger id, and clients subscribed to it call `router.refresh()`. The channel name is the ledger UUID, so it carries the same secret-link model, and the message holds no data. This also removes the `splits`-has-no-`ledger_id` wrinkle below, since nothing filters database rows any more.
 
    - **Just the Simplify Debts toggle:** ~30 minutes. One table, filterable server-side by `id=eq.<ledgerId>`, one `router.refresh()` on event.
    - **Expenses and splits too:** roughly half a day, because of one real wrinkle — `splits` has no `ledger_id` column, so its realtime stream can't be filtered per ledger server-side. Either denormalize `ledger_id` onto `splits` (also simplifies the two-step fetch in `page.tsx`) or accept that every connected client receives every group's split events. Prefer the former. Also debounce the refresh so a burst of split inserts doesn't trigger one refetch each.
@@ -80,6 +80,6 @@ Queried the live Supabase schema directly (read-only) rather than trusting the d
 
 ## Where things stand for the next thread
 
-Start with priority #1 (the open access model). Multi-currency (now #4) carries two linked defects: the stubbed rate source, and a confirmed rounding bug where converting each split independently does not conserve money (KNOWN-ISSUES §1.5). `src/lib/balances.test.ts` already holds the acceptance test for the second, shipped skipped — unskip it when the fix lands.
+Priority #1 (the open access model) is code-complete and waiting on its rollout steps; #2 (remove-member) is next. Multi-currency (now #4) carries two linked defects: the stubbed rate source, and a confirmed rounding bug where converting each split independently does not conserve money (KNOWN-ISSUES §1.5). `src/lib/balances.test.ts` already holds the acceptance test for the second, shipped skipped — unskip it when the fix lands.
 
 `PRD.md`, `db-chart.md` and `features.md` are accurate as of this pass and now cover payments. [KNOWN-ISSUES.md](./KNOWN-ISSUES.md) is the running log of everything found but not fixed — read it before picking anything up; it is more current than this file, which is a snapshot.

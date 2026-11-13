@@ -20,6 +20,25 @@ Most bill-splitting apps have become bloated with intrusive ads, daily transacti
 * **State Management:** URL-based UUIDs & LocalStorage
 * **Deployment:** [Vercel](https://vercel.com/)
 
+## Running it
+
+Create `.env.local` with:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_SECRET_KEY=<secret key>
+```
+
+The secret key is in the Supabase dashboard under **Project Settings → API Keys**: either a `sb_secret_…` key or the legacy `service_role` key works. It never reaches the browser. All database access happens in server code, and the public key has no table access at all. Set the same two variables in Vercel.
+
+```
+npm install
+npm run dev
+npm test
+```
+
+Schema changes go in [`supabase/migrations/`](./supabase/migrations/).
+
 ## Project Documentation
 This project is built with a "Documentation First" approach. Explore the internal specs below:
 
