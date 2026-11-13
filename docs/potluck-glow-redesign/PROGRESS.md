@@ -27,7 +27,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T01 | Seed script | T00b | todo | |
 | T02 | Tokens, font, theme plumbing | T00a | todo | |
 | T03 | Viewer calculation layer | T00a | in review | https://github.com/jackyzhong/potluck/pull/14 |
-| T04 | Schema: split mode, weights, created_by | T00a | todo | |
+| T04 | Schema: split mode, weights, created_by | T00a | in review | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
 | T05 | Foundation components | T02 | todo | |
 | T06 | Viewer state, first-visit prompt | T03, T05 | todo | |
 | T07 | Page frame, viewing-as switcher | T06 | todo | |
@@ -86,6 +86,36 @@ which doc and section, what it says, and what's actually true. `PLAN.md`
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T04 · claude-sonnet-5-5
+**Status:** done → in review ([PR #13](https://github.com/jackyzhong/potluck/pull/13)).
+**Changed:**
+- `supabase/migrations/20261113224445_split_mode_weights_created_by.sql`: adds `expenses.split_mode` (check), `splits.weight` (numeric, check `>= 0`) and `expenses.created_by` (plain FK to `users`). Drops and recreates `save_expense()` with `p_split_mode` and `p_created_by` (both default null) and a `weight` key in each split. Same revoke/grant to `service_role`.
+- `src/lib/validation.ts`, `src/app/ledger/[id]/actions.ts`: `parseExpenseInput` and `saveExpense` carry `splitMode`, `createdBy` and per-split `weight`.
+- `src/lib/validation.test.ts`: 6 new tests.
+**Checked:**
+- npm test ✓ (27 pass, 1 skipped, 0 fail). build ✓.
+- lint ✗ for a reason outside this task: the one error is `ExpenseModal.tsx:80` (`react-hooks/set-state-in-effect`, KNOWN-ISSUES 5.2). The plan says it goes away when T14 removes `ExpenseModal`. `npx eslint src/lib src/app/ledger/[id]/actions.ts` (the files I changed) is clean.
+- Migration applied to **potluck-dev only**. `apply_migration` stamped it `20261113224555`, so I changed the row in `supabase_migrations.schema_migrations` to `20261113224445`, the file's version. `list_migrations` agrees with the files. Not applied to production.
+- Against dev, calling the RPC with a throwaway group:
+  - The old call shape (no mode args) stores null mode and null creator.
+  - A `created_by` from another ledger is rejected (22023). This can't be tested in `validation.test.ts`, because membership is only known to the database.
+  - A percent split without weights, and weights on an exact split, are rejected (22023); a bad mode and a negative weight hit the check constraints (23514).
+  - Percent weights are stored.
+  - An edit changes `split_mode` but keeps `created_by`.
+- Today's UI against dev: with `npm run dev` on the dev project, I added an expense through the unchanged "Add Expense" modal in a throwaway group. It saved with `split_mode`, `created_by` and weights all null. Both throwaway groups and their rows are deleted; the Veld group was not touched.
+**Differs from the boards:** n/a (no UI change).
+**Decided:**
+- `created_by` is **not** changed when an expense is edited, so "Added by" names whoever first added it. Old rows stay null.
+- `weight` is required for percent and shares, and rejected for equal, exact and no mode. Validation also requires percent weights (each 0–100) to total 100 (within 1e-6) and shares to be whole numbers totalling at least 1. This mirrors docs/04 "Validation per mode". Zero shares/percent is allowed so someone can sit out.
+- `created_by` is a plain FK (no `on delete`), so `remove_member` archives a member who added an expense instead of deleting them, as it does for payers and participants.
+- The server does not check that `amountCents` matches what `weight` implies (largest remainder, D6). That needs T03's `splitByWeight`; T13/T14 compute the amounts.
+- The save action's 22023 message ("Everyone on an expense must be in this group.") now also covers a `created_by` outside the ledger.
+**New copy:** "Pick a valid way to split.", "Shares must be whole numbers.", "A percentage can't be more than 100.", "The percentages must add up to 100.", "Give at least one person a share." (server-side validation messages, not in docs/06).
+**Next session should know:**
+- T12/T13/T14: send `splitMode`, `createdBy` (the viewer's id) and a `weight` on every split for percent and shares only.
+- The `p_splits` JSON takes `weight` as a JSON number; absent or null means no weight.
+- The owner applies this migration to production in T21. It drops `save_expense(…8 args)`, so the T21 deploy of the app and the migration should go together.
 
 ### 2026-11-13 · T03 · claude-sonnet-5-5
 **Status:** done → in review (PR #14).

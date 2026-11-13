@@ -130,7 +130,8 @@ export async function saveExpense(
   const expense = parsed.value;
 
   // One transaction, and the database re-checks ledger membership, the
-  // expense's ledger and the split total itself. See the save_expense migration.
+  // expense's ledger, the creator's membership and the split total itself. See
+  // the save_expense migrations.
   const { data, error } = await db.rpc("save_expense", {
     p_ledger_id: ledgerId,
     p_expense_id: expenseId,
@@ -139,7 +140,9 @@ export async function saveExpense(
     p_amount_cents: expense.amountCents,
     p_currency: expense.currency,
     p_created_at: expense.createdAt,
-    p_splits: expense.splits.map((s) => ({ user_id: s.userId, amount_cents: s.amountCents }))
+    p_splits: expense.splits.map((s) => ({ user_id: s.userId, amount_cents: s.amountCents, weight: s.weight })),
+    p_split_mode: expense.splitMode,
+    p_created_by: expense.createdBy
   });
 
   if (error?.code === "P0002") return rejected("That expense no longer exists.");
