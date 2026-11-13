@@ -142,9 +142,3 @@ RLS is enabled on all five tables with **no policies**, and the public roles
 nothing. Supabase's default grants for future tables are revoked too, so a new
 table starts private.
 
-> **Rollout status:** the code is in place, but the migration that removes the
-> old open policies, `supabase/pending/revoke_public_access.sql`, is applied
-> only after the release is live with `SUPABASE_SECRET_KEY` set. Until then
-> the live database still has the old `using (true)` policies (one per
-> operation the old client code needed), and the public key still works
-> against it. See KNOWN-ISSUES §2.1.
