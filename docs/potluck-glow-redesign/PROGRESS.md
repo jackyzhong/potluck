@@ -24,10 +24,10 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 |---|---|---|---|---|
 | T00a | Confirm decisions | | done | accepted as defaults, 2026-11-13 |
 | T00b | Dev database, `glow` branch | | done | `glow` |
-| T01 | Seed script | T00b | in review | [PR #12](https://github.com/jackyzhong/potluck/pull/12) |
-| T02 | Tokens, font, theme plumbing | T00a | in review | [PR #15](https://github.com/jackyzhong/potluck/pull/15) |
-| T03 | Viewer calculation layer | T00a | in review | https://github.com/jackyzhong/potluck/pull/14 |
-| T04 | Schema: split mode, weights, created_by | T00a | in review | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
+| T01 | Seed script | T00b | done | [PR #12](https://github.com/jackyzhong/potluck/pull/12) |
+| T02 | Tokens, font, theme plumbing | T00a | done | [PR #15](https://github.com/jackyzhong/potluck/pull/15) |
+| T03 | Viewer calculation layer | T00a | done | [PR #14](https://github.com/jackyzhong/potluck/pull/14) |
+| T04 | Schema: split mode, weights, created_by | T00a | done | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
 | T05 | Foundation components | T02 | todo | |
 | T06 | Viewer state, first-visit prompt | T03, T05 | todo | |
 | T07 | Page frame, viewing-as switcher | T06 | todo | |
@@ -86,6 +86,19 @@ which doc and section, what it says, and what's actually true. `PLAN.md`
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T01–T04 · claude-opus-5-5
+**Status:** T01–T04 merged into `glow` (PRs #12–#15).
+**Changed:**
+- Before merging, made lint a clean gate on `glow`: a scoped `eslint-disable` around the one `ExpenseModal` effect (KNOWN-ISSUES 5.2, updated). All four PRs had reported that error; it predates them. Delete the modal and the comment together when T13/T14 replace it.
+- Merged #14, #13, #12, #15 in that order. The only conflicts were in this file (board rows and new log entries), resolved by keeping both sides.
+**Checked:**
+- On merged `glow`: npm test ✓ (77 pass, 1 skipped, the existing multi-currency skip) · lint ✓ (clean) · build ✓.
+- Reviewed each diff against its "Done when". The calc layer is integer-exact and conserves cents. `save_expense` checks match `parseExpenseInput`, and an omitted weight is accepted for non-weighted modes. The seed refuses any host except the dev project.
+- Dev database: `20261113224445_split_mode_weights_created_by` applied, with the version matching the file. One `save_expense` overload. One Veld group (5 expenses, 2 payments), and T04's throwaway group is gone. Production's migration list doesn't include it.
+**Next session should know:**
+- The seed writes no `split_mode` yet (Veld rows read as "custom split" until it does). Set `split_mode = 'equal'` in `scripts/seed-dev.mjs` when T12 needs it.
+- T05 (needs T02) can start now. T06 needs T03 and T05.
 
 ### 2026-11-13 · T02 · claude-sonnet-5-5
 **Status:** done → in review ([PR #15](https://github.com/jackyzhong/potluck/pull/15)).
