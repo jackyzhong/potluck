@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Potluck activity: phone, member switcher open, Glow, dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; overflow: hidden; position: relative; box-sizing: border-box; background: #0F0F1A; color: #F2F2F8; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.35; display: flex; flex-direction: column">
+
+<header style="display: flex; align-items: center; gap: 8px; padding: 12px 12px 12px 4px">
+<button aria-label="Back to groups" style="width: 44px; height: 44px; border: 0; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+</button>
+<span aria-hidden="true" style="font-size: 24px; line-height: 1">🍲</span>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column"><h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.01em">Veld 2026</h1><span style="font-size: 12px; font-weight: 600; color: #A6A6BD">Viewing as Jacky</span></div>
+<button style="height: 44px; padding: 0 16px; border: 0; border-radius: 22px; background: #1C1C2E; font-weight: 700; cursor: pointer">Invite</button>
+<button aria-haspopup="dialog" aria-expanded="true" aria-label="Viewing as Jacky, switch person" style="height: 44px; padding: 0 8px 0 4px; border: 0; border-radius: 22px; background: #1C1C2E; display: flex; align-items: center; gap: 4px; cursor: pointer"><span aria-hidden="true" style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 18px; background: #FFB38A; color: #4A1E00; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">J</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+</header>
+
+<div role="tablist" aria-label="Group views" style="display: flex; gap: 4px; margin: 0 16px; padding: 4px; background: #1C1C2E; border-radius: 26px">
+<button role="tab" aria-selected="true" style="flex: 1 1 0; height: 44px; border: 0; border-radius: 22px; background: #3A3A5E; font-weight: 700; cursor: pointer">Activity</button>
+<button role="tab" aria-selected="false" style="flex: 1 1 0; height: 44px; border: 0; border-radius: 22px; background: none; color: #C3C3D6; font-weight: 600; cursor: pointer">Balances</button>
+</div>
+
+<section style="margin: 16px 16px 0; padding: 20px 16px 14px; border-radius: 24px; color: #FFFFFF; background: radial-gradient(90% 120% at 100% 0%, #B8389A 0%, rgba(184,56,154,0) 60%), radial-gradient(100% 120% at 0% 100%, #2A1FB0 0%, rgba(42,31,176,0) 70%), #4A35E8; box-shadow: 0 12px 36px rgba(106,85,245,0.35); display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 0 4px">
+<span style="font-size: 14px; font-weight: 600">You're owed</span>
+<span style="font-size: 54px; font-weight: 800; line-height: 1.05; letter-spacing: -0.03em; font-variant-numeric: tabular-nums">CA$51.91</span>
+</div>
+<div aria-label="Balances by person, tap to filter" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px">
+<button style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; border: 0; border-radius: 14px; background: rgba(255,255,255,0.14); cursor: pointer">
+<span style="width: 36px; height: 36px; border-radius: 18px; background: #FFFFFF; color: #2A1FB0; font-weight: 800; display: flex; align-items: center; justify-content: center">J</span>
+<span style="font-size: 12px">Jonah</span>
+<span style="font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums">+28.79</span>
+</button>
+<button style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; border: 0; border-radius: 14px; background: rgba(255,255,255,0.14); cursor: pointer">
+<span style="width: 36px; height: 36px; border-radius: 18px; background: #FFFFFF; color: #2A1FB0; font-weight: 800; display: flex; align-items: center; justify-content: center">M</span>
+<span style="font-size: 12px">Matthew</span>
+<span style="font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums">+25.04</span>
+</button>
+<button style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; border: 0; border-radius: 14px; background: rgba(255,255,255,0.14); cursor: pointer">
+<span style="width: 36px; height: 36px; border-radius: 18px; background: #FFFFFF; color: #2A1FB0; font-weight: 800; display: flex; align-items: center; justify-content: center">A</span>
+<span style="font-size: 12px">Alvin</span>
+<span style="font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums">+7.80</span>
+</button>
+<button style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; border: 0; border-radius: 14px; background: rgba(255,255,255,0.14); cursor: pointer">
+<span style="width: 36px; height: 36px; border-radius: 18px; background: #FFFFFF; color: #2A1FB0; font-weight: 800; display: flex; align-items: center; justify-content: center">A</span>
+<span style="font-size: 12px">Angus</span>
+<span style="font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums">+6.66</span>
+</button>
+<button style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; border: 0; border-radius: 14px; background: #0F0F1A; cursor: pointer">
+<span style="width: 36px; height: 36px; border-radius: 18px; background: #FFFFFF; color: #14142B; font-weight: 800; display: flex; align-items: center; justify-content: center">S</span>
+<span style="font-size: 12px">Stephen</span>
+<span style="font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums">−16.38</span>
+</button>
+</div>
+</section>
+
+<section style="margin: 16px 16px 0; padding: 14px 16px; background: #1C1C2E; border-radius: 20px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<h2 style="margin: 0; font-size: 17px; font-weight: 800">Trip so far</h2>
+<span style="font-size: 13px; color: #A6A6BD; font-variant-numeric: tabular-nums">Group spent CA$492.52</span>
+</div>
+<div role="img" aria-label="You paid 151.74 of the group's 492.52; your share is 85.59" style="height: 10px; border-radius: 5px; background: #33334D; display: flex; overflow: hidden">
+<div style="width: 17.4%; background: #F2F2F8"></div>
+<div style="width: 13.4%; background: #7C68FF"></div>
+</div>
+<div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums">
+<span>Your share CA$85.59</span>
+<span style="color: #B3A6FF">You paid CA$151.74</span>
+</div>
+</section>
+
+<main style="margin: 16px 16px 0; padding: 0 14px; background: #1C1C2E; border-radius: 20px; display: flex; flex-direction: column">
+
+<button style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 8px 0; border: 0; border-bottom: 1px solid #2C2C44; background: none; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 18px; background: #9CC9FF; color: #0B2B55; font-weight: 700; display: flex; align-items: center; justify-content: center">S</span>
+<span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">Fans</span><span style="font-size: 13px; color: #A6A6BD; font-variant-numeric: tabular-nums">Sep 18 · Stephen paid CA$75.00</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-weight: 700; color: #FF9A6B; font-variant-numeric: tabular-nums">−CA$12.50</span><span style="font-size: 12px; color: #A6A6BD; font-variant-numeric: tabular-nums">bal. CA$51.91</span></span>
+</button>
+
+<button style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 8px 0; border: 0; border-bottom: 1px solid #2C2C44; background: none; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 18px; background: #7FE3D0; color: #063B33; font-weight: 700; display: flex; align-items: center; justify-content: center">M</span>
+<span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">Matthew paid you</span><span style="font-size: 13px; color: #A6A6BD">Sep 17 · payment · write off</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-weight: 600; font-variant-numeric: tabular-nums">CA$3.75 in</span><span style="font-size: 12px; color: #A6A6BD; font-variant-numeric: tabular-nums">bal. CA$64.41</span></span>
+</button>
+
+<button style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 8px 0; border: 0; border-bottom: 1px solid #2C2C44; background: none; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 18px; background: #FFD166; color: #4A3000; font-weight: 700; display: flex; align-items: center; justify-content: center">A</span>
+<span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">Alvin paid you</span><span style="font-size: 13px; color: #A6A6BD">Sep 17 · payment</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-weight: 600; font-variant-numeric: tabular-nums">CA$10.49 in</span><span style="font-size: 12px; color: #A6A6BD; font-variant-numeric: tabular-nums">bal. CA$68.16</span></span>
+</button>
+
+<button style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 8px 0; border: 0; border-bottom: 1px solid #2C2C44; background: none; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 18px; background: #F2F2F8; color: #14142B; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">You</span>
+<span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">Pizza Badiali</span><span style="font-size: 13px; color: #A6A6BD; font-variant-numeric: tabular-nums">Sep 8 · You paid CA$109.74</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-weight: 700; color: #B3A6FF; font-variant-numeric: tabular-nums">+CA$91.45</span><span style="font-size: 12px; color: #A6A6BD; font-variant-numeric: tabular-nums">bal. CA$78.65</span></span>
+</button>
+
+<button style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 8px 0; border: 0; border-bottom: 1px solid #2C2C44; background: none; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 18px; background: #FF9EC4; color: #4F0A2A; font-weight: 700; display: flex; align-items: center; justify-content: center">A</span>
+<span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">Groceries</span><span style="font-size: 13px; color: #A6A6BD; font-variant-numeric: tabular-nums">Sep 8 · Angus paid CA$69.78</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-weight: 700; color: #FF9A6B; font-variant-numeric: tabular-nums">−CA$11.63</span><span style="font-size: 12px; color: #A6A6BD; font-variant-numeric: tabular-nums">bal. −CA$12.80</span></span>
+</button>
+
+<button style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 8px 0; border: 0; border-bottom: 1px solid #2C2C44; background: none; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 18px; background: #F2F2F8; color: #14142B; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">You</span>
+<span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">Uber to veld day 3</span><span style="font-size: 13px; color: #A6A6BD; font-variant-numeric: tabular-nums">Aug 13 · You paid CA$42.00</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-weight: 700; color: #B3A6FF; font-variant-numeric: tabular-nums">+CA$31.50</span><span style="font-size: 12px; color: #A6A6BD; font-variant-numeric: tabular-nums">bal. −CA$1.17</span></span>
+</button>
+
+<button style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 8px 0; border: 0; background: none; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 18px; background: #9CC9FF; color: #0B2B55; font-weight: 700; display: flex; align-items: center; justify-content: center">S</span>
+<span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">Candy (1)</span><span style="font-size: 13px; color: #A6A6BD; font-variant-numeric: tabular-nums">Aug 13 · Stephen paid CA$196.00</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-weight: 700; color: #FF9A6B; font-variant-numeric: tabular-nums">−CA$32.67</span><span style="font-size: 12px; color: #A6A6BD; font-variant-numeric: tabular-nums">bal. −CA$32.67</span></span>
+</button>
+
+</main>
+
+<div style="margin-top: auto; display: flex; gap: 10px; padding: 12px 16px 20px">
+<button style="flex: 1 1 0; height: 52px; border: 0; border-radius: 26px; background: #26263C; font-weight: 700; font-size: 16px; cursor: pointer">Add payment</button>
+<button style="flex: 1 1 0; height: 52px; border: 0; border-radius: 26px; background: #F2F2F8; color: #0F0F1A; font-weight: 700; font-size: 16px; cursor: pointer">Add expense</button>
+</div>
+
+<div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(0,0,0,0.6)"></div>
+<div role="dialog" aria-label="View the group as" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 12px 28px; background: #1C1C2E; border-radius: 28px 28px 0 0; display: flex; flex-direction: column">
+<div aria-hidden="true" style="align-self: center; width: 40px; height: 5px; margin-bottom: 8px; border-radius: 3px; background: #4A4A70"></div>
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 8px 12px 8px"><div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 19px; font-weight: 800">View the group as</span><span style="font-size: 13px; color: #A6A6BD">Amounts and “you” switch to this person</span></div><button aria-label="Close" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; background: #2C2C44; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<button role="menuitemradio" aria-checked="true" style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 20px; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 6px 12px; border: 0; border-radius: 14px; background: #2A2A4A; text-align: left; cursor: pointer"><span aria-hidden="true" style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 18px; background: #FFB38A; color: #4A1E00; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">J</span><span style="font-weight: 700">Jacky</span><span style="font-size: 13px; font-weight: 600; color: #B3A6FF; font-variant-numeric: tabular-nums">gets back CA$51.91</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B3A6FF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></button>
+<button role="menuitemradio" aria-checked="false" style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 20px; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 6px 12px; border: 0; border-radius: 14px; background: none; text-align: left; cursor: pointer"><span aria-hidden="true" style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 18px; background: #9CC9FF; color: #0B2B55; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">S</span><span style="font-weight: 700">Stephen</span><span style="font-size: 13px; font-weight: 600; color: #B3A6FF; font-variant-numeric: tabular-nums">gets back CA$185.41</span><span></span></button>
+<button role="menuitemradio" aria-checked="false" style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 20px; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 6px 12px; border: 0; border-radius: 14px; background: none; text-align: left; cursor: pointer"><span aria-hidden="true" style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 18px; background: #FF9EC4; color: #4F0A2A; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">A</span><span style="font-weight: 700">Angus</span><span style="font-size: 13px; font-weight: 600; color: #FF9A6B; font-variant-numeric: tabular-nums">owes CA$5.31</span><span></span></button>
+<button role="menuitemradio" aria-checked="false" style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 20px; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 6px 12px; border: 0; border-radius: 14px; background: none; text-align: left; cursor: pointer"><span aria-hidden="true" style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 18px; background: #FFD166; color: #4A3000; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">A</span><span style="font-weight: 700">Alvin</span><span style="font-size: 13px; font-weight: 600; color: #FF9A6B; font-variant-numeric: tabular-nums">owes CA$64.60</span><span></span></button>
+<button role="menuitemradio" aria-checked="false" style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 20px; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 6px 12px; border: 0; border-radius: 14px; background: none; text-align: left; cursor: pointer"><span aria-hidden="true" style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 18px; background: #7FE3D0; color: #063B33; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">M</span><span style="font-weight: 700">Matthew</span><span style="font-size: 13px; font-weight: 600; color: #FF9A6B; font-variant-numeric: tabular-nums">owes CA$81.83</span><span></span></button>
+<button role="menuitemradio" aria-checked="false" style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 20px; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 6px 12px; border: 0; border-radius: 14px; background: none; text-align: left; cursor: pointer"><span aria-hidden="true" style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 18px; background: #B9A7FF; color: #1D1147; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">J</span><span style="font-weight: 700">Jonah</span><span style="font-size: 13px; font-weight: 600; color: #FF9A6B; font-variant-numeric: tabular-nums">owes CA$85.58</span><span></span></button>
+<div aria-hidden="true" style="height: 1px; margin: 6px 12px; background: #2C2C44"></div>
+<button role="menuitem" style="display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 6px 12px; border: 0; border-radius: 14px; background: none; text-align: left; font-weight: 700; cursor: pointer"><span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 18px; background: #2C2C44; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M16 4.8a3.5 3.5 0 0 1 0 6.4M18.5 14.9c1.6.9 2.7 2.6 3 5.1"/></svg></span>Manage members</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

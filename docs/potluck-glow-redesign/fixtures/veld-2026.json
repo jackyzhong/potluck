@@ -1,0 +1,35 @@
+{
+  "_about": "Sample ledger used by every Glow mockup. Shaped like the Supabase tables (ledgers, users, expenses, splits, payments). Money is integer cents in CAD. Members are listed in ledger order (users.created_at ascending), which decides who absorbs leftover cents.",
+  "ledger": {
+    "id": "ledger-veld-2026",
+    "title": "Veld 2026",
+    "emoji": "🍲",
+    "base_currency": "CAD",
+    "simplify_debts": true
+  },
+  "users": [
+    { "id": "u-jacky", "name": "Jacky", "created_at": "2026-08-01T10:00:00Z" },
+    { "id": "u-stephen", "name": "Stephen", "created_at": "2026-08-01T10:00:01Z" },
+    { "id": "u-angus", "name": "Angus", "created_at": "2026-08-01T10:00:02Z" },
+    { "id": "u-alvin", "name": "Alvin", "created_at": "2026-08-01T10:00:03Z" },
+    { "id": "u-matthew", "name": "Matthew", "created_at": "2026-08-01T10:00:04Z" },
+    { "id": "u-jonah", "name": "Jonah", "created_at": "2026-08-01T10:00:05Z" }
+  ],
+  "expenses": [
+    { "id": "e-candy", "description": "Candy (1)", "payer_id": "u-stephen", "amount_cents": 19600, "original_currency": "CAD", "created_at": "2026-08-13T18:00:00Z", "split": { "mode": "equal", "participants": ["u-jacky", "u-stephen", "u-angus", "u-alvin", "u-matthew", "u-jonah"] } },
+    { "id": "e-uber", "description": "Uber to veld day 3", "payer_id": "u-jacky", "amount_cents": 4200, "original_currency": "CAD", "created_at": "2026-08-13T20:00:00Z", "split": { "mode": "equal", "participants": ["u-jacky", "u-stephen", "u-matthew", "u-jonah"] } },
+    { "id": "e-groceries", "description": "Groceries", "payer_id": "u-angus", "amount_cents": 6978, "original_currency": "CAD", "created_at": "2026-09-08T17:00:00Z", "split": { "mode": "equal", "participants": ["u-jacky", "u-stephen", "u-angus", "u-alvin", "u-matthew", "u-jonah"] } },
+    { "id": "e-pizza", "description": "Pizza Badiali", "payer_id": "u-jacky", "amount_cents": 10974, "original_currency": "CAD", "created_at": "2026-09-08T21:00:00Z", "split": { "mode": "equal", "participants": ["u-jacky", "u-stephen", "u-angus", "u-alvin", "u-matthew", "u-jonah"] } },
+    { "id": "e-fans", "description": "Fans", "payer_id": "u-stephen", "amount_cents": 7500, "original_currency": "CAD", "created_at": "2026-09-18T15:00:00Z", "split": { "mode": "equal", "participants": ["u-jacky", "u-stephen", "u-angus", "u-alvin", "u-matthew", "u-jonah"] } }
+  ],
+  "payments": [
+    { "id": "p-alvin-jacky", "payer_id": "u-alvin", "payee_id": "u-jacky", "amount_cents": 1049, "original_currency": "CAD", "note": null, "created_at": "2026-09-17T12:00:00Z" },
+    { "id": "p-matthew-jacky", "payer_id": "u-matthew", "payee_id": "u-jacky", "amount_cents": 375, "original_currency": "CAD", "note": "write off", "created_at": "2026-09-17T13:00:00Z" }
+  ],
+  "_composer_examples": {
+    "_about": "Inputs behind the add-expense mockups (boards Q, R, S, U). Not saved expenses.",
+    "equal": { "description": "Late-night shawarma", "payer_id": "u-jacky", "amount_cents": 6450, "participants": ["u-jacky", "u-stephen", "u-alvin", "u-jonah"] },
+    "exact_in_progress": { "amount_cents": 6450, "entered": { "u-jacky": 2000, "u-stephen": 1450, "u-alvin": 1000 }, "blank": ["u-angus", "u-matthew", "u-jonah"] },
+    "percent": { "amount_cents": 6450, "percent": { "u-jacky": 40, "u-stephen": 30, "u-alvin": 20, "u-jonah": 10 } }
+  }
+}

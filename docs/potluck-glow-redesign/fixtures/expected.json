@@ -1,0 +1,249 @@
+{
+  "members": {
+    "Jacky": {
+      "paid": "CA$151.74",
+      "share": "CA$85.59",
+      "sent": "CA$0.00",
+      "received": "CA$14.24",
+      "net": "+CA$51.91"
+    },
+    "Stephen": {
+      "paid": "CA$271.00",
+      "share": "CA$85.59",
+      "sent": "CA$0.00",
+      "received": "CA$0.00",
+      "net": "+CA$185.41"
+    },
+    "Angus": {
+      "paid": "CA$69.78",
+      "share": "CA$75.09",
+      "sent": "CA$0.00",
+      "received": "CA$0.00",
+      "net": "−CA$5.31"
+    },
+    "Alvin": {
+      "paid": "CA$0.00",
+      "share": "CA$75.09",
+      "sent": "CA$10.49",
+      "received": "CA$0.00",
+      "net": "−CA$64.60"
+    },
+    "Matthew": {
+      "paid": "CA$0.00",
+      "share": "CA$85.58",
+      "sent": "CA$3.75",
+      "received": "CA$0.00",
+      "net": "−CA$81.83"
+    },
+    "Jonah": {
+      "paid": "CA$0.00",
+      "share": "CA$85.58",
+      "sent": "CA$0.00",
+      "received": "CA$0.00",
+      "net": "−CA$85.58"
+    }
+  },
+  "viewers": {
+    "Jacky": {
+      "net": "CA$51.91",
+      "ledger": [
+        {
+          "when": "2026-09-18",
+          "row": "Fans",
+          "paid_by": "Stephen",
+          "total": "CA$75.00",
+          "impact": "−CA$12.50",
+          "balance": "CA$51.91"
+        },
+        {
+          "when": "2026-09-17",
+          "row": "Matthew paid Jacky",
+          "paid_by": "Matthew",
+          "total": "CA$3.75",
+          "impact": "−CA$3.75",
+          "balance": "CA$64.41"
+        },
+        {
+          "when": "2026-09-17",
+          "row": "Alvin paid Jacky",
+          "paid_by": "Alvin",
+          "total": "CA$10.49",
+          "impact": "−CA$10.49",
+          "balance": "CA$68.16"
+        },
+        {
+          "when": "2026-09-08",
+          "row": "Pizza Badiali",
+          "paid_by": "Jacky",
+          "total": "CA$109.74",
+          "impact": "+CA$91.45",
+          "balance": "CA$78.65"
+        },
+        {
+          "when": "2026-09-08",
+          "row": "Groceries",
+          "paid_by": "Angus",
+          "total": "CA$69.78",
+          "impact": "−CA$11.63",
+          "balance": "−CA$12.80"
+        },
+        {
+          "when": "2026-08-13",
+          "row": "Uber to veld day 3",
+          "paid_by": "Jacky",
+          "total": "CA$42.00",
+          "impact": "+CA$31.50",
+          "balance": "−CA$1.17"
+        },
+        {
+          "when": "2026-08-13",
+          "row": "Candy (1)",
+          "paid_by": "Stephen",
+          "total": "CA$196.00",
+          "impact": "−CA$32.67",
+          "balance": "−CA$32.67"
+        }
+      ],
+      "chips": [
+        {
+          "member": "Jonah",
+          "amount": "+28.79"
+        },
+        {
+          "member": "Matthew",
+          "amount": "+25.04"
+        },
+        {
+          "member": "Alvin",
+          "amount": "+7.80"
+        },
+        {
+          "member": "Angus",
+          "amount": "+6.66"
+        },
+        {
+          "member": "Stephen",
+          "amount": "−16.38"
+        }
+      ],
+      "share_of_spend": {
+        "group_spent_cents": 49252,
+        "your_share_cents": 8559,
+        "you_paid_cents": 15174,
+        "bar": {
+          "share_pct": 17.4,
+          "extra_pct": 13.4,
+          "shortfall_pct": 0
+        }
+      }
+    },
+    "Stephen": {
+      "net": "CA$185.41",
+      "ledger": [
+        {
+          "when": "2026-09-18",
+          "row": "Fans",
+          "paid_by": "Stephen",
+          "total": "CA$75.00",
+          "impact": "+CA$62.50",
+          "balance": "CA$185.41"
+        },
+        {
+          "when": "2026-09-17",
+          "row": "Matthew paid Jacky",
+          "paid_by": "Matthew",
+          "total": "CA$3.75",
+          "impact": "not involved",
+          "balance": "CA$122.91"
+        },
+        {
+          "when": "2026-09-17",
+          "row": "Alvin paid Jacky",
+          "paid_by": "Alvin",
+          "total": "CA$10.49",
+          "impact": "not involved",
+          "balance": "CA$122.91"
+        },
+        {
+          "when": "2026-09-08",
+          "row": "Pizza Badiali",
+          "paid_by": "Jacky",
+          "total": "CA$109.74",
+          "impact": "−CA$18.29",
+          "balance": "CA$122.91"
+        },
+        {
+          "when": "2026-09-08",
+          "row": "Groceries",
+          "paid_by": "Angus",
+          "total": "CA$69.78",
+          "impact": "−CA$11.63",
+          "balance": "CA$141.20"
+        },
+        {
+          "when": "2026-08-13",
+          "row": "Uber to veld day 3",
+          "paid_by": "Jacky",
+          "total": "CA$42.00",
+          "impact": "−CA$10.50",
+          "balance": "CA$152.83"
+        },
+        {
+          "when": "2026-08-13",
+          "row": "Candy (1)",
+          "paid_by": "Stephen",
+          "total": "CA$196.00",
+          "impact": "+CA$163.33",
+          "balance": "CA$163.33"
+        }
+      ],
+      "chips": [
+        {
+          "member": "Alvin",
+          "amount": "+45.17"
+        },
+        {
+          "member": "Matthew",
+          "amount": "+45.16"
+        },
+        {
+          "member": "Jonah",
+          "amount": "+45.16"
+        },
+        {
+          "member": "Angus",
+          "amount": "+33.54"
+        },
+        {
+          "member": "Jacky",
+          "amount": "+16.38"
+        }
+      ],
+      "share_of_spend": {
+        "group_spent_cents": 49252,
+        "your_share_cents": 8559,
+        "you_paid_cents": 27100,
+        "bar": {
+          "share_pct": 17.4,
+          "extra_pct": 37.6,
+          "shortfall_pct": 0
+        }
+      }
+    }
+  },
+  "composer": {
+    "equal": {
+      "Jacky": "CA$16.13",
+      "Stephen": "CA$16.13",
+      "Alvin": "CA$16.12",
+      "Jonah": "CA$16.12"
+    },
+    "percent": {
+      "Jacky": "CA$25.80",
+      "Stephen": "CA$19.35",
+      "Alvin": "CA$12.90",
+      "Jonah": "CA$6.45"
+    },
+    "exact_left_to_assign": "CA$20.00"
+  }
+}

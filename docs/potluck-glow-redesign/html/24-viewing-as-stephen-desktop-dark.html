@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Potluck activity: desktop, viewing as Stephen, Glow, dark</title>
+</head>
+<body>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button,input{font:inherit;color:inherit}
+input::placeholder{color:#A6A6BD}
+kbd{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12px;font-weight:600;padding:1px 6px;border:1px solid #4A4A70;border-radius:6px;background:#0F0F1A;color:#DADAE8}
+th{font-size:12px;font-weight:700;color:#A6A6BD;text-align:left;padding:14px 12px 10px;border-bottom:1px solid #2C2C44;white-space:nowrap}
+td{padding:0 12px;height:56px;border-bottom:1px solid #26263C;white-space:nowrap}
+</style>
+<div style="min-height: 100vh; box-sizing: border-box; background: #0F0F1A; color: #F2F2F8; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.4; display: flex; flex-direction: column">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px 24px">
+<div style="display: flex; align-items: center; gap: 10px; flex: 1 1 200px">
+<span aria-hidden="true" style="font-size: 28px; line-height: 1">🍲</span>
+<h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">Veld 2026</h1>
+</div>
+<div role="tablist" aria-label="Group views" style="display: flex; gap: 4px; padding: 4px; background: #1C1C2E; border-radius: 24px">
+<button role="tab" aria-selected="true" style="height: 40px; padding: 0 20px; border: 0; border-radius: 20px; background: #3A3A5E; font-weight: 700; cursor: pointer">Activity</button>
+<button role="tab" aria-selected="false" style="height: 40px; padding: 0 20px; border: 0; border-radius: 20px; background: none; color: #C3C3D6; font-weight: 600; cursor: pointer">Balances</button>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; flex: 1 1 420px">
+<button style="height: 44px; padding: 0 16px; border: 0; border-radius: 22px; background: #1C1C2E; font-weight: 700; cursor: pointer">Invite</button>
+<button style="height: 44px; padding: 0 16px; border: 0; border-radius: 22px; background: #26263C; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer">Add payment <kbd>P</kbd></button>
+<button style="height: 44px; padding: 0 16px; border: 0; border-radius: 22px; background: #F2F2F8; color: #0F0F1A; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer">Add expense <kbd>N</kbd></button>
+<span aria-hidden="true" style="width: 1px; height: 28px; margin: 0 4px; background: #33334D"></span>
+<button aria-haspopup="menu" aria-expanded="false" aria-label="Viewing as Stephen, switch person" style="height: 44px; padding: 0 12px 0 6px; border: 0; border-radius: 22px; background: #1C1C2E; display: flex; align-items: center; gap: 8px; cursor: pointer">
+<span aria-hidden="true" style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #9CC9FF; color: #0B2B55; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">S</span>
+<span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15"><span style="font-size: 11px; font-weight: 600; color: #A6A6BD">Viewing as</span><span style="font-weight: 700">Stephen</span></span>
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+</button>
+</div>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; padding: 4px 24px 0">
+
+<section style="flex: 3 1 560px; min-width: 0; box-sizing: border-box; padding: 20px; border-radius: 24px; color: white; background: radial-gradient(70% 140% at 100% 0%, #A02C88 0%, rgba(160,44,136,0) 65%), radial-gradient(80% 140% at 0% 100%, #2A1FB0 0%, rgba(42,31,176,0) 70%), #4A35E8; box-shadow: 0 12px 36px rgba(106,85,245,0.35); display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px">
+<div style="flex: 1 1 240px; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 14px; font-weight: 600">You're owed</span>
+<span style="font-size: 60px; font-weight: 800; line-height: 1.05; letter-spacing: -0.03em; font-variant-numeric: tabular-nums">CA$185.41</span>
+<span style="font-size: 13px">Everyone else owes you</span>
+</div>
+<div aria-label="Balances by person, click to filter" style="flex: 2 1 360px; min-width: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
+<button style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; border: 0; border-radius: 16px; background: rgba(255,255,255,0.14); cursor: pointer"><span style="width: 38px; height: 38px; border-radius: 19px; background: white; color: #2A1FB0; font-weight: 800; display: flex; align-items: center; justify-content: center">A</span><span style="font-size: 13px">Alvin</span><span style="font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums">+45.17</span></button>
+<button style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; border: 0; border-radius: 16px; background: rgba(255,255,255,0.14); cursor: pointer"><span style="width: 38px; height: 38px; border-radius: 19px; background: white; color: #2A1FB0; font-weight: 800; display: flex; align-items: center; justify-content: center">M</span><span style="font-size: 13px">Matthew</span><span style="font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums">+45.16</span></button>
+<button style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; border: 0; border-radius: 16px; background: rgba(255,255,255,0.14); cursor: pointer"><span style="width: 38px; height: 38px; border-radius: 19px; background: white; color: #2A1FB0; font-weight: 800; display: flex; align-items: center; justify-content: center">J</span><span style="font-size: 13px">Jonah</span><span style="font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums">+45.16</span></button>
+<button style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; border: 0; border-radius: 16px; background: rgba(255,255,255,0.14); cursor: pointer"><span style="width: 38px; height: 38px; border-radius: 19px; background: white; color: #2A1FB0; font-weight: 800; display: flex; align-items: center; justify-content: center">A</span><span style="font-size: 13px">Angus</span><span style="font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums">+33.54</span></button>
+<button style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; border: 0; border-radius: 16px; background: rgba(255,255,255,0.14); cursor: pointer"><span style="width: 38px; height: 38px; border-radius: 19px; background: white; color: #2A1FB0; font-weight: 800; display: flex; align-items: center; justify-content: center">J</span><span style="font-size: 13px">Jacky</span><span style="font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums">+16.38</span></button>
+</div>
+</section>
+
+<section style="flex: 1 1 280px; box-sizing: border-box; padding: 20px; background: #1C1C2E; border-radius: 24px; display: flex; flex-direction: column; justify-content: center; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 800">Trip so far</h2>
+<span style="font-size: 13px; color: #A6A6BD; font-variant-numeric: tabular-nums">Group spent CA$492.52</span>
+</div>
+<div role="img" aria-label="You paid 271.00 of the group's 492.52; your share is 85.59" style="height: 12px; border-radius: 6px; background: #33334D; display: flex; overflow: hidden">
+<div style="width: 17.4%; background: #F2F2F8"></div>
+<div style="width: 37.6%; background: #7C68FF"></div>
+</div>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums">
+<span>Your share CA$85.59</span>
+<span style="color: #B3A6FF">You paid CA$271.00</span>
+</div>
+</section>
+
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 16px 24px 12px">
+<label style="display: flex; align-items: center; gap: 8px; flex: 1 1 260px; max-width: 360px; height: 44px; padding: 0 14px; box-sizing: border-box; background: #1C1C2E; border-radius: 22px">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A6A6BD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+<input type="search" aria-label="Search activity" placeholder="Search expenses, people, amounts" style="flex-grow: 1; min-width: 0; border: 0; outline: 0; background: none">
+<kbd>/</kbd>
+</label>
+<div role="group" aria-label="Filter activity" style="display: flex; flex-wrap: wrap; gap: 6px">
+<button aria-pressed="true" style="height: 44px; padding: 0 16px; border: 0; border-radius: 22px; background: #F2F2F8; color: #0F0F1A; font-weight: 700; cursor: pointer">All</button>
+<button aria-pressed="false" style="height: 44px; padding: 0 16px; border: 0; border-radius: 22px; background: #1C1C2E; font-weight: 600; cursor: pointer">Expenses</button>
+<button aria-pressed="false" style="height: 44px; padding: 0 16px; border: 0; border-radius: 22px; background: #1C1C2E; font-weight: 600; cursor: pointer">Payments</button>
+<button aria-pressed="false" style="height: 44px; padding: 0 16px; border: 0; border-radius: 22px; background: #1C1C2E; font-weight: 600; cursor: pointer">Involving me</button>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; padding: 0 24px 16px">
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 0 8px; background: #1C1C2E; border-radius: 24px; overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums">
+<thead>
+<tr><th>Date</th><th>Description</th><th>Paid by</th><th style="text-align: right">Total</th><th style="text-align: right">Your impact</th><th style="text-align: right">Balance</th></tr>
+</thead>
+<tbody>
+<tr>
+<td style="font-weight: 700">Sep 18</td>
+<td style=""><span style="font-weight: 700">Fans</span></td>
+<td style=""><span style="display: inline-flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 14px; background: #F2F2F8; color: #14142B; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">You</span>You</span></td>
+<td style="text-align: right">CA$75.00</td>
+<td style="text-align: right; font-weight: 700; color: #B3A6FF">+CA$62.50</td>
+<td style="text-align: right; color: #C3C3D6">CA$185.41</td>
+</tr>
+<tr>
+<td style="font-weight: 700">Sep 17</td>
+<td style="">Matthew paid Jacky <span style="font-size: 12px; font-weight: 600; margin-left: 6px; padding: 2px 8px; border-radius: 10px; background: #2F2A5C; color: #CFC7FF">Payment</span> <span style="color: #A6A6BD; margin-left: 4px">write off</span></td>
+<td style=""><span style="display: inline-flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 14px; background: #7FE3D0; color: #063B33; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center">M</span>Matthew</span></td>
+<td style="text-align: right">CA$3.75</td>
+<td style="text-align: right; color: #A6A6BD">not involved</td>
+<td style="text-align: right; color: #C3C3D6">CA$122.91</td>
+</tr>
+<tr>
+<td style="font-weight: 700"></td>
+<td style="">Alvin paid Jacky <span style="font-size: 12px; font-weight: 600; margin-left: 6px; padding: 2px 8px; border-radius: 10px; background: #2F2A5C; color: #CFC7FF">Payment</span></td>
+<td style=""><span style="display: inline-flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 14px; background: #FFD166; color: #4A3000; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center">A</span>Alvin</span></td>
+<td style="text-align: right">CA$10.49</td>
+<td style="text-align: right; color: #A6A6BD">not involved</td>
+<td style="text-align: right; color: #C3C3D6">CA$122.91</td>
+</tr>
+<tr aria-selected="true" style="background: #2A2A4A">
+<td style="font-weight: 700; border-radius: 14px 0 0 14px">Sep 8</td>
+<td style=""><span style="font-weight: 800">Pizza Badiali</span></td>
+<td style=""><span style="display: inline-flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 14px; background: #FFB38A; color: #4A1E00; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center">J</span>Jacky</span></td>
+<td style="text-align: right">CA$109.74</td>
+<td style="text-align: right; font-weight: 700; color: #FF9A6B">−CA$18.29</td>
+<td style="text-align: right; color: #C3C3D6; border-radius: 0 14px 14px 0">CA$122.91</td>
+</tr>
+<tr>
+<td style="font-weight: 700"></td>
+<td style=""><span style="font-weight: 700">Groceries</span></td>
+<td style=""><span style="display: inline-flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 14px; background: #FF9EC4; color: #4F0A2A; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center">A</span>Angus</span></td>
+<td style="text-align: right">CA$69.78</td>
+<td style="text-align: right; font-weight: 700; color: #FF9A6B">−CA$11.63</td>
+<td style="text-align: right; color: #C3C3D6">CA$141.20</td>
+</tr>
+<tr>
+<td style="font-weight: 700">Aug 13</td>
+<td style=""><span style="font-weight: 700">Uber to veld day 3</span></td>
+<td style=""><span style="display: inline-flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 14px; background: #FFB38A; color: #4A1E00; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center">J</span>Jacky</span></td>
+<td style="text-align: right">CA$42.00</td>
+<td style="text-align: right; font-weight: 700; color: #FF9A6B">−CA$10.50</td>
+<td style="text-align: right; color: #C3C3D6">CA$152.83</td>
+</tr>
+<tr>
+<td style="font-weight: 700; border-bottom: 0"></td>
+<td style="border-bottom: 0"><span style="font-weight: 700">Candy (1)</span></td>
+<td style="border-bottom: 0"><span style="display: inline-flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 14px; background: #F2F2F8; color: #14142B; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">You</span>You</span></td>
+<td style="text-align: right; border-bottom: 0">CA$196.00</td>
+<td style="text-align: right; font-weight: 700; color: #B3A6FF; border-bottom: 0">+CA$163.33</td>
+<td style="text-align: right; color: #C3C3D6; border-bottom: 0">CA$163.33</td>
+</tr>
+</tbody>
+</table>
+</main>
+
+<aside aria-label="Selected expense" style="flex: 1 1 300px; min-width: 0; box-sizing: border-box; padding: 20px; background: #1C1C2E; border-radius: 24px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 12px; color: #A6A6BD">Sep 8 · added by Jacky</span>
+<h2 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.01em">Pizza Badiali</h2>
+<span style="font-size: 32px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">CA$109.74</span>
+<span style="color: #A6A6BD">Jacky paid · split equally 6 ways</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; padding: 12px 14px; border-radius: 14px; background: #3A2418"><span style="font-weight: 600">Your share</span><span style="font-size: 18px; font-weight: 800; color: #FF9A6B; font-variant-numeric: tabular-nums">−CA$18.29</span></div>
+<div style="display: flex; flex-direction: column; font-variant-numeric: tabular-nums">
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #2C2C44"><span style="font-weight: 700">You</span><span style="font-weight: 700; color: #FF9A6B">owe Jacky CA$18.29</span></div>
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #2C2C44"><span>Jacky</span><span style="color: #A6A6BD">paid, share CA$18.29</span></div>
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #2C2C44"><span>Angus</span><span>owes Jacky CA$18.29</span></div>
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #2C2C44"><span>Alvin</span><span>owes Jacky CA$18.29</span></div>
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #2C2C44"><span>Matthew</span><span>owes Jacky CA$18.29</span></div>
+<div style="display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid #2C2C44; border-bottom: 1px solid #2C2C44"><span>Jonah</span><span>owes Jacky CA$18.29</span></div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<button style="flex: 1 1 120px; height: 44px; border: 0; border-radius: 22px; background: #F2F2F8; color: #0F0F1A; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer">Edit <kbd>E</kbd></button>
+<button style="flex: 1 1 120px; height: 44px; border: 0; border-radius: 22px; background: #2C2C44; font-weight: 700; cursor: pointer">Duplicate</button>
+</div>
+</aside>
+
+</div>
+
+<footer style="margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 12px 24px 16px; color: #A6A6BD; font-size: 13px">
+<span style="display: flex; align-items: center; gap: 6px"><kbd>J</kbd><kbd>K</kbd> move between rows</span>
+<span style="display: flex; align-items: center; gap: 6px"><kbd>Enter</kbd> open</span>
+<span style="display: flex; align-items: center; gap: 6px"><kbd>E</kbd> edit</span>
+<span style="display: flex; align-items: center; gap: 6px"><kbd>/</kbd> search</span>
+<span style="display: flex; align-items: center; gap: 6px"><kbd>N</kbd> add expense</span>
+<span style="display: flex; align-items: center; gap: 6px"><kbd>P</kbd> add payment</span>
+</footer>
+
+</div>
+</body>
+</html>
