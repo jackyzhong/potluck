@@ -233,16 +233,19 @@ commits are on `glow`.
 
 ```bash
 git checkout glow && git pull --ff-only
-git merge --no-ff origin/<task-branch> -m "Merge <task-branch> into glow"
+B=$(gh pr view <N> --json headRefName --jq .headRefName)   # never copy the name from a report
+git merge --no-ff "origin/$B" -m "Merge $B into glow"
+git merge-base --is-ancestor "origin/$B" HEAD || echo "NOT MERGED"   # check before marking done
 # If only PROGRESS.md conflicts (the usual case):
 python3 scripts/resolve-progress-conflicts.py docs/potluck-glow-redesign/PROGRESS.md
 git add docs/potluck-glow-redesign/PROGRESS.md && git commit --no-edit
 ```
 
 The script keeps both sides of each conflict. For a board row, it takes the
-side that moved the task off `todo`. For log entries, it keeps both, newest
-first. It refuses if both sides changed the same board row; resolve that by
-hand. A conflict in any other file means two tasks overlapped: resolve it by
+side that is further along (todo < blocked < in progress < in review <
+done). For log entries, it keeps both, newest
+first. It refuses only if both sides changed one row to the same status in
+different ways; resolve that by hand. A conflict in any other file means two tasks overlapped: resolve it by
 hand, and say how in your log entry.
 
 After the last merge of the batch:
