@@ -29,7 +29,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T03 | Viewer calculation layer | T00a | done | [PR #14](https://github.com/jackyzhong/potluck/pull/14) |
 | T04 | Schema: split mode, weights, created_by | T00a | done | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
 | T05 | Foundation components | T02 | done | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
-| T06 | Viewer state, first-visit prompt | T03, T05 | todo | |
+| T06 | Viewer state, first-visit prompt | T03, T05 | done | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
 | T07 | Page frame, viewing-as switcher | T06 | todo | |
 | T08 | Activity hero, share card | T07 | todo | |
 | T09 | Ledger table and list | T07 | todo | |
@@ -96,6 +96,17 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T06 · claude-opus-5-5
+**Status:** T06 ([PR #19](https://github.com/jackyzhong/potluck/pull/19)) merged into `glow`. T07 dispatched.
+**Checked:**
+- Merged `glow`: npm test ✓ · lint ✓ · build ✓.
+- The saved viewer is read through `useSyncExternalStore`: the server render shows `loading`, so there's no hydration mismatch.
+- Only the per-viewer numbers rerun when the viewer changes.
+- `setViewer` refuses archived and foreign ids.
+**Next session should know:**
+- Use `useViewer().status === "loading"` to keep wording neutral before the saved viewer is read.
+- `useGlowData().forViewer` is null until a viewer is picked.
 
 ### 2026-11-13 · review T05, T20 · claude-opus-5-5
 **Status:** T05 ([PR #18](https://github.com/jackyzhong/potluck/pull/18)) and T20 ([PR #17](https://github.com/jackyzhong/potluck/pull/17)) merged into `glow`. T06 dispatched.
