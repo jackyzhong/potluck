@@ -128,6 +128,8 @@ why it was not done alongside the lint cleanup.
 
 Once it is fixed, lint is clean and can be made a CI gate.
 
+*On the `glow` branch (2026-11-13) the rule is disabled around that one effect, with a comment, so lint is a clean gate for the Glow tasks. The Glow composer (T13/T14) replaces this modal; delete the modal and the comment together.*
+
 ### 5.4 The remote sandbox cannot reach Supabase · Environment note
 
 The agent sandbox's network policy blocks `supabase.co`, so the app cannot be
