@@ -30,7 +30,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T04 | Schema: split mode, weights, created_by | T00a | done | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
 | T05 | Foundation components | T02 | done | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
 | T06 | Viewer state, first-visit prompt | T03, T05 | done | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
-| T07 | Page frame, viewing-as switcher | T06 | in review | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
+| T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
 | T08 | Activity hero, share card | T07 | todo | |
 | T09 | Ledger table and list | T07 | todo | |
 | T10 | Search and filters | T08, T09 | todo | |
@@ -96,6 +96,16 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T07 · claude-opus-5-5
+**Status:** T07 ([PR #20](https://github.com/jackyzhong/potluck/pull/20)) merged into `glow`. T08, T09 and T11 dispatched in parallel.
+**Checked:**
+- Merged `glow`: npm test ✓ (108 pass) · lint ✓ · build ✓.
+- Ran the branch myself at 1280. The header matches board 03's layout, and the viewer menu in dark matches board 20 (rows, nets, the tick on the current viewer).
+- I didn't check the phone sheet in dark or the swipe gesture. The worker didn't either.
+**Next session should know:**
+- T08, T09 and T11 each fill one `GroupFrame` slot prop in `page.tsx` (see T07's log). Expect small `page.tsx` conflicts when merging them: keep every side's slot.
+- T07 changed `Button` to pass `ref` through.
 
 ### 2026-11-13 · T07 · claude-sonnet-5-5
 **Status:** done → in review ([PR #20](https://github.com/jackyzhong/potluck/pull/20)).
