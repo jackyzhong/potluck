@@ -23,7 +23,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | Task | Title | Depends on | Status | Branch / PR |
 |---|---|---|---|---|
 | T00a | Confirm decisions | | done | accepted as defaults, 2026-11-13 |
-| T00b | Dev database, `glow` branch | | in progress (owner: secret key into `.env.local` and Vercel Preview) | `glow` |
+| T00b | Dev database, `glow` branch | | done | `glow` |
 | T01 | Seed script | T00b | todo | |
 | T02 | Tokens, font, theme plumbing | T00a | todo | |
 | T03 | Viewer calculation layer | T00a | todo | |
@@ -86,6 +86,17 @@ _None yet._
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T00b (finish) · claude-opus-5-5
+**Status:** done.
+**Changed:**
+- Owner: put the dev URL and secret key in the main checkout's `.env.local` and in Vercel Preview. Vercel Production is unchanged.
+- Agent: commented out the old production URL and the unused anon key in `.env.local`. With duplicate keys, the last one wins, so the file worked, but one wrong deletion would have pointed local runs at production.
+**Checked:**
+- `.env.local`, loaded through `@next/env` as the app loads it, resolves to the dev URL, and its secret key reads all five dev tables (200 responses, 0 rows).
+- `npm run dev` in this worktree with the copied `.env.local`: the home page returns 200, and a missing ledger returns 404.
+- Vercel: Preview `NEXT_PUBLIC_SUPABASE_URL` is the dev URL, and Production is still the production URL. The Preview secret key is sensitive, so its value can't be read back. It was checked through a Preview deploy instead (see the next entry, or PR #11's checks).
+**Next session should know:** T01 is unblocked. Anything that runs the app hits the empty dev database until T01 seeds it.
 
 ### 2026-11-13 · T00b · claude-opus-5-5
 **Status:** partial. The owner still has to put the secret key in place (see T00b in PLAN.md).

@@ -241,21 +241,17 @@ should read the diff closely, or run the task on a stronger model.
 **T00a · Confirm the decisions.** Done 2026-11-13: the owner accepted every
 recommended option as a default (see "Decisions").
 
-**T00b · Dev database.**
-- **Done 2026-11-13:**
-  - Created the `potluck-dev` project, $0/month.
-  - Applied all migrations to it and checked its schema matches production.
-  - Cut the `glow` branch.
-- **Still the owner's** (both need the dev secret key, which only the
-  Supabase dashboard shows):
-  1. Point the main checkout's `.env.local` at the dev project: its URL
-     `https://pooogudusmmfuztxaqfg.supabase.co` and its secret key.
-  2. In Vercel, change the **Preview** environment's `NEXT_PUBLIC_SUPABASE_URL`
-     and `SUPABASE_SECRET_KEY` to the dev project, so `glow` previews never
-     write to real groups.
-
-Done when `npm run dev` in a fresh worktree, with the copied `.env.local`,
-shows the home page, and the dev project's URL appears in `.env.local`.
+**T00b · Dev database.** Done 2026-11-13.
+- Created the `potluck-dev` project, $0/month.
+- Applied all migrations to it and checked its schema matches production.
+- Cut the `glow` branch.
+- The main checkout's `.env.local` points at the dev project. Its old
+  production lines are commented out, not deleted.
+- Vercel holds separate variables per environment. **Production** keeps
+  `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SECRET_KEY` for the production
+  project. **Preview** has its own pair for the dev project, so `glow`
+  previews never write to real groups. `NEXT_PUBLIC_SUPABASE_ANON_KEY` is
+  still set but unused.
 
 ### Phase 1: foundations (T01–T04 can run in parallel)
 
