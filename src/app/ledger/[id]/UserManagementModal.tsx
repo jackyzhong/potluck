@@ -6,12 +6,16 @@ import { useRouter } from "next/navigation";
 import { addMember, removeMember, renameMember, restoreMember } from "./actions";
 import { useModalKeyboard } from "@/src/lib/useModalKeyboard";
 import { LIMITS } from "@/src/lib/validation";
+import { Avatar } from "@/src/components/glow/Avatar";
+import { CloseIcon } from "@/src/components/glow/icons";
+import { memberSlots } from "@/src/lib/glow/avatar";
 
 type User = {
   id: string;
   name: string;
   is_placeholder: boolean;
   archived_at?: string | null;
+  created_at?: string;
 };
 
 type Props = {
@@ -35,6 +39,8 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
 
   if (!isOpen) return null;
 
+  // Colours count archived members too, so nobody's colour moves when someone is removed.
+  const slots = memberSlots(users.map(u => ({ id: u.id, created_at: u.created_at ?? "" })));
   const active = users.filter(u => !u.archived_at);
   const removed = users.filter(u => u.archived_at);
 
@@ -97,31 +103,29 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
       role="dialog"
       aria-modal="true"
       aria-labelledby="user-modal-title"
-      className="fixed inset-0 bg-black/20 z-20 flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-20 flex items-end justify-center bg-overlay p-4 text-text sm:items-center"
     >
-      <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl mb-24 sm:mb-0 relative">
+      <div style={{ border: "var(--menu-border)" }} className="relative w-full max-w-sm rounded-hero bg-surface p-6 shadow-menu">
         <button
           type="button"
           onClick={onClose}
           data-modal-close
           aria-label="Close"
-          className="absolute top-6 right-6 text-zinc-400 hover:text-zinc-900 z-10"
+          className="absolute top-3 right-3 z-10 flex size-11 cursor-pointer items-center justify-center rounded-full bg-surface-muted text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          ✕
+          <CloseIcon size={20} />
         </button>
 
         {!isAddingUser ? (
           <>
-            <h3 id="user-modal-title" className="text-xl font-bold mb-4 text-zinc-900">Group Members</h3>
+            <h3 id="user-modal-title" className="mb-4 pr-12 text-xl font-extrabold">Manage members</h3>
             <div className="max-h-72 overflow-y-auto mb-6 flex flex-col gap-2">
               {active.length === 0 ? (
-                <p className="text-zinc-500 text-sm italic">No members yet.</p>
+                <p className="text-sm italic text-text-muted">No members yet.</p>
               ) : (
                 active.map(user => (
-                  <div key={user.id} className="flex items-center gap-3 p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                    <div className="w-8 h-8 shrink-0 rounded-full bg-zinc-200 flex items-center justify-center font-medium text-zinc-600">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
+                  <div key={user.id} className="flex items-center gap-3 rounded-tile bg-surface-sunken p-3">
+                    <Avatar name={user.name} slot={slots.get(user.id)} id={user.id} size={32} />
                     {renamingId === user.id ? (
                       <form
                         className="flex-1 flex items-center gap-2 min-w-0"
@@ -143,33 +147,33 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                               setRenamingId(null);
                             }
                           }}
-                          className="flex-1 min-w-0 px-2 py-1 bg-white border border-zinc-300 rounded-lg outline-none focus:border-zinc-900"
+                          className="h-11 min-w-0 flex-1 rounded-input border border-line-strong bg-surface px-2 text-text outline-none focus:border-accent"
                           autoFocus
                         />
                         <button
                           type="submit"
                           disabled={busyMemberId === user.id || !renameValue.trim()}
-                          className="text-sm font-medium text-zinc-900 disabled:text-zinc-300"
+                          className="min-h-11 cursor-pointer px-2 text-sm font-bold text-text disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           Save
                         </button>
                         <button
                           type="button"
                           onClick={() => setRenamingId(null)}
-                          className="text-sm text-zinc-500"
+                          className="min-h-11 cursor-pointer px-2 text-sm font-semibold text-text-muted"
                         >
                           Cancel
                         </button>
                       </form>
                     ) : (
                       <>
-                        <span className="flex-1 min-w-0 truncate font-medium text-zinc-900">{user.name}</span>
+                        <span className="min-w-0 flex-1 truncate font-bold">{user.name}</span>
                         <button
                           type="button"
                           onClick={() => startRename(user)}
                           disabled={busyMemberId === user.id}
                           aria-label={`Rename ${user.name}`}
-                          className="text-sm text-zinc-500 hover:text-zinc-900 disabled:text-zinc-300"
+                          className="min-h-11 cursor-pointer px-2 text-sm font-semibold text-text-secondary hover:text-text disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           Rename
                         </button>
@@ -178,7 +182,7 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                           onClick={() => handleRemove(user)}
                           disabled={busyMemberId === user.id}
                           aria-label={`Remove ${user.name}`}
-                          className="text-sm text-red-500 hover:text-red-600 disabled:text-zinc-300"
+                          className="min-h-11 cursor-pointer px-2 text-sm font-semibold text-negative disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           Remove
                         </button>
@@ -190,19 +194,19 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
 
               {removed.length > 0 && (
                 <>
-                  <h4 className="mt-3 text-xs font-medium uppercase tracking-wide text-zinc-400">Removed</h4>
+                  <h4 className="mt-3 text-xs font-bold uppercase tracking-[var(--tracking-label)] text-text-muted">Removed</h4>
                   {removed.map(user => (
-                    <div key={user.id} className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-zinc-200">
-                      <div className="w-8 h-8 shrink-0 rounded-full bg-zinc-100 flex items-center justify-center font-medium text-zinc-400">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="flex-1 min-w-0 truncate text-zinc-500">{user.name}</span>
+                    <div key={user.id} className="flex items-center gap-3 rounded-tile border border-dashed border-line-strong p-3">
+                      <span className="opacity-60">
+                        <Avatar name={user.name} slot={slots.get(user.id)} id={user.id} size={32} />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-text-muted">{user.name}</span>
                       <button
                         type="button"
                         onClick={() => runForMember(user.id, () => restoreMember(ledgerId, user.id))}
                         disabled={busyMemberId === user.id}
                         aria-label={`Restore ${user.name}`}
-                        className="text-sm font-medium text-zinc-700 hover:text-zinc-900 disabled:text-zinc-300"
+                        className="min-h-11 cursor-pointer px-2 text-sm font-bold text-positive disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         Restore
                       </button>
@@ -214,9 +218,9 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
             <button
               type="button"
               onClick={() => setIsAddingUser(true)}
-              className="w-full py-3 font-medium bg-zinc-100 text-zinc-900 hover:bg-zinc-200 rounded-xl transition-colors"
+              className="h-12 w-full cursor-pointer rounded-pill bg-surface-muted font-bold text-text hover:opacity-90"
             >
-              + Add Group Member
+              Add group member
             </button>
           </>
         ) : (
@@ -226,8 +230,8 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
               handleAddUser();
             }}
           >
-            <h3 id="user-modal-title" className="text-xl font-bold mb-2 text-zinc-900">Add Member</h3>
-            <p className="text-sm text-zinc-500 mb-4">Phone number search coming soon.</p>
+            <h3 id="user-modal-title" className="mb-2 pr-12 text-xl font-extrabold">Add member</h3>
+            <p className="mb-4 text-sm text-text-muted">Phone number search coming soon.</p>
 
             <input
               type="text"
@@ -235,7 +239,7 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
               maxLength={LIMITS.memberName}
               value={newUserName}
               onChange={(e) => setNewUserName(e.target.value)}
-              className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl mb-6 outline-none focus:border-zinc-900"
+              className="mb-6 h-12 w-full rounded-input border border-line-strong bg-surface-sunken px-3 text-text outline-none placeholder:text-text-muted focus:border-accent"
               autoFocus
             />
 
@@ -246,16 +250,16 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                   setIsAddingUser(false);
                   setNewUserName("");
                 }}
-                className="flex-1 py-3 font-medium text-zinc-500 hover:bg-zinc-50 rounded-xl transition-colors"
+                className="h-12 flex-1 cursor-pointer rounded-pill font-bold text-text-secondary hover:bg-surface-muted"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isSubmittingUser || !newUserName.trim()}
-                className="flex-1 py-3 font-medium bg-zinc-900 text-white rounded-xl disabled:bg-zinc-200 transition-colors"
+                className="h-12 flex-1 cursor-pointer rounded-pill bg-button-primary-bg font-bold text-button-primary-fg disabled:cursor-not-allowed disabled:bg-button-disabled-bg disabled:text-button-disabled-fg"
               >
-                {isSubmittingUser ? "Adding..." : "Add"}
+                {isSubmittingUser ? "Adding…" : "Add"}
               </button>
             </div>
           </form>

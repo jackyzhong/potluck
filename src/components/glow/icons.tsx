@@ -46,3 +46,29 @@ export function AlertIcon(props: { size?: number; className?: string }) {
     </Icon>
   );
 }
+
+export function ChevronDownIcon(props: { size?: number; className?: string }) {
+  return (
+    <Icon strokeWidth={2.4} {...props}>
+      <path d="M6 9l6 6 6-6" />
+    </Icon>
+  );
+}
+
+export function CloseIcon(props: { size?: number; className?: string }) {
+  return (
+    <Icon {...props}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </Icon>
+  );
+}
+
+export function PeopleIcon(props: { size?: number; className?: string }) {
+  return (
+    <Icon {...props}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5" />
+      <path d="M16 4.8a3.5 3.5 0 0 1 0 6.4M18.5 14.9c1.6.9 2.7 2.6 3 5.1" />
+    </Icon>
+  );
+}

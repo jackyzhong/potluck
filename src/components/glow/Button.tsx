@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, MouseEvent, ReactNode, Ref } from "react";
 import { Kbd } from "./Kbd";
 
 export type ButtonVariant = "primary" | "secondary" | "soft" | "text" | "icon";
@@ -7,6 +7,8 @@ export type ButtonSize = 44 | 48 | 52;
 
 type Common = Omit<ComponentPropsWithoutRef<"button">, "disabled" | "children"> & {
   size?: ButtonSize;
+  /** React 19 passes `ref` to function components as an ordinary prop; it lands on the <button>. */
+  ref?: Ref<HTMLButtonElement>;
   /**
    * Marks the button unavailable WITHOUT removing it from the tab order, so a
    * screen-reader user can still land on it and read why. It sets
