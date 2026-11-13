@@ -24,7 +24,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 |---|---|---|---|---|
 | T00a | Confirm decisions | | done | accepted as defaults, 2026-11-13 |
 | T00b | Dev database, `glow` branch | | done | `glow` |
-| T01 | Seed script | T00b | todo | |
+| T01 | Seed script | T00b | in review | [PR #12](https://github.com/jackyzhong/potluck/pull/12) |
 | T02 | Tokens, font, theme plumbing | T00a | todo | |
 | T03 | Viewer calculation layer | T00a | in review | https://github.com/jackyzhong/potluck/pull/14 |
 | T04 | Schema: split mode, weights, created_by | T00a | in review | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
@@ -86,6 +86,28 @@ which doc and section, what it says, and what's actually true. `PLAN.md`
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T01 · claude-sonnet-5-5
+**Status:** done → in review ([PR #12](https://github.com/jackyzhong/potluck/pull/12)).
+**Changed:** `scripts/seed-dev.mjs` (new). Nothing else outside this log and the board row.
+**Checked:**
+- Allow-list: a production-shaped URL and a look-alike URL both exit 1 before any client is created. Not run against production.
+- Ran twice against dev: 1 ledger, 6 users, 5 expenses, 28 splits, 2 payments, every split an integer.
+- `npm run dev` + the printed URL: Activity shows 5 expenses and 2 settlements.
+- npm test ✓ · build ✓ · eslint on `scripts/seed-dev.mjs` ✓.
+- **npm run lint ✗**: one error in `ExpenseModal.tsx` (`react-hooks/set-state-in-effect`), the known KNOWN-ISSUES 5.2. It was on `glow` before this task, and I left it because the file is out of T01's scope. T14 removes `ExpenseModal` and T21 confirms lint is clean.
+- visual: not applicable (no UI change).
+**Differs from the boards:** n/a.
+**Decided:**
+- The allow-list compares the URL's host to `pooogudusmmfuztxaqfg.supabase.co` exactly, rather than checking that the string contains the ref. It's stricter, and `.env.local` keeps the production URL in a comment, so a plain substring check on the file's text would be wrong.
+- Ids are uuids derived from the fixture ids (sha1), so the group's URL is the same on every run: `/ledger/3894c472-c5d9-5a84-ad89-8f6aa3ea2361`.
+- A re-run also deletes any other ledger titled "Veld 2026". That's fine on the dev project only, which is the only one the script can reach.
+- It inserts into the tables directly and doesn't call `save_expense()`, so T04 changing that function's signature can't break it.
+**New copy:** none.
+**Next session should know:**
+- The seed doesn't set `split_mode`, `weight` or `created_by`. Once T04 is merged, rows will have null for all three, which is how old rows read (D13). T12/T14 testing that needs a percent or shares expense has to add one through the UI. Adding those modes to the seed is a follow-up for after T04.
+- Only equal splits are seeded, which is all the fixture contains.
+- `npm run lint` is red on `glow` until `ExpenseModal` goes. Don't treat it as caused by your task.
 
 ### 2026-11-13 · T04 · claude-sonnet-5-5
 **Status:** done → in review ([PR #13](https://github.com/jackyzhong/potluck/pull/13)).
