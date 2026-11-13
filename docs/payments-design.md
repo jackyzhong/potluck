@@ -96,7 +96,8 @@ Notes on the shape:
 
 - `note` is genuinely nullable. Do not repeat the `expenses.description`
   mistake, where the column is `NOT NULL` while the UI calls it optional and
-  the save silently fails (KNOWN-ISSUES 1.1).
+  the save silently fails (formerly KNOWN-ISSUES 1.1; fixed by the
+  `tighten_constraints` migration).
 - `ledger_id` sits on the row directly. Besides being correct, it means
   payments can be filtered per-ledger by Realtime — the thing `splits` cannot
   do (KNOWN-ISSUES 4.1).

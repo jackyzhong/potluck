@@ -1,4 +1,6 @@
 
+The schema's source of truth is [`supabase/migrations/`](../supabase/migrations/). Change the database by adding a migration there, and update this page in the same change.
+
 ERD:
 ```mermaid
 erDiagram
@@ -26,7 +28,7 @@ The "Global Registry" for all Potluck groups. Every row represents a unique even
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | PK, Default: gen_random_uuid() | Unique identifier for the group. |
 | `title` | TEXT | NOT NULL | Display name (e.g., "Japan 2026"). |
-| `base_currency` | TEXT | Default: 'CAD' | The currency used for the final settlement. |
+| `base_currency` | TEXT | NOT NULL, Default: 'CAD' | The currency used for the final settlement. |
 | `emoji` | TEXT | Optional | Emoji chosen by the organizer to represent the group. |
 | `simplify_debts` | BOOLEAN | NOT NULL, Default: true | Whether the Balances tab collapses debts into the fewest possible transfers. It belongs to the ledger rather than to a viewer, so toggling it changes the view for everyone in the group; other viewers pick the change up on their next load. |
 | `created_at` | TIMESTAMPTZ | Default: NOW() | Timestamp for audit/sorting. |
@@ -41,7 +43,7 @@ Stores every person associated with a specific ledger.
 | Field | Type | Attributes | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | PK, Default: gen_random_uuid() | Unique identifier for the participant. |
-| `ledger_id` | UUID | FK -> ledgers.id | Links the user to a specific group. |
+| `ledger_id` | UUID | FK -> ledgers.id, NOT NULL, ON DELETE CASCADE | Links the user to a specific group. |
 | `name` | TEXT | NOT NULL | Display name for the user. |
 | `is_placeholder`| BOOLEAN | Default: true | **Reserved for a future feature.** Every row is currently created with this set to `true`; no code path ever flips it, since claiming isn't implemented yet. |
 | `device_token` | TEXT | Optional | **Reserved for a future feature.** Intended to store a local browser ID for account-less entry; not currently read or written anywhere in the app. |
@@ -59,12 +61,12 @@ Records the act of spending money.
 | Field | Type | Attributes | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | PK, Default: gen_random_uuid() | Unique identifier for the expense. |
-| `ledger_id` | UUID | FK -> ledgers.id | Group this expense belongs to. |
-| `payer_id` | UUID | FK -> users.id | The user who fronted the cash. |
-| `description` | TEXT | NOT NULL | Note (e.g., "Dinner at 7-Eleven"). |
+| `ledger_id` | UUID | FK -> ledgers.id, NOT NULL, ON DELETE CASCADE | Group this expense belongs to. |
+| `payer_id` | UUID | FK -> users.id, NOT NULL | The user who fronted the cash. |
+| `description` | TEXT | Optional | Note (e.g., "Dinner at 7-Eleven"). The app shows "Untitled Expense" when it is missing. |
 | `amount_cents` | BIGINT | NOT NULL | Total cost in cents (auditing accuracy). |
-| `original_currency`| TEXT | Default: 'CAD' | Currency used at point of sale. |
-| `created_at` | TIMESTAMPTZ | Default: NOW() | Doubles as the expense's transaction date/time. It is user-editable at entry (defaults to "now," but can be backdated) and drives the chronological ordering of the expense list — whatever date/time the user picks is where the expense appears in the list. |
+| `original_currency`| TEXT | NOT NULL, Default: 'CAD' | Currency used at point of sale. |
+| `created_at` | TIMESTAMPTZ | NOT NULL, Default: NOW() | Doubles as the expense's transaction date/time. It is user-editable at entry (defaults to "now," but can be backdated) and drives the chronological ordering of the expense list — whatever date/time the user picks is where the expense appears in the list. |
 
 ### Table: `splits`
 
@@ -76,9 +78,11 @@ The most granular table. It breaks down an expense into individual debts.
 | Field | Type | Attributes | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | UUID | PK, Default: gen_random_uuid() | Unique identifier for the split line. |
-| `expense_id` | UUID | FK -> expenses.id | Parent transaction. |
-| `user_id` | UUID | FK -> users.id | Person who owes a portion. |
+| `expense_id` | UUID | FK -> expenses.id, NOT NULL, ON DELETE CASCADE | Parent transaction. |
+| `user_id` | UUID | FK -> users.id, NOT NULL | Person who owes a portion. |
 | `amount_cents` | BIGINT | NOT NULL | Individual portion of the debt in cents. |
+
+A unique index on `(expense_id, user_id)` allows at most one split row per person per expense, so a share can never be counted twice.
 
 ### Table: `payments`
 
@@ -100,7 +104,7 @@ being shared out.
 | `payee_id` | UUID | FK -> users.id, NOT NULL | The member who received it. |
 | `amount_cents` | BIGINT | NOT NULL, CHECK (> 0) | Amount settled, in cents. Base currency only for now — see KNOWN-ISSUES 1.4. |
 | `original_currency`| TEXT | NOT NULL, Default: 'CAD' | Present for symmetry with `expenses`; v1 only writes the ledger's base currency. |
-| `note` | TEXT | Optional | Free-text note. Genuinely nullable, unlike `expenses.description`. |
+| `note` | TEXT | Optional | Free-text note. |
 | `created_at` | TIMESTAMPTZ | NOT NULL, Default: NOW() | When the payment happened. Drives ordering in the Activity list. |
 
 A `payer_id <> payee_id` check constraint prevents paying yourself.
