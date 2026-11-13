@@ -24,7 +24,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 |---|---|---|---|---|
 | T00a | Confirm decisions | | done | accepted as defaults, 2026-11-13 |
 | T00b | Dev database, `glow` branch | | done | `glow` |
-| T01 | Seed script | T00b | todo | |
+| T01 | Seed script | T00b | in progress | `claude/glow-t01-seed-ad94cb` |
 | T02 | Tokens, font, theme plumbing | T00a | todo | |
 | T03 | Viewer calculation layer | T00a | todo | |
 | T04 | Schema: split mode, weights, created_by | T00a | todo | |
