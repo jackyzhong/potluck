@@ -25,7 +25,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T00a | Confirm decisions | | done | accepted as defaults, 2026-11-13 |
 | T00b | Dev database, `glow` branch | | done | `glow` |
 | T01 | Seed script | T00b | todo | |
-| T02 | Tokens, font, theme plumbing | T00a | in review | PR pending (`claude/glow-t02-tokens-161184`) |
+| T02 | Tokens, font, theme plumbing | T00a | in review | [PR #15](https://github.com/jackyzhong/potluck/pull/15) |
 | T03 | Viewer calculation layer | T00a | todo | |
 | T04 | Schema: split mode, weights, created_by | T00a | todo | |
 | T05 | Foundation components | T02 | todo | |
@@ -88,7 +88,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 ---
 
 ### 2026-11-13 · T02 · claude-sonnet-5-5
-**Status:** done → in review (PR pending).
+**Status:** done → in review ([PR #15](https://github.com/jackyzhong/potluck/pull/15)).
 **Changed:**
 - `src/app/tokens.css`: verbatim copy of `tokens/tokens.css`.
 - `src/app/globals.css`: imports it, maps colour roles, shadows and radii with `@theme inline` (`bg-surface`, `text-text-muted`, `border-line`, `shadow-card`, `rounded-hero`, `bg-member-1-bg`, …), and puts the next/font variable first in `--font-sans`. Body uses `--bg` and `--text`.
