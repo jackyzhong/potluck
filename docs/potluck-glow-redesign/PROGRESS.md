@@ -28,7 +28,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T02 | Tokens, font, theme plumbing | T00a | done | [PR #15](https://github.com/jackyzhong/potluck/pull/15) |
 | T03 | Viewer calculation layer | T00a | done | [PR #14](https://github.com/jackyzhong/potluck/pull/14) |
 | T04 | Schema: split mode, weights, created_by | T00a | done | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
-| T05 | Foundation components | T02 | todo | |
+| T05 | Foundation components | T02 | in review | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
 | T06 | Viewer state, first-visit prompt | T03, T05 | todo | |
 | T07 | Page frame, viewing-as switcher | T06 | todo | |
 | T08 | Activity hero, share card | T07 | todo | |
@@ -96,6 +96,43 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T05 · claude-sonnet-5-5
+**Status:** done → in review ([PR #18](https://github.com/jackyzhong/potluck/pull/18)).
+**Changed:**
+- `src/components/glow/`: `Avatar`, `Money`, `Kbd`, `Button`, `SegmentedControl`, `FilterChips`, `SearchField`, `Switch`, `StatusStrip`, `Toast`, plus `icons.tsx` (search, check, alert) and an `index.ts` barrel. Only `SegmentedControl` is a client component (`"use client"`, for roving focus); the rest have no hooks and work from server or client code.
+- `src/lib/glow/money.ts` + `money.test.ts`: `formatMoney(cents, { currency, signed, compact })` and `moneyTone`. Integer cents in, U+2212 minus, throws `RangeError` on a non-integer.
+- `src/lib/glow/avatar.ts` + `avatar.test.ts`: `memberSlots(members)` (slot 1–6 by `created_at` order, id as tie-break), `fallbackSlot(id)`, `initialOf(name)`.
+- `src/lib/glow/index.ts`: two `export *` lines for the above. (T03's file; the only change outside the task's own files.)
+- `src/app/dev/glow/page.tsx` (the gate) and `gallery.tsx` (client; every variant, drawn in a light panel and a dark panel, each pinning its own `data-theme`).
+- `globals.css` and `tokens.css` untouched.
+**Checked:**
+- npm test ✓ (91 pass, 1 skipped as before; 14 new) · lint ✓ · build ✓.
+- Gate, with `next start` on real builds: unset `VERCEL_ENV` 200 · `VERCEL_ENV=preview` 200 · `VERCEL_ENV=production` 404.
+- Gallery, in the built-in browser, at 1280 and 390, light and dark: every variant renders and there is no horizontal overflow at either width. No console errors. Setting `data-theme` on `<html>` switches the page chrome (`--bg`, `--text`).
+- Measured in the page: `Money` text is U+2212 with `font-variant-numeric: tabular-nums` and no hyphen-minus; buttons are 44/48/52 high, tabs 40/44, icon button 44 × 44, switch 46 × 28.
+- Behaviour, tried in the page: Left/Right/End/wrap on the tablist with roving tabindex; the switch toggles `aria-checked`; a disabled button keeps `aria-disabled`, stays focusable and ignores clicks; `StatusStrip` and `Toast` carry `role="status"` and `aria-live="polite"`, the error toast `role="alert"`.
+- Not checked: a screen reader; the focus ring by eye; contrast numbers (relied on the tokens' documented AA pairs, except the switch's off track, below).
+**Differs from the boards:**
+- 1280 screenshots: the Browser pane is about 800px wide and crops an emulated 1280 viewport, so I saw the left (light) column of the two-column gallery and checked the dark column at 390. Layout at 1280 was measured, not seen.
+- Not compared pixel for pixel with `screens/*.png`: no board shows these components in isolation. Sizes, radii, weights and spacing were taken from the `html/` boards (03, 05, 07, 09, 11, 15, 17).
+- Nothing else noticed.
+**Decided:**
+- **Avatar:** takes `name` and `slot` (from `memberSlots()` over every member, archived ones included), not a `Member` object, so it stays presentational. The caller computes the slot map once per group. Without a slot it falls back to a stable hash of `id`.
+- **Money:** `compact` implies a sign ("+28.79", "−16.38"), matching docs/05. Leaving `tone` out inherits the surrounding colour, which the gradient card needs.
+- **Button:** `disabled` sets `aria-disabled` rather than the native attribute, per docs/03. It swallows `onClick` and `preventDefault`s so a disabled submit button doesn't submit. `inPanel` picks the `--surface-muted-2` fill for `soft`. `kbd="N"` draws a hidden-from-AT key cap. `variant="icon"` requires `aria-label` in the types.
+- **SegmentedControl:** arrow keys select as well as move focus. `variant="pill"` (`size` 40/44, `fill`) and `variant="split"` cover the two designs. `id` is optional; when set it wires `aria-controls` for a panel.
+- **Switch off state:** the boards draw only the on state. Off is `--text-muted` track with a `--surface` knob, which keeps the track 3:1 against the page in both themes. Change it if the owner draws something else.
+- **Toast:** `success` (polite status, inverse colours with a check) and `error` (assertive alert). D15 keeps errors inline this round, so `error` is unused for now. It doesn't position, time out or queue; T18 does that.
+- **Branch name:** `glow/T05-…` can't exist next to the `glow` ref, so this uses the harness branch `claude/glow-t05-components-1b2e26`, which PLAN allows.
+**New copy:** none in the product. Gallery-only text: "Couldn't save. Try again" (error toast demo), "Expense added" (from docs/06), and the gallery's own headings and notes.
+**Next session should know:**
+- **The gradient tokens only work in the `background` shorthand.** `--gradient-glow` and `--gradient-glow-compact` end in a bare colour layer (`…, var(--glow-base)`), which `background-image` rejects, so `bg-[image:var(--gradient-glow)]` silently renders nothing. Use `[background:var(--gradient-glow)]` (as the gallery does). T08 and T13 need this.
+- No type-size utilities exist. Components use `text-[length:var(--text-body)]` and the like; a few use the plain Tailwind sizes only where a token exists as a utility (`rounded-md` for kbd, `size-7/8/9`).
+- Add new components to the barrel `src/components/glow/index.ts` and a section to the gallery's `Everything` component. Each section renders twice (light and dark), so keep state inside it.
+- Hide-on-touch for `Kbd` is `@media (hover: none)`, so it also hides under the Browser pane's mobile emulation. That is why 390 screenshots show no key caps.
+- `Money` throws on a fractional amount. That is deliberate (T03's functions return integers), but a bug upstream will show as a crashed render, not a rounded number.
+- Dev server, if started by hand, must be stopped by port (`lsof -tiTCP:<port>`), not `pkill -f "next dev"`, which kills other sessions' servers.
 
 ### 2026-11-13 · coordinator docs · claude-opus-5-5
 **Status:** done. No product code changed. The build no longer depends on any chat thread.
