@@ -23,7 +23,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | Task | Title | Depends on | Status | Branch / PR |
 |---|---|---|---|---|
 | T00a | Confirm decisions | | done | accepted as defaults, 2026-11-13 |
-| T00b | Dev database, `glow` branch | | todo (owner) | |
+| T00b | Dev database, `glow` branch | | in progress (owner: secret key into `.env.local` and Vercel Preview) | `glow` |
 | T01 | Seed script | T00b | todo | |
 | T02 | Tokens, font, theme plumbing | T00a | todo | |
 | T03 | Viewer calculation layer | T00a | todo | |
@@ -86,6 +86,21 @@ _None yet._
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T00b · claude-opus-5-5
+**Status:** partial. The owner still has to put the secret key in place (see T00b in PLAN.md).
+**Changed:**
+- Created the Supabase project `potluck-dev` (ref `pooogudusmmfuztxaqfg`, ca-central-1, $0/month).
+- Applied all 8 migrations, including `20261113204541_revoke_public_access` (still in `supabase/pending/` on `main` until PR #10 merges).
+- Renumbered dev's migration history to the file versions.
+- Cut `glow` from `claude/glow-build-plan`, so it already contains PLAN.md.
+**Checked:** per-category schema fingerprints (columns, constraints, indexes,
+function signatures, grants and ACLs, function bodies ignoring comments, RLS)
+match production, with 0 policies on both.
+**Next session should know:**
+- The function bodies on dev have no comments; the logic is identical to production.
+- Until `.env.local` points at dev, T01 and anything that runs the app is blocked.
+- T02 and T03 can start now.
 
 ### 2026-11-13 · T00a · claude-opus-5-5
 **Status:** done.

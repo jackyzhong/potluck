@@ -143,9 +143,20 @@ worktree, copy the main checkout's file:
 cp "$(git rev-parse --path-format=absolute --git-common-dir)/../.env.local" .env.local
 ```
 
-That file must point at the **dev** Supabase project (task T00b). If
-`NEXT_PUBLIC_SUPABASE_URL` contains the production project ref, stop: don't
-run the app against it.
+That file must point at the **dev** Supabase project:
+
+| Project | Ref | Use |
+|---|---|---|
+| `potluck-dev` | `pooogudusmmfuztxaqfg` | Local dev, seeding, migrations under test, Vercel Preview |
+| `Potluck` (production) | `xjkvjfmdljdpynlumszz` | Production only. Never run the app, a seed or a migration against it from a task |
+
+If `NEXT_PUBLIC_SUPABASE_URL` in `.env.local` doesn't contain the dev ref,
+stop. Don't run the app.
+
+The dev project has every migration in `supabase/migrations/` applied, its
+migration history uses the same version numbers as the files, and its schema
+was checked against production on 2026-11-13. When a task adds a migration,
+apply it to dev under the file's version and note it in the log.
 
 Seed the sample group with `node scripts/seed-dev.mjs` (built in T01). It
 prints the group's URL.
@@ -230,15 +241,18 @@ should read the diff closely, or run the task on a stronger model.
 **T00a · Confirm the decisions.** Done 2026-11-13: the owner accepted every
 recommended option as a default (see "Decisions").
 
-**T00b · Dev database.** The owner sets up a dev database:
-1. Create a second Supabase project, `potluck-dev`. The free tier allows two
-   projects.
-2. Apply every file in `supabase/migrations/` to it, in order.
-3. Point the main checkout's `.env.local` at it: its URL and its secret key.
-4. In Vercel, change the **Preview** environment's `NEXT_PUBLIC_SUPABASE_URL`
-   and `SUPABASE_SECRET_KEY` to the dev project, so `glow` previews never
-   write to real groups.
-5. Create the `glow` branch from `main`.
+**T00b · Dev database.**
+- **Done 2026-11-13:**
+  - Created the `potluck-dev` project, $0/month.
+  - Applied all migrations to it and checked its schema matches production.
+  - Cut the `glow` branch.
+- **Still the owner's** (both need the dev secret key, which only the
+  Supabase dashboard shows):
+  1. Point the main checkout's `.env.local` at the dev project: its URL
+     `https://pooogudusmmfuztxaqfg.supabase.co` and its secret key.
+  2. In Vercel, change the **Preview** environment's `NEXT_PUBLIC_SUPABASE_URL`
+     and `SUPABASE_SECRET_KEY` to the dev project, so `glow` previews never
+     write to real groups.
 
 Done when `npm run dev` in a fresh worktree, with the copied `.env.local`,
 shows the home page, and the dev project's URL appears in `.env.local`.
@@ -248,8 +262,9 @@ shows the home page, and the dev project's URL appears in `.env.local`.
 **T01 · Seed script** · S · depends on T00b
 - **Build:** `scripts/seed-dev.mjs`, which loads `fixtures/veld-2026.json` into
   the database named in `.env.local` and prints the group's URL.
-  - It refuses to run if `NEXT_PUBLIC_SUPABASE_URL` contains the production
-    ref `xjkvjfmdljdpynlumszz`.
+  - It refuses to run unless `NEXT_PUBLIC_SUPABASE_URL` contains the dev
+    ref `pooogudusmmfuztxaqfg`. Use an allow-list, not a block on the
+    production ref.
   - It's idempotent: re-running replaces the Veld group instead of adding a
     second one.
 - **Read:** `fixtures/veld-2026.json`, `supabase/migrations/`, README "Folder map".
