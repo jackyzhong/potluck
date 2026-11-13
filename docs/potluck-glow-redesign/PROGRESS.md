@@ -25,7 +25,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T00a | Confirm decisions | | done | accepted as defaults, 2026-11-13 |
 | T00b | Dev database, `glow` branch | | done | `glow` |
 | T01 | Seed script | T00b | in review | [PR #12](https://github.com/jackyzhong/potluck/pull/12) |
-| T02 | Tokens, font, theme plumbing | T00a | todo | |
+| T02 | Tokens, font, theme plumbing | T00a | in review | [PR #15](https://github.com/jackyzhong/potluck/pull/15) |
 | T03 | Viewer calculation layer | T00a | in review | https://github.com/jackyzhong/potluck/pull/14 |
 | T04 | Schema: split mode, weights, created_by | T00a | in review | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
 | T05 | Foundation components | T02 | todo | |
@@ -86,6 +86,34 @@ which doc and section, what it says, and what's actually true. `PLAN.md`
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T02 · claude-sonnet-5-5
+**Status:** done → in review ([PR #15](https://github.com/jackyzhong/potluck/pull/15)).
+**Changed:**
+- `src/app/tokens.css`: verbatim copy of `tokens/tokens.css`.
+- `src/app/globals.css`: imports it, maps colour roles, shadows and radii with `@theme inline` (`bg-surface`, `text-text-muted`, `border-line`, `shadow-card`, `rounded-hero`, `bg-member-1-bg`, …), and puts the next/font variable first in `--font-sans`. Body uses `--bg` and `--text`.
+- `src/app/layout.tsx`: Plus Jakarta Sans (variable font, weights 200–800) replaces Geist and Geist Mono. Adds the theme init script in `<head>` and `suppressHydrationWarning` on `<html>`.
+- `src/lib/theme.ts` + `theme.test.ts`: `Theme` type, `getStoredTheme`, `setTheme`, `applyTheme`, `themeInitScript`. Storage key `potluck:theme`.
+**Checked:** npm test ✓ (6 new tests) · build ✓ · lint ✗ (see below) · visual: home and the seeded Veld 2026 ledger page render in Plus Jakarta Sans. Boards not compared, because T02 changes no component.
+- Lint has one error, `ExpenseModal.tsx:80` `set-state-in-effect`. It is KNOWN-ISSUES 5.2, was there before this task, and goes away when T14 removes `ExpenseModal`. T02's files lint clean.
+- With the OS in light mode and nothing stored, `--bg` is `#f7f7fa`. With the OS in dark mode and nothing stored, it is `#0f0f1a`.
+- Setting `data-theme` by hand to light, dark and system switches `--bg`, `--surface` and `color-scheme`. Dark: `#0F0F1A` / `#1C1C2E`. Light: `#F7F7FA` / `#FFF`.
+- A stored `dark` beats a light OS after a reload, with no console errors.
+- In the delivered HTML the init script comes before `<body>`, so the first paint uses the stored theme.
+- Not checked: a frame-by-frame flash capture.
+**Differs from the boards:** nothing to compare yet.
+**Decided:**
+- `data-theme` is written as `system`, `light` or `dark`. With nothing stored it is left unset. Both unset and `system` follow the OS in `tokens.css`.
+- The font loads as the variable font (no `weight` list) because the docs recommend it. It gives 400–800 from one file set.
+- The next/font variable is `--font-plus-jakarta`, so it doesn't collide with `--font-sans` from `tokens.css`.
+- `tokens.css` is unedited. Typography sizes aren't mapped into `@theme`: they'd clash with Tailwind's `text-*` size namespace. Components use `text-[length:var(--text-hero)]` or arbitrary values until a later task needs a utility.
+- `tw-check`, a throwaway page used to inspect the generated CSS, was deleted before commit.
+**New copy:** none.
+**Next session should know:**
+- **Dark mode on old screens.** Existing pages hard-code light colours (`bg-white`, `zinc-*`). With the OS in dark mode, or after `setTheme("dark")`, body text becomes near-white. Form inputs inherit it, so on the old Add expense modal their text is hard to read on the white fields. Cards and headings keep their own colours. This goes away as T07–T16 and T20 restyle those screens. Check dark mode in `glow` previews only from T07 on.
+- Tailwind writes `--shadow-card: var(--shadow-card)` into a layer, and the unlayered `tokens.css` values win over it. This is harmless; don't rename tokens to avoid it (comment in `globals.css`).
+- The path alias is `@/src/...` in this repo, not `@/...`.
+- T07 adds the System / Light / Dark control. It should call `setTheme()` and `getStoredTheme()` from `src/lib/theme.ts`. A theme change in another tab isn't synced yet.
 
 ### 2026-11-13 · T01 · claude-sonnet-5-5
 **Status:** done → in review ([PR #12](https://github.com/jackyzhong/potluck/pull/12)).
