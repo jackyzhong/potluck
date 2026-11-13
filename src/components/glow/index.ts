@@ -19,3 +19,15 @@ export {
   type ViewerState
 } from "./ViewerProvider";
 export { WhichOneAreYou, type WhichOneAreYouProps } from "./WhichOneAreYou";
+
+// Page frame and viewing-as switcher (T07). The frame itself, GroupFrame, lives
+// beside the ledger route because it wires the old modals.
+export { GroupHeader, type GroupHeaderProps } from "./GroupHeader";
+export { GroupTabs, parseTab, useGroupTab, type GroupTab } from "./GroupTabs";
+export { InvitePopover } from "./InvitePopover";
+export { PhoneActionBar } from "./PhoneActionBar";
+export { ShortcutFooter } from "./ShortcutFooter";
+export { ViewerAvatarButton, ViewerPill } from "./ViewerPill";
+export { ViewerMenu, type ViewerMenuProps } from "./ViewerMenu";
+export { ViewerSheet, type ViewerSheetProps } from "./ViewerSheet";
+export { ViewerSwitcher, type ViewerSwitcherProps } from "./ViewerSwitcher";

@@ -2,13 +2,11 @@
 import { db } from "@/src/lib/server/supabase";
 import { isUuid } from "@/src/lib/validation";
 import { notFound } from "next/navigation";
-import ActionMenu from "./ActionMenu";
-
 import ExpenseCard from "./ExpenseCard";
 import PaymentCard from "./PaymentCard";
 import { Expense, Split } from "./ExpenseModal";
 import { Payment } from "@/src/lib/balances";
-import LedgerTabs from "./LedgerTabs";
+import GroupFrame from "./GroupFrame";
 import BalancesView from "./BalancesView";
 import { getExchangeRates } from "@/src/lib/balances";
 import { ViewerProvider } from "@/src/components/glow/ViewerProvider";
@@ -127,68 +125,70 @@ export default async function LedgerPage({
       splits={allSplits}
       payments={ledgerPayments}
     >
-    <div className="min-h-screen bg-zinc-50 p-6 relative pb-32">
-      <header className="max-w-2xl mx-auto py-8">
-        <div className="text-4xl mb-2">{ledger.emoji || "🍲"}</div>
-        <h1 className="text-3xl font-bold text-zinc-900">{ledger.title}</h1>
-        <p className="text-zinc-500">Don&apos;t lose the link to this page! Share the link to invite others.</p>
-      </header>
-
-      <main className="max-w-2xl mx-auto flex flex-col gap-4">
-        <LedgerTabs />
-
-        {tab === "balances" ? (
-          <BalancesView 
-            ledgerId={ledger.id}
-            expenses={ledgerExpenses}
-            splits={allSplits}
-            payments={ledgerPayments}
-            users={initialUsers}
-            userMap={userMap}
-            baseCurrency={baseCurrency}
-            exchangeRates={exchangeRates}
-            isSimplified={ledger.simplify_debts ?? true}
-          />
-        ) : (
-          <>
-            {activity.length === 0 ? (
-              <div className="bg-white rounded-3xl shadow-sm p-6 text-center py-20 text-zinc-400">
-                Nothing here yet. Start by adding an expense!
-              </div>
-            ) : (
-              activity.map((item) =>
-                item.kind === "expense" ? (
-                  <ExpenseCard
-                    key={item.id}
-                    expense={item.expense}
-                    splits={item.splits}
-                    users={initialUsers}
-                    userMap={userMap}
-                    ledgerId={ledger.id}
-                    baseCurrency={baseCurrency}
-                  />
-                ) : (
-                  <PaymentCard
-                    key={item.id}
-                    payment={item.payment}
-                    users={initialUsers}
-                    userMap={userMap}
-                    ledgerId={ledger.id}
-                    baseCurrency={baseCurrency}
-                  />
+      {/* T07 built the frame. Each slot below is filled by a later task; until
+          then it holds today's content, narrowed so it stays readable. */}
+      <GroupFrame
+        ledgerId={ledger.id}
+        title={ledger.title}
+        emoji={ledger.emoji || "🍲"}
+        baseCurrency={baseCurrency}
+        users={initialUsers}
+        tab={tab === "balances" ? "balances" : "activity"}
+        // summary: T08 (hero, share card) · toolbar: T10 · panel: T11
+        // ledger: T09 replaces the card list below with LedgerTable / LedgerList
+        ledger={
+          tab === "balances" ? undefined : (
+            <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+              {activity.length === 0 ? (
+                <div className="rounded-3xl bg-surface p-6 py-20 text-center text-text-muted shadow-card">
+                  Nothing here yet. Start by adding an expense!
+                </div>
+              ) : (
+                activity.map((item) =>
+                  item.kind === "expense" ? (
+                    <ExpenseCard
+                      key={item.id}
+                      expense={item.expense}
+                      splits={item.splits}
+                      users={initialUsers}
+                      userMap={userMap}
+                      ledgerId={ledger.id}
+                      baseCurrency={baseCurrency}
+                    />
+                  ) : (
+                    <PaymentCard
+                      key={item.id}
+                      payment={item.payment}
+                      users={initialUsers}
+                      userMap={userMap}
+                      ledgerId={ledger.id}
+                      baseCurrency={baseCurrency}
+                    />
+                  )
                 )
-              )
-            )}
-          </>
-        )}
-      </main>
-
-      <ActionMenu 
-        ledgerId={ledger.id} 
-        initialUsers={initialUsers} 
-        baseCurrency={baseCurrency} 
+              )}
+            </div>
+          )
+        }
+        // balances: T16 replaces BalancesView
+        balances={
+          tab === "balances" ? (
+            <div className="mx-auto w-full max-w-2xl">
+              <BalancesView
+                ledgerId={ledger.id}
+                expenses={ledgerExpenses}
+                splits={allSplits}
+                payments={ledgerPayments}
+                users={initialUsers}
+                userMap={userMap}
+                baseCurrency={baseCurrency}
+                exchangeRates={exchangeRates}
+                isSimplified={ledger.simplify_debts ?? true}
+              />
+            </div>
+          ) : undefined
+        }
       />
-    </div>
     </ViewerProvider>
   );
 }

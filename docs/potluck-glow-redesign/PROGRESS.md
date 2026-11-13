@@ -30,7 +30,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T04 | Schema: split mode, weights, created_by | T00a | done | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
 | T05 | Foundation components | T02 | done | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
 | T06 | Viewer state, first-visit prompt | T03, T05 | done | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
-| T07 | Page frame, viewing-as switcher | T06 | in progress | `claude/glow-t07-frame-4e9b4a` |
+| T07 | Page frame, viewing-as switcher | T06 | in review | PR_LINK |
 | T08 | Activity hero, share card | T07 | todo | |
 | T09 | Ledger table and list | T07 | todo | |
 | T10 | Search and filters | T08, T09 | todo | |
@@ -96,6 +96,55 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T07 · claude-sonnet-5-5
+**Status:** done → in review (PR link on the board row).
+**Changed:**
+- `src/app/ledger/[id]/GroupFrame.tsx` (new, client): the page frame. Header, tabs, the slots (below), `PhoneActionBar`, `ShortcutFooter`, and the open state of the three old modals (Add expense, Add payment, Manage members). `page.tsx` now returns `<ViewerProvider><GroupFrame …/></ViewerProvider>` and fills the slots with today's content.
+- `src/components/glow/` (new): `GroupHeader`, `GroupTabs` (+ `useGroupTab`, `parseTab`), `InvitePopover`, `PhoneActionBar`, `ShortcutFooter`, `ViewerPill` (+ `ViewerAvatarButton`), `ViewerMenu`, `ViewerSheet`, `ViewerChoices` (the list both share), `ViewerSwitcher` (state and focus return), `useDismiss`, `useIsPhone`. Added to the barrel; three icons added to `icons.tsx` (chevron, close, people).
+- `UserManagementModal.tsx`: restyled with token utilities, `Avatar` for the members, 44px buttons. The state, handlers, server actions, `alert()`/`confirm()` and `useModalKeyboard` use are untouched.
+- Removed `ActionMenu.tsx` and `LedgerTabs.tsx` (both replaced).
+- Outside the task's file list, one line: `Button.tsx` takes a `ref` prop (React 19 passes it through to the `<button>`), because the Invite popover and the viewer menu return focus to a Button.
+**Slots (for T08, T09, T10, T11, T16).** `GroupFrame` props. Each task fills one and edits only that prop in `page.tsx`:
+- `summary` (T08): wrapper is `flex flex-wrap gap-4 px-6`. Give the hero `flex: 3 1 560px` and the share card `flex: 1 1 280px`.
+- `toolbar` (T10): wrapper is a wrapping flex row, hidden below 640px (D20).
+- `ledger` (T09): wrapper is `flex: 999 1 560px; min-width: 0`. It holds today's card list in a `max-w-2xl` column. Replace it, and drop that column.
+- `panel` (T11): wrapper is `flex: 1 1 300px`, rendered only when you pass something. T11 decides what shows at each width, so the wrapper doesn't hide itself below 1024px.
+- `balances` (T16): the whole Balances tab, in a `max-w-2xl` column today.
+- `tab` is the server's reading of `?tab=`, and the page passes only the active tab's nodes.
+**Checked:** npm test ✓ (108 pass, 1 skipped as before) · lint ✓ · build ✓ · visual, on the seeded Veld group with `npm run dev`, in the built-in browser:
+- Desktop at 1280 (emulated, shown scaled to the pane): header in light and dark, viewer menu open in light and dark. Compared with boards 03/04 and 19/20: pill, buttons, divider, tabs, menu size, rows, ticks and every net figure match (Jacky +51.91, Stephen +185.41, Angus −5.31, Alvin −64.60, Matthew −81.83, Jonah −85.58).
+- Phone at 390: header and the action bar in light and dark, the viewer sheet in light, the Invite popover, the Manage members modal, Balances. Compared with boards 01/02 and 21: header, tab row, sheet radius, grabber, 44px close, 56px rows, bar all match.
+- Also seen at 760 (wraps as docs/04 describes, no footer, no horizontal scroll).
+- Done when:
+  - **Switcher:** picking a person closes the menu, saves the viewer, announces "Now viewing as …", and puts focus back on the pill. Esc and an outside press also close it. Arrow keys, Home/End and type-ahead work (`m` → Matthew). On a phone it opens the sheet, and Esc returns focus to the avatar button.
+  - **Tabs:** `?tab=balances` switches the tab and survives a reload. Other params are kept when switching.
+  - **Theme:** System/Light/Dark switches `data-theme`, saves `potluck:theme`, and the menu reflects the saved value on reopening.
+  - **Manage members:** from the menu on desktop and from the sheet on phone. Add (Zed), rename (Jonah → Jonah B → Jonah), remove, and restore (Angus, who has history) all work. Removing Zed, who had no history, deleted him outright, as `remove_member` does. Esc closes the modal and returns focus to the avatar button.
+  - **Old modals:** Add expense and Add payment both open from the phone bar. The bar hides while a sheet or modal is open.
+  - **Invite:** the popover shows the link and the reminder. "Copy link" shows "Link copied" with the docs/06 status line (checked with a stubbed clipboard, because the pane's own clipboard refused the write, which exercised the "Couldn't copy" fallback too).
+- Not checked: a screen reader; the sheet's swipe-down (the pane can't send touch drags; the pointer handlers are written but untested); the phone sheet and the Invite popover in dark; focus rings by eye; the footer's `hover: none` rule on a real touch device; the page with a hover-less pointer at ≥1024.
+**Differs from the boards:**
+- The content below the header is still today's old cards (zinc-era styling in white cards, which stay white in dark), until T08/T09/T11 land.
+- No back button on phone (D19), so the emoji sits at the left edge.
+- Tabs on phone sit inside the same header element, so the side margin is the header's 16px, not a separate margin. Same pixels.
+- Boards don't draw the Invite popover, the Theme row, or the no-viewer states. They are my designs from the tokens.
+- No slide-up animation on the sheet, and no popover fade (docs/04 wants reduced motion respected; there is none to respect yet).
+- The "Manage members" modal has no board. Its sheet-like phone placement is my choice.
+**Decided:**
+- **Theme row** sits under "Manage members" in both the menu and sheet, as three `menuitemradio` buttons in a group (a real tablist can't live inside `role="menu"`). Arrow keys move through it like the member rows.
+- **No viewer yet / still loading:** the pill shows a neutral "?" avatar. While `status === "loading"` it prints no name, so a returning visitor never sees a flash of wrong wording. With nothing picked it says "Choose person", and the phone sub-line under the title is left out. Both are a viewer-less state docs/06 doesn't cover.
+- **Menu vs sheet** is chosen by `useIsPhone()` (matchMedia, < 640) only when something is opened; the pill/avatar button and every layout difference are CSS.
+- **Two `SegmentedControl`s** (desktop 40px, phone 44px full width) shown by CSS, because the control takes its size as a prop. The hidden one is `display: none`.
+- **`UserManagementModal`'s title** is now "Manage members" (matches the menu entry), and its buttons are sentence case ("Add group member"). The member avatars use `memberSlots()` directly, so the modal doesn't need the viewer context.
+- **Footer** shows at ≥1024 with a hover-capable pointer only, as docs/03 says (hidden below the desktop breakpoint and on touch).
+**New copy:** Invite popover: "Share this group", "Anyone with the link can view and add expenses. Don't lose the link to this page: bookmark it.", "Copy link", "Link copied", "Couldn't copy. Select the link above and copy it." ("Link copied. Anyone with it can view and add expenses." is docs/06's). "Theme", "System", "Light", "Dark". "Choose person" and the aria-label "Choose who is viewing, switch person". "Group link" (the readonly input's label). "Manage members" as the modal title.
+**Next session should know:**
+- T08/T09/T11 only edit their own prop in `page.tsx`. `GroupFrame` is a client component, but the nodes you pass in are server-rendered, so a slot component can be a server or client component.
+- The members modal's `Escape` and `useModalKeyboard` return focus to whatever had focus when it opened. `ViewerSwitcher` makes that the avatar button on purpose (it waits for the menu or sheet to close first); keep that order if you move the modal.
+- Removing a member with no expenses or payments deletes them (the `remove_member` function); only members with history are archived. Test archive/restore with someone who has rows.
+- I reseeded Veld after testing (added and renamed members), so the dev group is back to the fixture.
+- Dev server was started and stopped by port (3107).
 
 ### 2026-11-13 · review T06 · claude-opus-5-5
 **Status:** T06 ([PR #19](https://github.com/jackyzhong/potluck/pull/19)) merged into `glow`. T07 dispatched.
