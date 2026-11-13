@@ -96,7 +96,11 @@ export function parseMemberName(input: unknown): Parsed<string> {
     : fail(`Names must be between 1 and ${LIMITS.memberName} characters.`);
 }
 
-export type SplitInput = { userId: string; amountCents: number };
+export const SPLIT_MODES = ["equal", "exact", "percent", "shares"] as const;
+export type SplitMode = (typeof SPLIT_MODES)[number];
+
+/** `weight` is the percent or share count typed for the person; null for the other modes. */
+export type SplitInput = { userId: string; amountCents: number; weight: number | null };
 
 export type ExpenseInput = {
   payerId: string;
@@ -104,8 +108,15 @@ export type ExpenseInput = {
   amountCents: number;
   currency: string;
   createdAt: string;
+  /** Null when the caller sends no mode (the current form), stored as null. */
+  splitMode: SplitMode | null;
+  /** The member adding the expense. Whether they belong to the ledger is checked by the database. */
+  createdBy: string | null;
   splits: SplitInput[];
 };
+
+/** Percentages are compared to 100 with this much slack, so 33.33 + 33.33 + 33.34 passes. */
+const PERCENT_EPSILON = 1e-6;
 
 export function parseExpenseInput(input: unknown): Parsed<ExpenseInput> {
   const raw = record(input);
@@ -124,6 +135,19 @@ export function parseExpenseInput(input: unknown): Parsed<ExpenseInput> {
 
   const createdAt = timestamp(raw.createdAt);
   if (!createdAt) return fail("Enter a valid date.");
+
+  let splitMode: SplitMode | null = null;
+  if (raw.splitMode !== null && raw.splitMode !== undefined) {
+    if (!SPLIT_MODES.includes(raw.splitMode as SplitMode)) return fail("Pick a valid way to split.");
+    splitMode = raw.splitMode as SplitMode;
+  }
+  const weighted = splitMode === "percent" || splitMode === "shares";
+
+  let createdBy: string | null = null;
+  if (raw.createdBy !== null && raw.createdBy !== undefined) {
+    if (!isUuid(raw.createdBy)) return fail("Invalid request.");
+    createdBy = raw.createdBy.toLowerCase();
+  }
 
   if (!Array.isArray(raw.splits) || raw.splits.length === 0) {
     return fail("Split the expense between at least one person.");
@@ -144,12 +168,34 @@ export function parseExpenseInput(input: unknown): Parsed<ExpenseInput> {
     const userId = split.userId.toLowerCase();
     if (seen.has(userId)) return fail("Each person can only appear once in a split.");
     seen.add(userId);
+
+    let weight: number | null = null;
+    if (weighted) {
+      // Percent and shares can't be reopened without what was typed.
+      if (typeof split.weight !== "number" || !Number.isFinite(split.weight) || split.weight < 0) {
+        return fail("Invalid split.");
+      }
+      if (splitMode === "shares" && !Number.isSafeInteger(split.weight)) return fail("Shares must be whole numbers.");
+      if (splitMode === "percent" && split.weight > 100) return fail("A percentage can't be more than 100.");
+      weight = split.weight;
+    } else if (split.weight !== null && split.weight !== undefined) {
+      return fail("Invalid split.");
+    }
+
     total += split.amountCents as number;
-    splits.push({ userId, amountCents: split.amountCents as number });
+    splits.push({ userId, amountCents: split.amountCents as number, weight });
   }
 
   // The invariant every balance depends on: shares add up to exactly the total.
   if (total !== amountCents) return fail("The split doesn't add up to the expense total.");
+
+  if (weighted) {
+    const weightTotal = splits.reduce((sum, split) => sum + (split.weight ?? 0), 0);
+    if (splitMode === "percent" && Math.abs(weightTotal - 100) > PERCENT_EPSILON) {
+      return fail("The percentages must add up to 100.");
+    }
+    if (splitMode === "shares" && weightTotal < 1) return fail("Give at least one person a share.");
+  }
 
   return {
     ok: true,
@@ -159,6 +205,8 @@ export function parseExpenseInput(input: unknown): Parsed<ExpenseInput> {
       amountCents,
       currency: code,
       createdAt,
+      splitMode,
+      createdBy,
       splits
     }
   };
