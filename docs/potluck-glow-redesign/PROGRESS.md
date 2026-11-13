@@ -26,7 +26,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T00b | Dev database, `glow` branch | | done | `glow` |
 | T01 | Seed script | T00b | todo | |
 | T02 | Tokens, font, theme plumbing | T00a | todo | |
-| T03 | Viewer calculation layer | T00a | todo | |
+| T03 | Viewer calculation layer | T00a | in progress | `claude/glow-t03-calc-ce5c57` |
 | T04 | Schema: split mode, weights, created_by | T00a | todo | |
 | T05 | Foundation components | T02 | todo | |
 | T06 | Viewer state, first-visit prompt | T03, T05 | todo | |
