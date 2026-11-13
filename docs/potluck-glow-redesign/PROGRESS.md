@@ -28,7 +28,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T02 | Tokens, font, theme plumbing | T00a | done | [PR #15](https://github.com/jackyzhong/potluck/pull/15) |
 | T03 | Viewer calculation layer | T00a | done | [PR #14](https://github.com/jackyzhong/potluck/pull/14) |
 | T04 | Schema: split mode, weights, created_by | T00a | done | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
-| T05 | Foundation components | T02 | in review | PR_LINK |
+| T05 | Foundation components | T02 | in review | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
 | T06 | Viewer state, first-visit prompt | T03, T05 | todo | |
 | T07 | Page frame, viewing-as switcher | T06 | todo | |
 | T08 | Activity hero, share card | T07 | todo | |
@@ -98,7 +98,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 ---
 
 ### 2026-11-13 · T05 · claude-sonnet-5-5
-**Status:** done → in review (PR_LINK).
+**Status:** done → in review ([PR #18](https://github.com/jackyzhong/potluck/pull/18)).
 **Changed:**
 - `src/components/glow/`: `Avatar`, `Money`, `Kbd`, `Button`, `SegmentedControl`, `FilterChips`, `SearchField`, `Switch`, `StatusStrip`, `Toast`, plus `icons.tsx` (search, check, alert) and an `index.ts` barrel. Only `SegmentedControl` is a client component (`"use client"`, for roving focus); the rest have no hooks and work from server or client code.
 - `src/lib/glow/money.ts` + `money.test.ts`: `formatMoney(cents, { currency, signed, compact })` and `moneyTone`. Integer cents in, U+2212 minus, throws `RangeError` on a non-integer.
