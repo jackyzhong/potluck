@@ -29,7 +29,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T03 | Viewer calculation layer | T00a | done | [PR #14](https://github.com/jackyzhong/potluck/pull/14) |
 | T04 | Schema: split mode, weights, created_by | T00a | done | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
 | T05 | Foundation components | T02 | done | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
-| T06 | Viewer state, first-visit prompt | T03, T05 | in review | PR (see below) |
+| T06 | Viewer state, first-visit prompt | T03, T05 | in review | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
 | T07 | Page frame, viewing-as switcher | T06 | todo | |
 | T08 | Activity hero, share card | T07 | todo | |
 | T09 | Ledger table and list | T07 | todo | |
@@ -98,7 +98,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 ---
 
 ### 2026-11-13 · T06 · claude-sonnet-5-5
-**Status:** done → in review (PR link on the board row).
+**Status:** done → in review ([PR #19](https://github.com/jackyzhong/potluck/pull/19)).
 **Changed:**
 - `src/lib/glow/viewer.ts` + `viewer.test.ts` (new, pure): `viewerStorageKey`, guarded `readStoredViewer` / `writeStoredViewer` / `browserStorage`, `buildMemberOrder`, `pickableViewers`, `resolveViewer` (the docs/04 fallback rules). Re-exported from `src/lib/glow/index.ts`.
 - `src/components/glow/ViewerProvider.tsx` (client): `ViewerProvider`, `useViewer()`, `useGlowData()`.
@@ -126,8 +126,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 **New copy:** "Bookmark this page. The link is how you get back to this group." (D2 says the prompt mentions bookmarking; docs/06 has no string). The heading, hint, "gets back / owes / settled up", "Close" and "Now viewing as {name}" are from docs/06.
 **Next session should know:**
 - T07: use `useViewer()` for the pill (`viewer`, `pickable`, `setViewer`) and `useGlowData().totals` for each member's net. The first-visit sheet stays separate from your `ViewerSheet`; delete or fold it in later if you want one component.
-- T08 and the rest: numbers come from `useGlowData().forViewer` (null until a viewer exists). The ledger rows are in `viewerLedger`'s order (newest first); `ledger.id` equals the row id.
-- The provider renders its prompt as a sibling of `children`, so anything covering the page with a higher z-index than a `<dialog>` top layer can't hide it; the top layer always wins.
+- T08 and the rest: numbers come from `useGlowData().forViewer` (null until a viewer exists). `forViewer.ledger` is `viewerLedger`'s output, in that function's order.
 - Dev server was started by port (`PORT=3106`) and stopped by port.
 
 ### 2026-11-13 · review T05, T20 · claude-opus-5-5
