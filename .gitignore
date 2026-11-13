@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Obsidian
 .obsidian/
+
+# claude code local settings
+.claude/settings.local.json
