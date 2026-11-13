@@ -26,7 +26,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T00b | Dev database, `glow` branch | | done | `glow` |
 | T01 | Seed script | T00b | todo | |
 | T02 | Tokens, font, theme plumbing | T00a | todo | |
-| T03 | Viewer calculation layer | T00a | in progress | `claude/glow-t03-calc-ce5c57` |
+| T03 | Viewer calculation layer | T00a | in review | https://github.com/jackyzhong/potluck/pull/14 |
 | T04 | Schema: split mode, weights, created_by | T00a | todo | |
 | T05 | Foundation components | T02 | todo | |
 | T06 | Viewer state, first-visit prompt | T03, T05 | todo | |
@@ -88,7 +88,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 ---
 
 ### 2026-11-13 · T03 · claude-sonnet-5-5
-**Status:** done → in review (PR link on the board).
+**Status:** done → in review (PR #14).
 **Changed:**
 - `src/lib/glow/split.ts`: `splitEqually` (D5), `splitByWeight` (D6, largest remainder), `splitAmounts` (one entry point for all four modes), `equalSplitExtraCentMembers` (for the remainder note).
 - `src/lib/glow/ledger.ts`: `events`, `impact`, `memberTotals`, `viewerLedger`, `pairwise`, `visibleChips` (D11), `heroCounts`, `shareOfSpend`, `composerImpact`. Types are the app's `Expense`, `Split`, `Payment`. `memberTotals` reuses `getMemberBreakdown` from `balances.ts`; `balances.ts` is unchanged.
