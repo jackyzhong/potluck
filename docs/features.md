@@ -14,6 +14,16 @@ This document defines the logic and state transitions for complex features withi
 2. **Assignment:** That name immediately becomes selectable as a payer or split participant on any expense in the ledger — there is no separate join or activation step.
 3. **No ownership/identity binding:** All members are equivalent, undifferentiated rows tied to the ledger (`is_placeholder` is always `true`). There is no concept of "this browser is Alice" — anyone with the link can add expenses on behalf of anyone in the list.
 
+4. **Renaming:** any member can be renamed from "Manage Users".
+5. **Removing:** removing a member does one of two things, decided atomically by the `remove_member()` database function:
+   - **No activity** (not a payer, split participant, payer or payee of any payment): the member is deleted.
+   - **Any activity:** the member is **archived** (`users.archived_at` set). They disappear from the payer, split and payment pickers for new records, but stay on every record they are already part of and in the balances, so the books still add up. An archived member can still owe or be owed money, and can still be settled up with: Settle up pre-fills them even though new payments would not offer them.
+
+   Editing an existing expense or payment keeps its archived members in the pickers, so saving the edit cannot silently drop them.
+6. **Restoring:** archived members are listed under "Removed" in "Manage Users" and can be restored, which makes them pickable again.
+
+Removing someone never changes anyone's balance. Blocking removal while a member's balance is non-zero was considered and rejected: a mistaken addition would then be stuck in the group until someone settled a debt that should not exist.
+
 This is intentionally simple for the MVP: it covers the core use case (a small trusted group splitting costs) without needing accounts or a join flow.
 
 ### Deferred (Post-MVP): "Claiming" / Identity Binding

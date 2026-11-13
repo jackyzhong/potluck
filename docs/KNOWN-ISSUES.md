@@ -87,22 +87,6 @@ release is deployed, or the old client code breaks:
 Not yet covered: rate limiting. Anyone can still create ledgers or flood a
 ledger they know the link to. The server actions are the place to add it.
 
-### 2.4 Foreign keys to `users` have no delete behaviour · Confirmed
-
-`splits.user_id` and `expenses.payer_id` reference `users(id)` with no
-`ON DELETE` clause, so a user who appears in any split or expense cannot be
-deleted at all — the delete errors with a foreign key violation. Hit directly
-while cleaning up test data.
-
-There is no remove-member flow in the UI today, so this is latent rather than
-broken. It will block one the moment it is built.
-
-**Fix:** decide the semantics first. Deleting a member who owes money is
-probably wrong; soft-delete (an `archived` flag) or refusing to remove members
-with activity is likely the right answer, not a cascade.
-
----
-
 ## 4. Product & UX
 
 ### 4.1 Shared state only updates on reload · Known
@@ -130,14 +114,6 @@ Every failure path in `ExpenseModal`, `BalancesView` and `UserManagementModal`
 uses a browser `alert()`. It blocks the page, cannot be styled, and reads as
 broken on mobile. Fine for MVP, worth replacing with inline error state or a
 toast before any wider release.
-
-### 4.4 Members can be added but never removed or renamed · Known
-
-`UserManagementModal` only inserts. A typo in a member's name is permanent, and
-someone added by mistake stays in the group forever. See 2.4 — the deletion
-story needs a decision before the UI can exist.
-
----
 
 ## 5. Engineering & tooling
 

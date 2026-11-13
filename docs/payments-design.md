@@ -103,8 +103,9 @@ Notes on the shape:
   do (KNOWN-ISSUES 4.1).
 - `payer_id`/`payee_id` intentionally mirror the existing no-cascade FKs to
   `users`, for consistency with `expenses.payer_id`. This inherits
-  KNOWN-ISSUES 2.4: a member with payment history cannot be deleted. That is
-  the right default until the remove-member semantics are decided.
+  the rule that a member with payment history cannot be deleted. That turned
+  out to be what the remove-member design builds on: `remove_member()` tries
+  the delete and archives the member when these keys refuse it.
 - RLS policies must be added in the same migration — `select`, `insert`,
   `update`, `delete`. A missing one fails silently rather than erroring.
   Match the existing (fully open) convention for now, and note that this table
