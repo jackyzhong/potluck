@@ -28,7 +28,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T02 | Tokens, font, theme plumbing | T00a | done | [PR #15](https://github.com/jackyzhong/potluck/pull/15) |
 | T03 | Viewer calculation layer | T00a | done | [PR #14](https://github.com/jackyzhong/potluck/pull/14) |
 | T04 | Schema: split mode, weights, created_by | T00a | done | [PR #13](https://github.com/jackyzhong/potluck/pull/13) |
-| T05 | Foundation components | T02 | in review | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
+| T05 | Foundation components | T02 | done | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
 | T06 | Viewer state, first-visit prompt | T03, T05 | todo | |
 | T07 | Page frame, viewing-as switcher | T06 | todo | |
 | T08 | Activity hero, share card | T07 | todo | |
@@ -43,7 +43,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
 | T18 | States and edge cases | T16 | todo | |
 | T19 | Accessibility and motion pass | T18 | todo | |
-| T20 | Home and create-group restyle | T02 | in review | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
+| T20 | Home and create-group restyle | T02 | done | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
 | T21 | Ship | all | todo | |
 
 ---
@@ -96,6 +96,21 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T05, T20 · claude-opus-5-5
+**Status:** T05 ([PR #18](https://github.com/jackyzhong/potluck/pull/18)) and T20 ([PR #17](https://github.com/jackyzhong/potluck/pull/17)) merged into `glow`. T06 dispatched.
+**Changed:** nothing beyond the merges. The only conflict was the PROGRESS.md board, resolved by script.
+**Checked:**
+- Merged `glow`: npm test ✓ (91 pass) · lint ✓ · build ✓.
+- T05:
+  - The gallery is gated on `VERCEL_ENV`.
+  - `formatMoney` throws on non-integer cents and uses U+2212.
+  - `memberSlots` counts archived members.
+- T20: no raw colour classes left in `/` or `/create-group`, and layout and copy are unchanged.
+- Not re-checked by eye: the T05 gallery in dark at 1280 (the worker didn't either). It's on the `glow` Preview at `/dev/glow` for the owner.
+**Next session should know:**
+- `memberSlots` sorts `created_at` as strings, while T03's `events` parses instants. Both are fine for rows from one database. If an avatar order ever looks wrong, that's why.
+- T07 is next after T06.
 
 ### 2026-11-13 · T20 · claude-sonnet-5-5
 **Status:** done → in review (PR link on the board row).
