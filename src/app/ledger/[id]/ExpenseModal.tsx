@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { saveExpense, deleteExpense } from "./actions";
 import { CURRENCY_LIST, CURRENCIES } from "@/src/lib/currencies";
 import { useModalKeyboard } from "@/src/lib/useModalKeyboard";
+import { activeMembers, pickableMembers } from "@/src/lib/members";
 
 type User = {
   id: string;
   name: string;
   is_placeholder: boolean;
+  archived_at?: string | null;
 };
 
 export type Expense = {
@@ -88,7 +90,7 @@ export default function ExpenseModal({
         // sets the fields its own mode uses, so anything not reset here would
         // carry over from whichever expense was open before this one.
         setSplitMode("EQUAL");
-        setSelectedSplitUsers(users.map(u => u.id));
+        setSelectedSplitUsers(activeMembers(users).map(u => u.id));
         setExactAmounts({});
         setPercentages({});
 
@@ -123,7 +125,7 @@ export default function ExpenseModal({
         setDate(now.toISOString().slice(0, 16));
         
         setSplitMode("EQUAL");
-        setSelectedSplitUsers(users.map(u => u.id));
+        setSelectedSplitUsers(activeMembers(users).map(u => u.id));
         setExactAmounts({});
         setPercentages({});
       }
@@ -159,6 +161,13 @@ export default function ExpenseModal({
   }, [isCurrencyOpen]);
 
   if (!isOpen) return null;
+
+  // Removed members are not offered for new expenses, but anyone already on
+  // the expense being edited stays, so saving it cannot drop them.
+  const pickable = pickableMembers(
+    users,
+    existingExpense ? [existingExpense.payer_id, ...(existingSplits ?? []).map(s => s.user_id)] : []
+  );
 
   const selectedCurrency = CURRENCIES[currency] || CURRENCIES[baseCurrency];
   const amountCentsForSplit = Math.round((parseFloat(amount) || 0) * Math.pow(10, selectedCurrency.decimals));
@@ -315,7 +324,7 @@ export default function ExpenseModal({
                   className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl outline-none focus:border-zinc-900"
                 >
                   <option value="" disabled>Select a member...</option>
-                  {users.map(u => (
+                  {pickable.map(u => (
                     <option key={u.id} value={u.id}>{u.name}</option>
                   ))}
                 </select>
@@ -435,7 +444,7 @@ export default function ExpenseModal({
 
             {/* Allocation List */}
             <div className="flex flex-col gap-3 mb-6 max-h-60 overflow-y-auto pr-2">
-              {users.map(user => (
+              {pickable.map(user => (
                 <div key={user.id} className="flex items-center justify-between p-3 bg-zinc-50 border border-zinc-200 rounded-xl">
                   <div className="font-medium text-zinc-900">{user.name}</div>
 

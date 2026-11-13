@@ -6,11 +6,13 @@ import { savePayment, deletePayment } from "./actions";
 import { CURRENCIES, formatCurrency } from "@/src/lib/currencies";
 import { Payment } from "@/src/lib/balances";
 import { useModalKeyboard } from "@/src/lib/useModalKeyboard";
+import { pickableMembers } from "@/src/lib/members";
 
 type User = {
   id: string;
   name: string;
   is_placeholder: boolean;
+  archived_at?: string | null;
 };
 
 export type PaymentPrefill = {
@@ -110,6 +112,16 @@ export default function PaymentModal({
     setIsSubmitting(false);
   };
 
+  // Removed members are not offered for new payments, but a payment being
+  // edited, or a debt being settled, keeps the people it is about: a removed
+  // member can still owe or be owed money.
+  const pickable = pickableMembers(users, [
+    existingPayment?.payer_id,
+    existingPayment?.payee_id,
+    prefill?.payerId,
+    prefill?.payeeId
+  ].filter((id): id is string => Boolean(id)));
+
   const payerName = users.find((u) => u.id === payerId)?.name;
   const payeeName = users.find((u) => u.id === payeeId)?.name;
 
@@ -167,7 +179,7 @@ export default function PaymentModal({
                 <option value="" disabled>
                   Select a member...
                 </option>
-                {users.map((u) => (
+                {pickable.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
                   </option>
@@ -190,7 +202,7 @@ export default function PaymentModal({
                 <option value="" disabled>
                   Select a member...
                 </option>
-                {users.map((u) => (
+                {pickable.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
                   </option>
