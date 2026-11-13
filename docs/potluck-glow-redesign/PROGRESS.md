@@ -34,7 +34,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T08 | Activity hero, share card | T07 | todo | |
 | T09 | Ledger table and list | T07 | todo | |
 | T10 | Search and filters | T08, T09 | todo | |
-| T11 | Right panel, drawer, sheet | T07 | todo | |
+| T11 | Right panel, drawer, sheet | T07 | in progress | `claude/glow-t11-panel` |
 | T12 | Expense details | T09, T11, T04 | todo | |
 | T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
