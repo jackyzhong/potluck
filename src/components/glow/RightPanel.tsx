@@ -36,7 +36,7 @@ import {
 } from "@/src/lib/glow/panel";
 import { PanelBody, PanelHeader, usePanelTitle } from "./PanelContent";
 import { answerDiscard, askToDiscard, getPanelSession, panelOpener, usePanelSession } from "./panelStore";
-import { usePanelNav, usePanelState, writePanelUrl } from "./usePanel";
+import { useDeletedToast, usePanelNav, usePanelState, writePanelUrl } from "./usePanel";
 import { usePathname } from "next/navigation";
 
 // ---------- layout ----------
@@ -65,6 +65,7 @@ export function RightPanel() {
   const pathname = usePathname();
   const { state: urlState, needsCleanup } = usePanelState();
   const nav = usePanelNav();
+  useDeletedToast();
 
   // `shown` follows the URL, except that it won't leave a dirty add or edit
   // behind the user's back (a row click sets ?e= without asking). In that case

@@ -3,7 +3,7 @@
 // card, then the ledger rows. Server component, tokens only, and the pulse is
 // off for people who ask for reduced motion.
 
-const bone = "rounded-md bg-surface-muted motion-safe:animate-pulse";
+const bone = "rounded-md bg-line-strong motion-safe:animate-pulse";
 const onGlowBone = "rounded-md bg-on-glow-tile motion-safe:animate-pulse";
 
 export default function Loading() {

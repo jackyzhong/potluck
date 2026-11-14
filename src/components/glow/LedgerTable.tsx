@@ -49,6 +49,7 @@ function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string;
               e.stopPropagation();
               onSelect();
             }}
+            title={item.title}
             className={`min-w-0 truncate rounded-input text-left ${
               selected ? "font-extrabold" : row.kind === "expense" ? "font-bold" : "font-normal"
             }`}
@@ -65,14 +66,16 @@ function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string;
           ) : null}
         </div>
       </td>
-      <td className={cell}>
-        <span className="flex items-center gap-2.5 whitespace-nowrap">
+      <td className={`${cell} max-w-[200px]`}>
+        <span className="flex min-w-0 items-center gap-2.5 whitespace-nowrap">
           {item.payer.isViewer ? (
             <Avatar name={item.payer.name} variant="you" size={28} />
           ) : (
             <Avatar name={item.payer.name} slot={item.payer.slot} id={item.payer.id} size={28} />
           )}
-          {item.payer.isViewer ? "You" : item.payer.name}
+          <span className="min-w-0 truncate" title={item.payer.isViewer ? undefined : item.payer.name}>
+            {item.payer.isViewer ? "You" : item.payer.name}
+          </span>
         </span>
       </td>
       <td className={`${cell} text-right`}>

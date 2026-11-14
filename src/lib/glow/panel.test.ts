@@ -212,6 +212,6 @@ test("toastFor: saves and deletes get one polite message, anything else none", (
 
   assert.equal(toastFor(details("x"), { type: "deleted" }, false), "Expense deleted");
   assert.equal(toastFor(details("x"), { type: "deleted" }, true), "Payment deleted");
-  assert.equal(toastFor(empty, { type: "deleted" }, false), null);
+  assert.equal(toastFor(empty, { type: "deleted" }, false), "Expense deleted");
   assert.equal(toastFor(details("x"), { type: "close" }, false), null);
 });

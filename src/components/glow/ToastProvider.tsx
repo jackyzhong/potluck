@@ -72,7 +72,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         ref={host}
         popover="manual"
         data-toast-host
-        className="pointer-events-none fixed inset-x-4 bottom-[calc(96px+env(safe-area-inset-bottom))] top-auto m-0 flex justify-center overflow-visible border-0 bg-transparent p-0 text-text sm:bottom-6"
+        className="pointer-events-none fixed inset-x-auto left-1/2 bottom-[calc(96px+env(safe-area-inset-bottom))] top-auto m-0 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 justify-center overflow-visible border-0 bg-transparent p-0 text-text sm:bottom-6"
       >
         {current ? (
           <Toast key={current.key} message={current.message} variant={current.variant} className="max-w-full" />
