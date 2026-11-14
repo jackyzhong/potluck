@@ -36,7 +36,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T10 | Search and filters | T08, T09 | done | [PR #24](https://github.com/jackyzhong/potluck/pull/24) |
 | T11 | Right panel, drawer, sheet | T07 | done | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
 | T12 | Expense details | T09, T11, T04 | done | [PR #25](https://github.com/jackyzhong/potluck/pull/25) |
-| T13 | Composer: shell, Equally | T11, T04, T05 | in review | [PR #26](https://github.com/jackyzhong/potluck/pull/26) |
+| T13 | Composer: shell, Equally | T11, T04, T05 | done | [PR #26](https://github.com/jackyzhong/potluck/pull/26) |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
 | T15 | Payments: add, details, edit | T11, T09 | todo | |
 | T16 | Balances tab | T07, T15 | todo | |
@@ -96,6 +96,21 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T13 · claude-opus-5-5
+**Status:** T13 ([PR #26](https://github.com/jackyzhong/potluck/pull/26)) merged into `glow`. T14 dispatched; T15 is still running.
+**Changed:**
+- Wired T12's Duplicate to T13's `setComposerPrefill` (description, amount, payer, participants; dated today).
+- Resolved `PanelContent.tsx` and `src/lib/glow/index.ts`, keeping both sides.
+**Checked:**
+- Merged `glow`: npm test ✓ · lint ✓ · tsc ✓ · build ✓.
+- `parseAmountCents` uses integer arithmetic and rejects extra decimals rather than rounding.
+- The save sends `splitMode: "equal"`, `createdBy` = viewer and null weights, then waits for the new id in the refreshed rows before moving the panel.
+- In the browser at 1280: Duplicate on Pizza Badiali opens the composer prefilled (CA$109.74, You, Today, all six, "You'll be owed CA$91.45 more"), laid out as on board 09.
+**Next session should know:**
+- The Exact/Percent/Shares tabs are placeholders until T14.
+- `ExpenseModal` is still mounted, for Edit, until T14.
+- The prefill carries no split mode yet. T14 may extend `ComposerPrefill` with mode and weights.
 
 ### 2026-11-13 · T13 · claude-sonnet-5-5
 **Status:** in progress → in review ([PR #26](https://github.com/jackyzhong/potluck/pull/26), branch `glow-T13-composer`).
