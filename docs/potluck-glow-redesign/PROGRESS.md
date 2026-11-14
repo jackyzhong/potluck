@@ -31,7 +31,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T05 | Foundation components | T02 | done | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
 | T06 | Viewer state, first-visit prompt | T03, T05 | done | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
 | T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
-| T08 | Activity hero, share card | T07 | todo | |
+| T08 | Activity hero, share card | T07 | in review | [PR #22](https://github.com/jackyzhong/potluck/pull/22) |
 | T09 | Ledger table and list | T07 | done | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
 | T10 | Search and filters | T08, T09 | todo | |
 | T11 | Right panel, drawer, sheet | T07 | todo | |
@@ -96,6 +96,30 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T08 · claude-sonnet-5-5
+**Status:** done → in review ([PR #22](https://github.com/jackyzhong/potluck/pull/22)).
+**Changed:**
+- `src/components/glow/`: `BalanceHero`, `PersonChips`, `ShareOfSpendCard` (all in the barrel). `BalanceHero` and `ShareOfSpendCard` read `useViewer()` / `useGlowData()` themselves; `PersonChips` is presentational (`chips`, `members`, `currency`, `onSelect`, optional `selectedId`).
+- `src/lib/glow/hero.ts` + `hero.test.ts`: `heroCopy` (label and sub-line for owed, owe, settled; docs/06) and `heroScale` (amount shrinks past 9 characters). One export line added to `src/lib/glow/index.ts`.
+- `page.tsx`: only the `summary` prop (hero and share card on the Activity tab).
+- Branch is `glow-T08-hero`, not `glow/T08-hero`: git can't create a ref under `glow/` while the branch `glow` exists.
+**Checked:** npm test ✓ (117 pass, 1 skipped) · lint ✓ · build ✓ · visual, seeded Veld on `npm run dev`, built-in browser:
+- Jacky desktop 1280 dark and Stephen desktop 1280 light; Jacky phone 390 light; Alvin phone 390 dark (owe state, shortfall bar). Not shot: desktop 1280 in the other theme for each viewer, phone light for Stephen.
+- Numbers read from the DOM: Jacky hero CA$51.91, "4 people owe you · you owe Stephen", chips +28.79 +25.04 +7.80 +6.66 −16.38, bar aria "You paid CA$151.74 of the group's CA$492.52; your share is CA$85.59", widths 17.4% + 13.4%. Stephen CA$185.41, "Everyone else owes you", chips +45.17 +45.16 +45.16 +33.54 +16.38, 17.4% + 37.6%, paid CA$271.00. Both match boards 03/23 and docs/01.
+- Owe chip avatar uses the dark tile colour; no horizontal overflow at 390. Font size 60px desktop, 54px phone; with `--hs` 0.75 it gives 40.5px (scaling CSS works). Scaling math is unit-tested.
+- Neutral state (no viewer yet) seen: "Choose who's viewing", and the share card says to pick someone. The loading skeleton is written but I never caught it by eye.
+- Not checked: the settled state (the seed has nobody settled) and long amounts in the browser, both covered by unit tests only; chip click does nothing yet (by design); a screen reader; keyboard focus rings by eye.
+**Differs from the boards:** board 01/02 has no hero sub-line on phone; I show it (docs/07 A3). Not compared pixel for pixel. Fewer than 5 chips sit in the left columns of the 5-column grid (spec).
+**Decided:**
+- Net 0 with offsetting debts: label "You're all settled", no amount, but chips and the owes/owe sub-line stay (the doc says no chips; hiding real debts seemed worse).
+- "Everyone else" counts other members except archived ones the viewer is square with; two-person groups use the name instead.
+- "Still to cover" is a hatched segment of the bar; the "You paid" legend loses the positive colour in that case.
+**New copy:** "Choose who's viewing", "Pick a person to see who owes whom.", "Choose who's viewing to see your share.", "You owe everyone else" (mirror of docs/06), chip aria-label "{name}, owes you {x}" / "{name}, you owe {x}", bar label suffix ", and {x} of it is still to cover", list label "Balances by person, press to filter".
+**Next session should know:**
+- The Browser pane is shared between parallel workers: another session's navigation moved my tab mid-check. Open your own tab (`tabs_create`) and pass its `tabId` on every call.
+- T10: pass `onSelectPerson` and `selectedPersonId` to `BalanceHero`; today the page renders it with no props.
+- The gradient tokens include a base colour layer, so use `[background:var(--gradient-glow)]`, not `bg-[image:...]`.
 
 ### 2026-11-13 · review T09 · claude-opus-5-5
 **Status:** T09 ([PR #21](https://github.com/jackyzhong/potluck/pull/21)) merged into `glow`. T08 and T11 are still running.

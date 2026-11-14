@@ -9,6 +9,8 @@ import { getExchangeRates } from "@/src/lib/balances";
 import { ViewerProvider } from "@/src/components/glow/ViewerProvider";
 import { LedgerList } from "@/src/components/glow/LedgerList";
 import { LedgerTable } from "@/src/components/glow/LedgerTable";
+import { BalanceHero } from "@/src/components/glow/BalanceHero";
+import { ShareOfSpendCard } from "@/src/components/glow/ShareOfSpendCard";
 
 export default async function LedgerPage({
   params,
@@ -103,7 +105,15 @@ export default async function LedgerPage({
         baseCurrency={baseCurrency}
         users={initialUsers}
         tab={tab === "balances" ? "balances" : "activity"}
-        // summary: T08 (hero, share card) · toolbar: T10 · panel: T11
+        // toolbar: T10 · panel: T11 · summary: T08 · ledger: T09
+        summary={
+          tab === "balances" ? undefined : (
+            <>
+              <BalanceHero />
+              <ShareOfSpendCard />
+            </>
+          )
+        }
         // ledger: T09. Both layouts are in the DOM; CSS shows one (phone below 640px).
         ledger={
           tab === "balances" ? undefined : (
