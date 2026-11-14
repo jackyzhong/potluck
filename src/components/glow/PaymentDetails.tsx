@@ -14,12 +14,14 @@ import { Button } from "./Button";
 import { Money } from "./Money";
 import { StatusStrip } from "./StatusStrip";
 import { usePanelNav } from "./usePanel";
+import { useHydrated } from "./useHydrated";
 import { useGlowData, useViewer } from "./ViewerProvider";
 
 const DATE = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 export function PaymentDetails({ id }: { id: string }) {
   const router = useRouter();
+  const hydrated = useHydrated();
   const { id: ledgerId } = useParams<{ id: string }>();
   const nav = usePanelNav();
   const { data, currency: baseCurrency, slots } = useGlowData();
@@ -80,7 +82,7 @@ export function PaymentDetails({ id }: { id: string }) {
           <Money cents={payment.amount_cents} currency={currency} />
         </span>
         <span className="text-[length:var(--text-body)] text-text-muted">
-          {DATE.format(new Date(payment.created_at))} · Payment
+          {hydrated ? `${DATE.format(new Date(payment.created_at))} · Payment` : "Payment"}
         </span>
       </div>
 

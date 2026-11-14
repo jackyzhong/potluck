@@ -1,4 +1,4 @@
-import type { Expense, Split } from "@/src/app/ledger/[id]/ExpenseModal";
+import type { Expense, Split } from "@/src/lib/types";
 
 export type Debt = {
   debtorId: string;
