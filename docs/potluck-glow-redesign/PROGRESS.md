@@ -32,7 +32,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T06 | Viewer state, first-visit prompt | T03, T05 | done | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
 | T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
 | T08 | Activity hero, share card | T07 | todo | |
-| T09 | Ledger table and list | T07 | todo | |
+| T09 | Ledger table and list | T07 | in review | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
 | T10 | Search and filters | T08, T09 | todo | |
 | T11 | Right panel, drawer, sheet | T07 | todo | |
 | T12 | Expense details | T09, T11, T04 | todo | |
@@ -96,6 +96,28 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T09 · claude-sonnet-5-5
+**Status:** done → in review ([PR #21](https://github.com/jackyzhong/potluck/pull/21)).
+**Changed:**
+- `src/components/glow/`: `LedgerTable` (desktop, a real `<table>`), `LedgerList` (phone), `useLedgerView` (shared: rows from `useGlowData().forViewer.ledger`, day grouping, titles, `?e=` read and write), `LedgerEmpty`. Exported from the barrel.
+- `src/app/ledger/[id]/page.tsx`: only the `ledger` prop now renders `LedgerTable` (hidden below 640px) and `LedgerList` (hidden from 640px). Removed the `ExpenseCard`/`PaymentCard` render and the lines that only fed it (`activity`, `splitsByExpense`, and the `Expense`, `Payment` imports). The card files are still in place for T21.
+- Clicking a row (or its description button) does `router.replace` with `scroll: false`, sets `?e=<id>` and keeps other params. The row whose id matches `?e=` gets the selected styling. Nothing opens: T11 does.
+**Checked:** npm test ✓ (108 pass, 1 skipped) · lint ✓ · build ✓ · tsc ✓.
+- Ran against the seeded dev group on port 3190. Every row's date, payer, total, impact and balance match `fixtures/expected.json` for Jacky (7 rows) and Stephen (7 rows, two "not involved"). Payments show "CA$x in" per docs/05, where expected.json holds the signed value.
+- Visual: Stephen, desktop 1280 in light and dark, and phone 390 in light and dark, with a selected row. Compared by eye with boards 23/24 and 01/02. Not checked: Jacky's view by screenshot (numbers only), board 03/04 side by side at pixel level.
+- At 660px the table wrapper scrolls (scrollWidth 616 over clientWidth 612) and the document doesn't overflow. Table `min-width` is 600px.
+**Differs from the boards:** nothing noticed beyond what T08/T10/T11 still have to fill (hero, toolbar, panel). Dates use the browser's local timezone.
+**Decided:**
+- Branch is `claude/glow-t09-ledger`: git refuses `glow/T09-ledger` while a `glow` branch exists.
+- Both layouts are in the DOM, switched by CSS, so there is no flash on load. The ledger renders an empty card until the saved viewer is read.
+- Selection uses `aria-selected` on the table row as docs/03 says (a bare `<tr>` doesn't strictly allow it; T19 may revisit) and `aria-current` on the phone row button.
+- Impact "in"/"out" comes from whether the viewer is the payee/payer.
+**New copy:** "Pick who you are to see your numbers." (shown when the first-visit prompt was dismissed and nobody is picked). "Nothing here yet. Start by adding an expense!" is the old page's string, kept.
+**Next session should know:**
+- Until T12 and T15, the page has no edit or delete for expenses and payments (those lived on the removed cards).
+- No pagination or virtualisation yet (docs/03 asks to plan for it).
+- The browser pane is shared: other sessions navigate its default tab. Use your own tab and put navigate plus JS in one `browser_batch`.
 
 ### 2026-11-13 · review T07 · claude-opus-5-5
 **Status:** T07 ([PR #20](https://github.com/jackyzhong/potluck/pull/20)) merged into `glow`. T08, T09 and T11 dispatched in parallel.
