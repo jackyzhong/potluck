@@ -13,6 +13,7 @@ import { ActivityToolbar } from "@/src/components/glow/ActivityToolbar";
 import { ShareOfSpendCard } from "@/src/components/glow/ShareOfSpendCard";
 import { RightPanel } from "@/src/components/glow/RightPanel";
 import { BalancesTab } from "@/src/components/glow/BalancesTab";
+import { ToastProvider } from "@/src/components/glow/ToastProvider";
 
 export default async function LedgerPage({
   params,
@@ -91,6 +92,7 @@ export default async function LedgerPage({
     >
       {/* T07 built the frame. Each slot below is filled by a later task; until
           then it holds today's content, narrowed so it stays readable. */}
+      <ToastProvider>
       <FilterProvider>
       <GroupFrame
         ledgerId={ledger.id}
@@ -132,6 +134,7 @@ export default async function LedgerPage({
         }
       />
       </FilterProvider>
+      </ToastProvider>
     </ViewerProvider>
   );
 }

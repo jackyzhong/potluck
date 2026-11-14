@@ -18,6 +18,8 @@ type User = {
   created_at?: string;
 };
 
+const CONNECTION_ERROR = "Couldn't reach the group. Check your connection and try again.";
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -36,6 +38,9 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
   const [busyMemberId, setBusyMemberId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  // Failures show inline (D15), and Remove asks inside the row instead of in a browser dialog.
+  const [error, setError] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -46,10 +51,16 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
 
   const runForMember = async (memberId: string, action: () => Promise<{ ok: boolean; error?: string }>) => {
     setBusyMemberId(memberId);
-    const result = await action();
+    setError(null);
+    let result: { ok: boolean; error?: string };
+    try {
+      result = await action();
+    } catch {
+      result = { ok: false, error: CONNECTION_ERROR };
+    }
     setBusyMemberId(null);
     if (!result.ok) {
-      alert(result.error);
+      setError(result.error ?? CONNECTION_ERROR);
       return false;
     }
     router.refresh();
@@ -57,6 +68,8 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
   };
 
   const startRename = (user: User) => {
+    setError(null);
+    setConfirmingId(null);
     setRenamingId(user.id);
     setRenameValue(user.name);
   };
@@ -71,29 +84,31 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
     }
   };
 
-  const handleRemove = (user: User) => {
-    const message =
-      `Remove ${user.name} from the group?\n\n` +
-      "If they're on any expenses or payments, they stay there and in the balances, " +
-      "but won't be offered for new ones. You can restore them later.";
-    if (!window.confirm(message)) return;
-    runForMember(user.id, () => removeMember(ledgerId, user.id));
+  const handleRemove = async (user: User) => {
+    await runForMember(user.id, () => removeMember(ledgerId, user.id));
+    setConfirmingId(null);
   };
 
   const handleAddUser = async () => {
     if (!newUserName.trim()) return;
     setIsSubmittingUser(true);
+    setError(null);
 
-    const result = await addMember(ledgerId, newUserName);
+    let result: { ok: boolean; error?: string };
+    try {
+      result = await addMember(ledgerId, newUserName);
+    } catch {
+      result = { ok: false, error: CONNECTION_ERROR };
+    }
 
     if (result.ok) {
       router.refresh();
       setNewUserName("");
       setIsAddingUser(false); // Go back to list view
     } else {
-      alert(result.error);
+      setError(result.error ?? CONNECTION_ERROR);
     }
-    
+
     setIsSubmittingUser(false);
   };
 
@@ -126,7 +141,46 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                 active.map(user => (
                   <div key={user.id} className="flex items-center gap-3 rounded-tile bg-surface-sunken p-3">
                     <Avatar name={user.name} slot={slots.get(user.id)} id={user.id} size={32} />
-                    {renamingId === user.id ? (
+                    {confirmingId === user.id ? (
+                      <div
+                        className="flex min-w-0 flex-1 flex-col gap-2"
+                        onKeyDown={(e) => {
+                          // Escape backs out of the question rather than closing the whole modal.
+                          if (e.key === "Escape") {
+                            e.stopPropagation();
+                            setConfirmingId(null);
+                          }
+                        }}
+                      >
+                        <p className="m-0 text-sm font-bold">
+                          Remove <span className="break-words">{user.name}</span> from the group?
+                        </p>
+                        <p className="m-0 text-sm text-text-muted">
+                          If they&apos;re on any expenses or payments, they stay there and in the balances, but won&apos;t be
+                          offered for new ones. You can restore them later.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            data-autofocus
+                            autoFocus
+                            onClick={() => setConfirmingId(null)}
+                            disabled={busyMemberId === user.id}
+                            className="min-h-11 flex-1 cursor-pointer rounded-pill bg-surface-muted px-3 text-sm font-bold text-text disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemove(user)}
+                            disabled={busyMemberId === user.id}
+                            className="min-h-11 flex-1 cursor-pointer rounded-pill bg-negative px-3 text-sm font-bold text-on-glow disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {busyMemberId === user.id ? "Removing…" : "Remove"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : renamingId === user.id ? (
                       <form
                         className="flex-1 flex items-center gap-2 min-w-0"
                         onSubmit={(e) => {
@@ -167,7 +221,7 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                       </form>
                     ) : (
                       <>
-                        <span className="min-w-0 flex-1 truncate font-bold">{user.name}</span>
+                        <span title={user.name} className="min-w-0 flex-1 truncate font-bold">{user.name}</span>
                         <button
                           type="button"
                           onClick={() => startRename(user)}
@@ -179,7 +233,11 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleRemove(user)}
+                          onClick={() => {
+                            setError(null);
+                            setRenamingId(null);
+                            setConfirmingId(user.id);
+                          }}
                           disabled={busyMemberId === user.id}
                           aria-label={`Remove ${user.name}`}
                           className="min-h-11 cursor-pointer px-2 text-sm font-semibold text-negative disabled:cursor-not-allowed disabled:opacity-40"
@@ -200,7 +258,7 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                       <span className="opacity-60">
                         <Avatar name={user.name} slot={slots.get(user.id)} id={user.id} size={32} />
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-text-muted">{user.name}</span>
+                      <span title={user.name} className="min-w-0 flex-1 truncate text-text-muted">{user.name}</span>
                       <button
                         type="button"
                         onClick={() => runForMember(user.id, () => restoreMember(ledgerId, user.id))}
@@ -215,9 +273,18 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                 </>
               )}
             </div>
+            {error ? (
+              <p role="alert" className="m-0 mb-3 text-sm font-semibold text-negative">
+                {error}
+              </p>
+            ) : null}
             <button
               type="button"
-              onClick={() => setIsAddingUser(true)}
+              onClick={() => {
+                setError(null);
+                setConfirmingId(null);
+                setIsAddingUser(true);
+              }}
               className="h-12 w-full cursor-pointer rounded-pill bg-surface-muted font-bold text-text hover:opacity-90"
             >
               Add group member
@@ -239,9 +306,15 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
               maxLength={LIMITS.memberName}
               value={newUserName}
               onChange={(e) => setNewUserName(e.target.value)}
-              className="mb-6 h-12 w-full rounded-input border border-line-strong bg-surface-sunken px-3 text-text outline-none placeholder:text-text-muted focus:border-accent"
+              className="mb-6 h-12 w-full rounded-input border border-line-strong bg-surface-sunken px-3 text-text outline-none placeholder:text-text-muted focus:border-accent aria-[invalid=true]:mb-2 aria-[invalid=true]:border-negative"
+              aria-invalid={error ? true : undefined}
               autoFocus
             />
+            {error ? (
+              <p role="alert" className="m-0 mb-4 text-sm font-semibold text-negative">
+                {error}
+              </p>
+            ) : null}
 
             <div className="flex gap-2">
               <button
@@ -249,6 +322,7 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                 onClick={() => {
                   setIsAddingUser(false);
                   setNewUserName("");
+                  setError(null);
                 }}
                 className="h-12 flex-1 cursor-pointer rounded-pill font-bold text-text-secondary hover:bg-surface-muted"
               >
