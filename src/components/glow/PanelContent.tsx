@@ -15,6 +15,7 @@ import { ExpenseDetails } from "./ExpenseDetails";
 import { Kbd } from "./Kbd";
 import { CloseIcon } from "./icons";
 import { Money } from "./Money";
+import { ExpenseComposer } from "./ExpenseComposer";
 import { useGlowData } from "./ViewerProvider";
 import { usePanelNav } from "./usePanel";
 import { usePanelDirty } from "./panelStore";
@@ -122,6 +123,7 @@ function DetailsBody({ id }: { id: string }) {
   return <ExpenseDetails id={id} />;
 }
 
+// Edit only, until T14 replaces it. Add is the real ExpenseComposer (T13).
 function ComposerPlaceholder({ mode, id }: { mode: "add" | "edit"; id?: string }) {
   const nav = usePanelNav();
   const [draft, setDraft] = useState("");
@@ -154,7 +156,7 @@ export function PanelBody({ state }: { state: PanelState }) {
     case "details":
       return <DetailsBody id={state.id} />;
     case "add":
-      return <ComposerPlaceholder mode="add" />;
+      return <ExpenseComposer />;
     case "edit":
       return <ComposerPlaceholder mode="edit" id={state.id} />;
   }
