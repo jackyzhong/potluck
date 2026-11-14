@@ -171,7 +171,7 @@ export function SharesBody({
                 value={String(n)}
                 onChange={(e) => set(parseShares(e.target.value))}
                 onFocus={(e) => e.currentTarget.select()}
-                className="h-10 w-10 rounded-input border-0 bg-transparent p-0 text-center font-bold tabular-nums text-text outline-none focus-visible:outline-2 focus-visible:outline-accent"
+                className="h-10 w-10 rounded-input border-0 bg-transparent p-0 text-center font-bold tabular-nums text-text focus-visible:outline-2 focus-visible:outline-accent"
               />
               <button
                 type="button"
