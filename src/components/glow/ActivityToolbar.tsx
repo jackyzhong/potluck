@@ -25,7 +25,7 @@ export function ActivityToolbar() {
 
   return (
     <>
-      <SearchField value={filter.query} onChange={setQuery} className="min-w-[240px] max-w-[360px] flex-[1_1_320px]" />
+      <SearchField data-shortcut="search" value={filter.query} onChange={setQuery} className="min-w-[240px] max-w-[360px] flex-[1_1_320px]" />
       <FilterChips aria-label="Filter activity" options={OPTIONS} value={filter.kind} onChange={setKind} />
       {person ? (
         <button

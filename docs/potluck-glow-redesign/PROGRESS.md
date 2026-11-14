@@ -40,7 +40,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | done | [PR #29](https://github.com/jackyzhong/potluck/pull/29) |
 | T15 | Payments: add, details, edit | T11, T09 | done | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
 | T16 | Balances tab | T07, T15 | done | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
-| T17 | Keyboard shortcuts | T10, T12, T14, T16 | in progress | `glow-T17-keys` |
+| T17 | Keyboard shortcuts | T10, T12, T14, T16 | in review | branch `glow-T17-keys` (PR below) |
 | T18 | States and edge cases | T16 | todo | |
 | T19 | Accessibility and motion pass | T18 | todo | |
 | T20 | Home and create-group restyle | T02 | done | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
@@ -96,6 +96,28 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T17 · claude-sonnet-5-5
+**Status:** in progress → in review (branch `glow-T17-keys`).
+**Changed:**
+- `src/lib/glow/shortcuts.ts` + `shortcuts.test.ts` (new, 10 tests, exported from the index): `shortcutAction` (key to action), `isTypingTarget`, `moveIndex`, `escapeStep`.
+- `src/components/glow/useShortcuts.ts` (new): the one document keydown listener, mounted once in `GroupFrame`. `simplifyShortcut.ts` (new): `BalancesTab` registers its toggle there so D works without lifting `useSimplifyDebts`.
+- Minimum wiring: `GroupFrame` (one hook call), `BalancesTab` (register D), `data-nav-row` on the ledger row buttons (`LedgerTable`, `LedgerList`) and the Balances person buttons (`EveryoneBreakdown`), `data-shortcut="search"` on the search field in `ActivityToolbar`.
+- `Kbd` and `ShortcutFooter` now show only for fine pointers (`hover: hover` and `pointer: fine`); `Kbd` was only hiding on `hover: none`.
+**Checked:** npm test ✓ (233 pass, 1 skipped) · lint ✓ · tsc ✓ · build ✓. Built-in browser, my own tab, `npm run dev` on port 3717 (stopped), seeded Veld, dark, as Jacky:
+- N, P, E, Esc, J/K, Enter, `/`, 1, 2, D, V all work on Activity; N, P, J/K, Enter, D, Esc, 1 work on Balances. D flipped Simplify off and on again (restored to on).
+- Not firing: N, P and the rest with the "Which one are you?" dialog open; letters typed into the composer's amount field (no panel or tab change); N inside the open viewing-as menu. Esc closed the menu, then the panel, then cleared the search, then blurred it. Esc on a dirty edit gave one Discard prompt (no double close); N under that prompt did nothing.
+- Edit save, Cmd+Enter and Save were not exercised (nothing written); Cmd+Enter is the composers' own handler and is skipped by the listener.
+- **Not checked:** touch device (the hide rule is in the built CSS only), light mode, the drawer/sheet layouts with keys, a screen reader. Another worker's server navigated my first tab (tab-1) mid-run; I closed my second tab and only pressed N in tab-1 on the other worker's page (UI only, nothing saved).
+**Differs from the boards:** nothing visual changed.
+**Decided:**
+- Enter has no handler: J/K move real focus onto a row's button (ledger description button, Balances person button) and Enter then clicks it natively. Before the first J, Enter does nothing. J/K start from the focused row, else the row in `?e=`, and stop at the ends.
+- Typing means input, textarea, select, contenteditable, or anything inside `role="menu"`/`listbox` (so type-ahead in the viewing-as menu is safe). Checkboxes count as inputs: shortcuts are off while one is focused.
+- Any modal dialog other than the panel's drawer/sheet (members, viewer sheet, Discard prompt) switches every key off, Esc included; a native dialog handles its own Esc. Ctrl, Cmd and Alt are never ours; Shift only for `/`.
+- Esc: the viewing-as menu closes itself first; the inline panel closes itself when focus is inside it; otherwise the listener closes the panel (through the Discard guard), then clears the search (Activity), then blurs the field.
+- E works only while details is showing (expenses and payments); D only when the Balances tab is mounted and no save is in flight.
+- `V` toggles the viewing-as menu; `/` and `E` are ignored on Balances, `D` on Activity.
+**Next session should know:** T19 can check focus rings on J/K-focused rows. The footer hints still list only the docs/06 keys (no `1 2` or `V`).
 
 ### 2026-11-13 · review T14 · claude-opus-5-5
 **Status:** T14 ([PR #29](https://github.com/jackyzhong/potluck/pull/29)) merged into `glow`. T17 dispatched; T18 resumed after the usage limit.
