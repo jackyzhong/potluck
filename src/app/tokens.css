@@ -151,7 +151,7 @@
   --positive-tag-fg: #CFC7FF;
   --negative: #FF9A6B;
   --negative-soft: #3A2418;
-  --accent: #4A35E8;           /* mockups keep the light value; #6A55F5 is an option if more lift is wanted */
+  --accent: #6A55F5;           /* the mockups keep #4A35E8, but that is only 2.4:1 on --surface, below the 3:1 a focus ring, a switch or a checked box needs (T19). #6A55F5 is 3.4:1 with white text still 5:1 */
   --bar-share: #F2F2F8;
   --bar-extra: #7C68FF;
   --bar-track: #33334D;
@@ -189,7 +189,7 @@
     --text: #F2F2F8; --text-secondary: #C3C3D6; --text-muted: #A6A6BD;
     --line: #2C2C44; --line-table-row: #26263C; --line-strong: #33334D;
     --positive: #B3A6FF; --positive-soft: #2A2A4A; --positive-tag-bg: #2F2A5C; --positive-tag-fg: #CFC7FF;
-    --negative: #FF9A6B; --negative-soft: #3A2418; --accent: #4A35E8;
+    --negative: #FF9A6B; --negative-soft: #3A2418; --accent: #6A55F5;
     --bar-share: #F2F2F8; --bar-extra: #7C68FF; --bar-track: #33334D;
     --button-primary-bg: #F2F2F8; --button-primary-fg: #0F0F1A; --button-secondary-bg: #1C1C2E;
     --button-disabled-bg: #26263C; --button-disabled-fg: #A6A6BD;

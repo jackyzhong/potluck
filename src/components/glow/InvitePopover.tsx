@@ -74,7 +74,7 @@ export function InvitePopover({ ledgerId }: { ledgerId: string }) {
             value={link}
             aria-label="Group link"
             onFocus={(e) => e.currentTarget.select()}
-            className="h-11 w-full min-w-0 rounded-input border-0 bg-surface-sunken px-3 text-[length:var(--text-meta)] text-text outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="h-11 w-full min-w-0 rounded-input border-0 bg-surface-sunken px-3 text-[length:var(--text-meta)] text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
           <Button ref={copyRef} onClick={copy} className="w-full">
             {status === "copied" ? "Link copied" : "Copy link"}

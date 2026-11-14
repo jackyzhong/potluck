@@ -588,7 +588,7 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
             maxLength={DESCRIPTION_MAX}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="box-border h-10 rounded-input border-0 bg-on-glow-input px-3 font-semibold text-on-glow outline-none focus-visible:outline-2 focus-visible:outline-on-glow"
+            className="box-border h-10 rounded-input border-0 bg-on-glow-input max-sm:h-11 px-3 font-semibold text-on-glow focus-visible:outline-2 focus-visible:outline-on-glow"
           />
         </label>
         <div className="flex items-end gap-2.5">
@@ -603,7 +603,7 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
               placeholder="0.00"
               value={amountText}
               onChange={(e) => setAmountText(e.target.value)}
-              className="box-border h-14 w-full min-w-0 rounded-input border-0 bg-transparent p-0 text-[length:var(--text-amount-input)] font-extrabold tracking-[-0.03em] text-on-glow tabular-nums outline-none placeholder:text-on-glow/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-glow"
+              className="box-border h-14 w-full min-w-0 rounded-input border-0 bg-transparent p-0 text-[length:var(--text-amount-input)] font-extrabold tracking-[-0.03em] text-on-glow tabular-nums placeholder:text-on-glow/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-glow"
             />
           </label>
           <PillPopover
@@ -809,11 +809,15 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
         )}
       </div>
 
-      {/* Status strip: hidden until there's an amount (docs/04). One element, so
-          its changes are announced. */}
-      {check.strip ? (
-        <StatusStrip tone={check.strip.tone} message={check.strip.message} detail={stripDetail} />
-      ) : null}
+      {/* Status strip: hidden until there's an amount (docs/04). The live region
+          is always mounted (a region that appears together with its text is
+          often not announced), and while empty the negative margin cancels
+          the form's gap so it takes no room. */}
+      <div role="status" aria-live="polite" aria-atomic="true" className="empty:-mt-3.5">
+        {check.strip ? (
+          <StatusStrip live={false} tone={check.strip.tone} message={check.strip.message} detail={stripDetail} />
+        ) : null}
+      </div>
 
       {showFill ? (
         <Button variant="soft" inPanel size={44} onClick={fillBlankRows}>

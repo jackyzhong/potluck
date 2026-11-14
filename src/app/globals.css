@@ -116,3 +116,20 @@ body {
 [data-slot="panel"]:has([data-panel-kind="add"], [data-panel-kind="edit"]) {
   flex-basis: 400px;
 }
+
+/* T19: docs/04 asks every transition and animation to respect
+   prefers-reduced-motion. Components already add motion-reduce / motion-safe;
+   this is the backstop for the rest (hover colour fades, the home page ping,
+   the sheet and drawer slide). A near-zero duration, not `none`, so
+   transitionend and animationend still fire for code that waits on them. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}

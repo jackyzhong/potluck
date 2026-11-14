@@ -75,7 +75,7 @@ function PersonSelect({
         aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="min-w-0 max-w-[140px] cursor-pointer appearance-none truncate border-0 bg-transparent py-2 pr-5 font-bold text-text outline-none"
+        className="min-w-0 max-w-[140px] cursor-pointer appearance-none truncate border-0 bg-transparent py-2 pr-5 font-bold text-text outline-none max-sm:h-11"
       >
         <option value="" disabled>
           Choose…
@@ -248,7 +248,7 @@ export function PaymentComposer({ paymentId }: { paymentId?: string }) {
               setError(null);
             }}
             aria-invalid={error !== null && parsePaymentAmountCents(amount, decimals) === null}
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[length:var(--text-amount-input)] font-extrabold leading-tight tracking-[-0.03em] text-on-glow outline-none placeholder:text-on-glow/50 focus-visible:underline focus-visible:decoration-2 focus-visible:underline-offset-4"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[length:var(--text-amount-input)] font-extrabold leading-tight tracking-[-0.03em] text-on-glow placeholder:text-on-glow/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-glow"
           />
           <span className="shrink-0 rounded-pill bg-on-glow-tile px-3.5 py-2 font-bold">{currencyCode}</span>
         </div>

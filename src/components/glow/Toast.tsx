@@ -10,6 +10,8 @@ export type ToastProps = {
    */
   variant?: "success" | "error";
   className?: string;
+  /** `false` when the caller speaks the message through its own live region (the provider does, for success). */
+  live?: boolean;
 };
 
 /**
@@ -20,12 +22,12 @@ export type ToastProps = {
  * Success is `role="status"` (polite). Error is `role="alert"` (assertive), as
  * a failure shouldn't wait for the user to stop speaking.
  */
-export function Toast({ message, variant = "success", className = "" }: ToastProps) {
+export function Toast({ message, variant = "success", className = "", live = true }: ToastProps) {
   const isError = variant === "error";
   return (
     <div
-      role={isError ? "alert" : "status"}
-      {...(isError ? {} : { "aria-live": "polite" as const })}
+      role={!live ? undefined : isError ? "alert" : "status"}
+      {...(isError || !live ? {} : { "aria-live": "polite" as const })}
       className={[
         "inline-flex min-h-11 items-center gap-2.5 rounded-chip px-4 py-2.5 shadow-menu",
         "text-[length:var(--text-body)] font-semibold",
