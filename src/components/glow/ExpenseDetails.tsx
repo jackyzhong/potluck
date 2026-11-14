@@ -18,6 +18,7 @@ import { Button } from "./Button";
 import { Money } from "./Money";
 import { useGlowData, useViewer } from "./ViewerProvider";
 import { usePanelNav } from "./usePanel";
+import { setComposerPrefill } from "./composerPrefill";
 
 const DAY = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
 
@@ -224,7 +225,13 @@ export function ExpenseDetails({ id }: { id: string }) {
             variant="secondary"
             className="flex-[1_1_110px]"
             onClick={() => {
-              // TODO(coordinator): setComposerPrefill once T13 merges
+              // Same description, amount, payer and people; dated today (docs/03).
+              setComposerPrefill({
+                description: expense.description,
+                amountCents: expense.amount_cents,
+                payerId: expense.payer_id,
+                participantIds: data.splits.filter((s) => s.expense_id === id).map((s) => s.user_id)
+              });
               nav.openAdd();
             }}
           >
