@@ -28,7 +28,6 @@ import { PhoneActionBar } from "@/src/components/glow/PhoneActionBar";
 import { ShortcutFooter } from "@/src/components/glow/ShortcutFooter";
 import { usePanelNav } from "@/src/components/glow/usePanel";
 import { useOpenPayment } from "@/src/components/glow/paymentPrefill";
-import ExpenseModal from "./ExpenseModal";
 import UserManagementModal from "./UserManagementModal";
 
 type User = {
@@ -53,13 +52,14 @@ export type GroupFrameProps = {
   balances?: ReactNode;
 };
 
-type Modal = "expense" | "members" | null;
+type Modal = "members" | null;
 
+// `baseCurrency` is still in the props (the page passes it) but nothing here
+// uses it now that ExpenseModal is gone; the composer reads it from the data.
 export default function GroupFrame({
   ledgerId,
   title,
   emoji,
-  baseCurrency,
   users,
   tab,
   summary,
@@ -133,19 +133,12 @@ export default function GroupFrame({
         onAddExpense={openAdd}
       />
 
-      {/* The old modals, until T13 (expense) and T15 (payment) replace them. */}
+      {/* The one old modal left. Expenses (T13, T14) and payments (T15) use the panel. */}
       <UserManagementModal
         isOpen={modal === "members"}
         onClose={close}
         ledgerId={ledgerId}
         users={users}
-      />
-      <ExpenseModal
-        isOpen={modal === "expense"}
-        onClose={close}
-        ledgerId={ledgerId}
-        users={users}
-        baseCurrency={baseCurrency}
       />
     </div>
   );
