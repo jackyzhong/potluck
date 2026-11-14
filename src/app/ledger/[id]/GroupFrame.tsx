@@ -93,9 +93,14 @@ export default function GroupFrame({
       />
 
       {tab === "balances" ? (
-        <main className="px-4 pb-4 pt-1 sm:px-6">{balances}</main>
+        <main className="px-4 pb-4 pt-1 sm:px-6">
+          <div role="tabpanel" aria-label="Balances">
+            {balances}
+          </div>
+        </main>
       ) : (
-        <main className="flex flex-col">
+        <main>
+          <div role="tabpanel" aria-label="Activity" className="flex flex-col">
           {summary ? (
             <div data-slot="summary" className="flex flex-wrap gap-4 px-4 pt-1 sm:px-6">
               {summary}
@@ -121,6 +126,7 @@ export default function GroupFrame({
                 {panel}
               </div>
             ) : null}
+          </div>
           </div>
         </main>
       )}

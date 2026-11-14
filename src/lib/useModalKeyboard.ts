@@ -100,6 +100,11 @@ export function useModalKeyboard<T extends HTMLElement = HTMLDivElement>(
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // An inner control (a menu, an inline "are you sure") already used this
+        // Escape. React listens on the same node as this handler, so its
+        // stopPropagation can't hide the event from us: it says so with
+        // preventDefault instead.
+        if (e.defaultPrevented) return;
         if (escape === "none") return;
         if (escape === "inside" && !containerRef.current?.contains(document.activeElement)) return;
         e.preventDefault();

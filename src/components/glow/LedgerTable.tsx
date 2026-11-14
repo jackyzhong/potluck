@@ -34,7 +34,6 @@ function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string;
   const cell = "h-14 border-b border-line-table-row px-3 align-middle group-last:border-b-0";
   return (
     <tr
-      aria-selected={selected ? "true" : undefined}
       onClick={onSelect}
       className={`group cursor-pointer ${selected ? "bg-positive-soft" : ""}`}
     >
@@ -46,6 +45,7 @@ function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string;
           <button
             type="button"
             data-nav-row={row.id}
+            aria-current={selected ? "true" : undefined}
             onClick={(e) => {
               e.stopPropagation();
               onSelect();

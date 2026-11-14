@@ -1,7 +1,7 @@
 // src/app/ledger/[id]/UserManagementModal.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addMember, removeMember, renameMember, restoreMember } from "./actions";
 import { useModalKeyboard } from "@/src/lib/useModalKeyboard";
@@ -41,6 +41,16 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
   // Failures show inline (D15), and Remove asks inside the row instead of in a browser dialog.
   const [error, setError] = useState<string | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+
+  // Backing out of a row's question or rename form unmounts the control that had
+  // focus, so put focus back on the row's own button (Remove or Rename).
+  const backTo = useRef<string | null>(null);
+  useEffect(() => {
+    if (confirmingId !== null || renamingId !== null || !backTo.current) return;
+    const el = modalRef.current?.querySelector<HTMLElement>(backTo.current);
+    backTo.current = null;
+    el?.focus();
+  });
 
   if (!isOpen) return null;
 
@@ -147,7 +157,9 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                         onKeyDown={(e) => {
                           // Escape backs out of the question rather than closing the whole modal.
                           if (e.key === "Escape") {
+                            e.preventDefault();
                             e.stopPropagation();
+                            backTo.current = `[data-remove="${user.id}"]`;
                             setConfirmingId(null);
                           }
                         }}
@@ -164,7 +176,10 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                             type="button"
                             data-autofocus
                             autoFocus
-                            onClick={() => setConfirmingId(null)}
+                            onClick={() => {
+                              backTo.current = `[data-remove="${user.id}"]`;
+                              setConfirmingId(null);
+                            }}
                             disabled={busyMemberId === user.id}
                             className="min-h-11 flex-1 cursor-pointer rounded-pill bg-surface-muted px-3 text-sm font-bold text-text disabled:cursor-not-allowed disabled:opacity-40"
                           >
@@ -197,11 +212,13 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                           onKeyDown={(e) => {
                             // Escape cancels the rename rather than closing the whole modal.
                             if (e.key === "Escape") {
+                              e.preventDefault();
                               e.stopPropagation();
+                              backTo.current = `[data-rename="${user.id}"]`;
                               setRenamingId(null);
                             }
                           }}
-                          className="h-11 min-w-0 flex-1 rounded-input border border-line-strong bg-surface px-2 text-text outline-none focus:border-accent"
+                          className="h-11 min-w-0 flex-1 rounded-input border border-line-strong bg-surface px-2 text-text focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
                           autoFocus
                         />
                         <button
@@ -213,7 +230,10 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                         </button>
                         <button
                           type="button"
-                          onClick={() => setRenamingId(null)}
+                          onClick={() => {
+                            backTo.current = `[data-rename="${user.id}"]`;
+                            setRenamingId(null);
+                          }}
                           className="min-h-11 cursor-pointer px-2 text-sm font-semibold text-text-muted"
                         >
                           Cancel
@@ -226,6 +246,7 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                           type="button"
                           onClick={() => startRename(user)}
                           disabled={busyMemberId === user.id}
+                          data-rename={user.id}
                           aria-label={`Rename ${user.name}`}
                           className="min-h-11 cursor-pointer px-2 text-sm font-semibold text-text-secondary hover:text-text disabled:cursor-not-allowed disabled:opacity-40"
                         >
@@ -239,6 +260,7 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
                             setConfirmingId(user.id);
                           }}
                           disabled={busyMemberId === user.id}
+                          data-remove={user.id}
                           aria-label={`Remove ${user.name}`}
                           className="min-h-11 cursor-pointer px-2 text-sm font-semibold text-negative disabled:cursor-not-allowed disabled:opacity-40"
                         >
@@ -306,7 +328,7 @@ export default function UserManagementModal({ isOpen, onClose, ledgerId, users }
               maxLength={LIMITS.memberName}
               value={newUserName}
               onChange={(e) => setNewUserName(e.target.value)}
-              className="mb-6 h-12 w-full rounded-input border border-line-strong bg-surface-sunken px-3 text-text outline-none placeholder:text-text-muted focus:border-accent aria-[invalid=true]:mb-2 aria-[invalid=true]:border-negative"
+              className="mb-6 h-12 w-full rounded-input border border-line-strong bg-surface-sunken px-3 text-text placeholder:text-text-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent aria-[invalid=true]:mb-2 aria-[invalid=true]:border-negative"
               aria-invalid={error ? true : undefined}
               autoFocus
             />

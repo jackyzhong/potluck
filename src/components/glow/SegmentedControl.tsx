@@ -64,7 +64,8 @@ export function SegmentedControl<V extends string>({
   const track = split
     ? "grid gap-1 rounded-chip bg-surface-muted-2 p-1"
     : `${fill ? "flex" : "inline-flex"} gap-1 rounded-pill bg-surface-muted p-1`;
-  const height = split || size === 40 ? "h-10" : "h-11";
+  // The split tabs are 40px on a pointer screen and 44px on a phone (touch target).
+  const height = split ? "h-10 max-sm:h-11" : size === 40 ? "h-10" : "h-11";
 
   return (
     <div
