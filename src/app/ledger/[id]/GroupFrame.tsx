@@ -26,8 +26,8 @@ import { useState, type ReactNode } from "react";
 import { GroupHeader } from "@/src/components/glow/GroupHeader";
 import { PhoneActionBar } from "@/src/components/glow/PhoneActionBar";
 import { ShortcutFooter } from "@/src/components/glow/ShortcutFooter";
+import { useOpenPayment } from "@/src/components/glow/paymentPrefill";
 import ExpenseModal from "./ExpenseModal";
-import PaymentModal from "./PaymentModal";
 import UserManagementModal from "./UserManagementModal";
 
 type User = {
@@ -52,7 +52,7 @@ export type GroupFrameProps = {
   balances?: ReactNode;
 };
 
-type Modal = "expense" | "payment" | "members" | null;
+type Modal = "expense" | "members" | null;
 
 export default function GroupFrame({
   ledgerId,
@@ -70,6 +70,7 @@ export default function GroupFrame({
   const [modal, setModal] = useState<Modal>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const close = () => setModal(null);
+  const openPayment = useOpenPayment(); // Add payment and P open the right panel (T15)
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg pb-[calc(88px+env(safe-area-inset-bottom))] text-text sm:pb-0">
@@ -77,7 +78,7 @@ export default function GroupFrame({
         ledgerId={ledgerId}
         title={title}
         emoji={emoji}
-        onAddPayment={() => setModal("payment")}
+        onAddPayment={() => openPayment()}
         onAddExpense={() => setModal("expense")}
         viewerMenu={{
           open: viewerOpen,
@@ -125,7 +126,7 @@ export default function GroupFrame({
 
       <PhoneActionBar
         hidden={viewerOpen || modal !== null}
-        onAddPayment={() => setModal("payment")}
+        onAddPayment={() => openPayment()}
         onAddExpense={() => setModal("expense")}
       />
 
@@ -143,14 +144,6 @@ export default function GroupFrame({
         users={users}
         baseCurrency={baseCurrency}
       />
-      {modal === "payment" && (
-        <PaymentModal
-          onClose={close}
-          ledgerId={ledgerId}
-          users={users}
-          baseCurrency={baseCurrency}
-        />
-      )}
     </div>
   );
 }

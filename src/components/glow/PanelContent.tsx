@@ -15,6 +15,7 @@ import { Kbd } from "./Kbd";
 import { CloseIcon } from "./icons";
 import { Money } from "./Money";
 import { useGlowData } from "./ViewerProvider";
+import { AddPayment, PaymentOr } from "./PaymentPanel";
 import { usePanelNav } from "./usePanel";
 import { usePanelDirty } from "./panelStore";
 import type { PanelState } from "@/src/lib/glow/panel";
@@ -66,8 +67,10 @@ export function usePanelTitle(state: PanelState): string {
   switch (state.kind) {
     case "add":
       return "Add expense";
+    case "pay":
+      return "Add payment";
     case "edit":
-      return "Edit expense";
+      return data.payments.some((p) => p.id === state.id) ? "Edit payment" : "Edit expense";
     case "details": {
       const expense = data.expenses.find((e) => e.id === state.id);
       if (expense) return expense.description?.trim() || "Untitled expense";
@@ -142,10 +145,20 @@ export function PanelBody({ state }: { state: PanelState }) {
     case "empty":
       return <EmptyPlaceholder />;
     case "details":
-      return <DetailsPlaceholder id={state.id} />;
+      return (
+        <PaymentOr id={state.id} mode="details">
+          <DetailsPlaceholder id={state.id} />
+        </PaymentOr>
+      );
+    case "pay":
+      return <AddPayment />;
     case "add":
       return <ComposerPlaceholder mode="add" />;
     case "edit":
-      return <ComposerPlaceholder mode="edit" id={state.id} />;
+      return (
+        <PaymentOr id={state.id} mode="edit">
+          <ComposerPlaceholder mode="edit" id={state.id} />
+        </PaymentOr>
+      );
   }
 }
