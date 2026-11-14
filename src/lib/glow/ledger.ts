@@ -13,7 +13,7 @@
 // ascending). Include archived members: they stay in history and in the
 // totals, and leaving one out would break the sum-to-zero checks.
 
-import type { Expense, Split } from "@/src/app/ledger/[id]/ExpenseModal";
+import type { Expense, Split } from "@/src/lib/types";
 import { getMemberBreakdown, type Payment } from "../balances.ts";
 
 export type { Expense, Split, Payment };

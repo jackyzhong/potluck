@@ -17,6 +17,7 @@ import { Button } from "./Button";
 import { Money } from "./Money";
 import { useGlowData, useViewer } from "./ViewerProvider";
 import { usePanelNav } from "./usePanel";
+import { useHydrated } from "./useHydrated";
 import { setComposerPrefill } from "./composerPrefill";
 
 const DAY = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
@@ -41,6 +42,7 @@ function Pill({ children }: { children: React.ReactNode }) {
 
 export function ExpenseDetails({ id }: { id: string }) {
   const { data, currency, slots } = useGlowData();
+  const hydrated = useHydrated();
   const { viewerId, members } = useViewer();
   const nav = usePanelNav();
   const router = useRouter();
@@ -86,7 +88,7 @@ export function ExpenseDetails({ id }: { id: string }) {
     memberOrder: data.memberOrder,
     nameOf,
     viewerId,
-    dateLabel: DAY.format(new Date(expense.created_at))
+    dateLabel: hydrated ? DAY.format(new Date(expense.created_at)) : ""
   });
 
   const slotOf = (uid: string) => slots.get(uid);
@@ -118,7 +120,10 @@ export function ExpenseDetails({ id }: { id: string }) {
         <div className="text-[44px] font-extrabold leading-[1.05] tracking-[-0.03em]">
           <Money cents={expense.amount_cents} currency={expense.original_currency || currency} />
         </div>
-        <div className="mt-1 text-[length:var(--text-meta)] text-text-muted">{model.meta}</div>
+        <div className="mt-1 min-h-[1lh] text-[length:var(--text-meta)] text-text-muted">
+          {/* The day depends on the viewer's time zone, so it waits for the browser (useHydrated). */}
+          {hydrated ? model.meta : null}
+        </div>
       </div>
 
       {impact ? (
