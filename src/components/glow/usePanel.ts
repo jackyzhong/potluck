@@ -16,7 +16,7 @@
 // history.replaceState, which Next syncs into useSearchParams without a server
 // round trip, and without piling up history entries.
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   discardTitle,
@@ -24,11 +24,13 @@ import {
   parsePanel,
   readPanelParams,
   samePanelState,
+  toastFor,
   transition,
   withPanelState,
   type PanelAction,
   type PanelState
 } from "@/src/lib/glow/panel";
+import { useToast } from "./ToastProvider";
 import { useGlowData } from "./ViewerProvider";
 import {
   askToDiscard,
@@ -63,15 +65,34 @@ export function writePanelUrl(pathname: string, state: PanelState) {
   window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
 }
 
+// Two reports of the same finished save (the row arriving and the fallback
+// timer) must give one toast.
+let lastToast = { message: "", at: 0 };
+
 export function usePanelNav() {
   const pathname = usePathname();
   const { state } = usePanelState();
+  const toast = useToast();
+  const { data } = useGlowData();
+  // A deleted payment is gone from `data` by the time its delete is reported,
+  // so remember the ids that were payments while they still existed.
+  const paymentIds = useRef(new Set<string>());
+  for (const p of data.payments) paymentIds.current.add(p.id);
 
   const dispatch = useCallback(
     (action: PanelAction) => {
       const { previous } = getPanelSession();
       // A finished save or delete has nothing left to discard.
-      if (action.type === "saved" || action.type === "deleted") clearPanelDirty();
+      if (action.type === "saved" || action.type === "deleted") {
+        clearPanelDirty();
+        const id = "id" in state ? state.id : "";
+        const message = toastFor(state, action, paymentIds.current.has(id));
+        const now = Date.now();
+        if (message && !(message === lastToast.message && now - lastToast.at < 1500)) {
+          lastToast = { message, at: now };
+          toast.show(message);
+        }
+      }
       const next = transition(state, action, previous);
       if (samePanelState(state, next)) return;
 
@@ -86,7 +107,7 @@ export function usePanelNav() {
         go();
       }
     },
-    [state, pathname]
+    [state, pathname, toast]
   );
 
   return useMemo(

@@ -12,6 +12,7 @@ import { Avatar } from "./Avatar";
 import { Button } from "./Button";
 import { Money } from "./Money";
 import { Switch } from "./Switch";
+import { CheckIcon } from "./icons";
 import { useOpenPayment } from "./paymentPrefill";
 import { useGlowData, useViewer } from "./ViewerProvider";
 
@@ -86,6 +87,18 @@ export function SettleUpPlan({ plan, simplified, onSimplifiedChange, saving, err
         <p role="alert" className="m-0 mt-1 text-[length:var(--text-meta)] font-semibold text-negative">
           {error}
         </p>
+      ) : null}
+
+      {empty ? (
+        <div className="flex flex-col items-center gap-1 px-2 py-10 text-center">
+          <span className="grid size-11 place-items-center rounded-full bg-positive-soft text-positive">
+            <CheckIcon />
+          </span>
+          <p className="m-0 mt-2 font-extrabold">Nothing to settle</p>
+          <p className="m-0 text-[length:var(--text-meta)] text-text-muted">
+            Nobody owes anybody. Add an expense and the plan updates.
+          </p>
+        </div>
       ) : null}
 
       {plan.involving.length > 0 ? (

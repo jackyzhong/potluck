@@ -4,7 +4,9 @@
 // event, payer avatar · title over a meta line · impact over the running balance.
 
 import { Avatar } from "./Avatar";
+import { Button } from "./Button";
 import { LedgerEmpty } from "./LedgerEmpty";
+import { usePanelNav } from "./usePanel";
 import { Money } from "./Money";
 import { useLedgerView, type LedgerItem } from "./useLedgerView";
 
@@ -42,10 +44,22 @@ function Meta({ item, currency }: { item: LedgerItem; currency: string }) {
 
 export function LedgerList() {
   const { items, currency, ready, hasViewer, select } = useLedgerView({ applyFilters: false });
+  const nav = usePanelNav();
 
   if (!ready) return <LedgerEmpty />;
   if (!hasViewer) return <LedgerEmpty>Pick who you are to see your numbers.</LedgerEmpty>;
-  if (items.length === 0) return <LedgerEmpty>Nothing here yet. Start by adding an expense!</LedgerEmpty>;
+  if (items.length === 0) return (
+      <LedgerEmpty
+        title="No expenses yet"
+        action={
+          <Button size={48} kbd="N" onClick={nav.openAdd}>
+            Add expense
+          </Button>
+        }
+      >
+        Add the first one and Potluck keeps the tally.
+      </LedgerEmpty>
+    );
 
   return (
     <ul className="rounded-card bg-surface px-3.5 shadow-card">
