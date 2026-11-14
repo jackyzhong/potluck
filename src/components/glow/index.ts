@@ -40,3 +40,9 @@ export { LedgerTable } from "./LedgerTable";
 export { BalanceHero, type BalanceHeroProps } from "./BalanceHero";
 export { PersonChips, type PersonChipsProps } from "./PersonChips";
 export { ShareOfSpendCard } from "./ShareOfSpendCard";
+
+// Right panel, drawer and sheet (T11). Fill GroupFrame's `panel` slot with <RightPanel />.
+export { RightPanel, usePanelLayout } from "./RightPanel";
+export { PanelHeader } from "./PanelContent";
+export { usePanelNav, usePanelState } from "./usePanel";
+export { usePanelDirty } from "./panelStore";
