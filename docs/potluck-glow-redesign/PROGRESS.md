@@ -39,7 +39,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T13 | Composer: shell, Equally | T11, T04, T05 | done | [PR #26](https://github.com/jackyzhong/potluck/pull/26) |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
 | T15 | Payments: add, details, edit | T11, T09 | done | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
-| T16 | Balances tab | T07, T15 | todo | |
+| T16 | Balances tab | T07, T15 | in review | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
 | T18 | States and edge cases | T16 | todo | |
 | T19 | Accessibility and motion pass | T18 | todo | |
@@ -96,6 +96,38 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T16 · claude-sonnet-5-5
+**Status:** in progress → in review (branch `glow-T16-balances`, PR in the board row).
+**Changed:**
+- `src/lib/glow/balances.ts` + `balances.test.ts` (new, exported from the index; 13 tests): `statTiles`/`statTilesTotal`, `settlePlan` (wraps `getSimplifiedDebts`/`getUnsimplifiedDebts`, splits into involving/rest), `planSubtitle`, `SIMPLIFIED_CAPTION`, `transferText`, `planHeroLine`, `everyoneRows`, `netLabel`, `paymentsCell`, `memberLines` (wraps `getMemberBreakdown`), `showExpensesLabel`, `lineDate`. No balance is re-derived.
+- `src/components/glow/` (new, in the barrel): `BalancesTab` (the `balances` slot), `BalancesHero`, `StatTiles`, `SettleUpPlan`, `EveryoneBreakdown`, plus `useSimplifyDebts` (optimistic switch, `setSimplifyDebts`, then `router.refresh()`; inline error, no `alert()`).
+- `page.tsx`: only the `balances` prop, plus removing the now-unused `userMap`, `exchangeRates` and `getExchangeRates` import that fed `BalancesView`.
+- `BalancesView.tsx` is no longer used; the file is left for T21.
+**Checked:** npm test ✓ (185 pass, 1 skipped as before) · lint ✓ · tsc ✓ · build ✓ · browser (built-in, own tab, `npm run dev` on 3416, stopped), seeded Veld:
+- 1280 (the pane is 1024 wide, scaled), dark and light, viewed as Jacky and as Stephen. Tiles add up to the hero: Jacky 151.74 − 85.59 − 14.24 = 51.91; Stephen 271.00 − 85.59 + 0 = 185.41 (also unit-tested for every member).
+- Mark paid (Alvin pays you CA$46.60) opened the pay panel prefilled (From Alvin, to You, 46.60). Save: hero went 51.91 → 5.31, "Paid back" −14.24 → −60.84, plan 5 → 4 payments, the Alvin row went away, and the panel landed on the payment's details, no reload. I deleted the payment afterwards (back to 51.91).
+- Simplify off: "5 payments" became "12 payments" (the rows match the Activity chips: Jonah 28.79, Matthew 25.04, Stephen −16.38, ...), the caption disappeared, the hero line lost "once debts are simplified". Switched back on (the setting is saved on the dev group).
+- 390 wide, dark, as Stephen: hero, plan, accordion open with "Show/Hide expenses". No horizontal scroll. Desktop grid expands into the three-column row (Stephen: 2 paid lines, 5 share lines, Adds up to).
+**Not checked:** a true 1280 pixel comparison (pane is 1024), phone in light, the drawer width (640–1023), screen reader, keyboard-only pass, the failed-toggle error line, archived-member rows, a viewer who has sent more than received on the Balances tab (unit-tested only), a real touch.
+**Differs from the boards:**
+- Rows start collapsed (boards 05–08 draw Stephen open).
+- "Show N expenses" counts distinct expenses (Stephen: 5); board 05 prints 7, which is the number of lines.
+- The D1 caption sits under the plan subtitle in small muted text; the boards don't draw it.
+- Otherwise nothing noticed against 07/08 and 05/06 at the sizes I could see.
+**Decided:**
+- **Pay panel on Balances:** `BalancesTab` mounts `<RightPanel />` itself, in a slot that is `hidden` while the panel is empty (so the cards keep the full width). I chose this over switching to Activity: nothing in `GroupFrame` changes (T14 owns it), the user stays on Balances, and Add expense, Add payment and an itemised expense click now work on this tab too (before, header Add expense did nothing here). With the panel open at ≥1024 the two cards stack beside it.
+- Itemised expense lines in the breakdown open that expense in the panel (`openDetails`), not the Activity tab.
+- **Third tile:** shows sent − received, so the tiles always sum to net. Negative reads "Paid back" ("Already paid back to you" on desktop); positive reads "You've paid back" with a plus sign.
+- Hero sub-line is desktop only (the phone board has none). With Simplify off it drops "once debts are simplified".
+- Plan rows are sorted largest first within each section. With no viewer picked, the plan is one unlabelled list and the hero is the neutral "Choose who's viewing" card.
+- Archived members appear in Everyone only while their net is not zero (docs/05 gap 8); they stay in the plan.
+- Switch isn't disabled while saving (that would drop keyboard focus); clicks during a save are ignored.
+**New copy:** "Hide expenses", "Show 1 expense", "None" (empty itemised list), "{names} pay(s) you" / "You pay {names}" without the closing words when Simplify is off, "Couldn't save that for the group. Please try again." (the old alert's text, now inline) and "…Check your connection and try again.".
+**Next session should know:**
+- T17: D toggles Simplify (`useSimplifyDebts` is internal to `BalancesTab`; lift it or add a handler there), J/K/Enter act on the Everyone rows (`aria-expanded` buttons).
+- T18: empty group on Balances shows "Everyone's square." with no rows and the hero's "You're all settled"; not otherwise designed.
+- Anyone testing Mark paid on the shared "Veld 2026" can wipe or be wiped by a re-seed.
 
 ### 2026-11-13 · review T15 · claude-opus-5-5
 **Status:** T15 ([PR #27](https://github.com/jackyzhong/potluck/pull/27)) merged into `glow`. T16 dispatched; T14 is still running.

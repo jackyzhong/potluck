@@ -46,3 +46,10 @@ export { RightPanel, usePanelLayout } from "./RightPanel";
 export { PanelHeader } from "./PanelContent";
 export { usePanelNav, usePanelState } from "./usePanel";
 export { usePanelDirty } from "./panelStore";
+
+// Balances tab (T16). Fill GroupFrame's `balances` slot with <BalancesTab />.
+export { BalancesTab, type BalancesTabProps } from "./BalancesTab";
+export { BalancesHero, type BalancesHeroProps } from "./BalancesHero";
+export { EveryoneBreakdown } from "./EveryoneBreakdown";
+export { SettleUpPlan, type SettleUpPlanProps } from "./SettleUpPlan";
+export { StatTiles, type StatTilesProps } from "./StatTiles";
