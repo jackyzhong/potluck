@@ -42,7 +42,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T16 | Balances tab | T07, T15 | done | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | done | [PR #30](https://github.com/jackyzhong/potluck/pull/30) |
 | T18 | States and edge cases | T16 | done | [PR #31](https://github.com/jackyzhong/potluck/pull/31) |
-| T19 | Accessibility and motion pass | T18 | in review | [PR #32](https://github.com/jackyzhong/potluck/pull/32) (branch `glow-T19-a11y`) |
+| T19 | Accessibility and motion pass | T18 | done | [PR #32](https://github.com/jackyzhong/potluck/pull/32) |
 | T20 | Home and create-group restyle | T02 | done | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
 | T21 | Ship | all | todo | |
 
@@ -65,6 +65,8 @@ which doc and section, what it says, and what's actually true. `PLAN.md`
 "Spec facts that changed" lists the ones known when the plan was written.
 
 - **docs/05 "Splitting rules", Equal.** It says the app may let the payer absorb the leftover cents and tells the agent to check. Checked: `ExpenseModal` gives one extra cent each to the first `total % n` people in the order they were *selected*, not ledger order, and the payer takes nothing special. D5 (ledger order) is the rule for the new code; `splitEqually` implements it. (T03, 2026-11-13)
+
+- **tokens/tokens.css, dark `--accent`.** The spec keeps `#4A35E8` in dark mode. That's 2.4:1 on `--surface`, below the 3:1 WCAG asks of focus rings, switches and checked boxes. The app now uses `#6A55F5` (3.4:1; white text on it is still 5:1). The spec file is left as the designer's record. (T19, 2026-11-13)
 
 ---
 
@@ -96,6 +98,14 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-14 · review T19 · claude-opus-5-5
+**Status:** T19 ([PR #32](https://github.com/jackyzhong/potluck/pull/32)) merged into `glow`. Every build task (T01–T20) is now done. T21's agent part is next.
+**Checked:**
+- Merged `glow`: npm test ✓ (234 pass) · lint ✓ · tsc ✓ · build ✓.
+- Reviewed the CSS changes: the reduced-motion backstop and the dark accent. The accent change is logged under Spec corrections.
+**Next session should know:**
+- **Date mismatch bug (T19 found it, not fixed yet):** date labels are formatted in the server's time zone (UTC on Vercel), then again in the browser's. An expense saved in a Canadian evening can show the next day on first paint, plus a hydration warning. Fix this in T21.
 
 ### 2026-11-14 · T19 · claude-sonnet-5-5
 **Status:** in progress → in review (branch `glow-T19-a11y`, PR in the board row).
