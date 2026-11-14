@@ -1,17 +1,19 @@
 "use client";
 
-// The expense composer, add mode, Equally (T13). Boards 09/10 (desktop panel)
-// and 17/18 (phone sheet); docs/01 "Add expense", docs/03 `ExpenseComposer`,
-// docs/04 "Composer behaviour".
+// The expense composer: add and edit, all four split modes (T13, T14). Boards
+// 09/10 (add, Equally), 11/12 (Exact), 13/14 (Percent), 17/18 (phone sheet);
+// docs/01 "Add expense", docs/03 `ExpenseComposer`, docs/04 "Composer behaviour".
 //
 // Anatomy, top to bottom: the gradient card (description, amount, currency) ·
 // "Paid by [●] on [date]" · split-mode tabs · the Equally body · status strip ·
 // actions. The panel title row above it comes from `PanelHeader`.
 //
-// The maths is T03's: `splitEqually` for the cents, `equalSplitExtraCentMembers`
-// for the remainder note and `composerImpact` for the viewer's line. Nothing
-// here divides money. Saving goes through `saveExpense` with `splitMode: "equal"`
-// and `createdBy` set to the viewer. T14 adds Exact, Percent, Shares and edit.
+// The maths is T03's, reached through `src/lib/glow/composerSplit.ts`:
+// `splitAmounts` (Equally, Percent, Shares) for the cents, `composerImpact` for
+// the viewer's line, `checkSplit` for validity. Nothing here divides money.
+// Saving goes through `saveExpense` with the split mode, and `weight` for
+// Percent and Shares. Edit reopens the stored mode with its stored numbers
+// (D13); a row from before modes were stored opens in Exact.
 
 import {
   useEffect,
@@ -23,18 +25,38 @@ import {
   type ReactNode
 } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { saveExpense } from "@/src/app/ledger/[id]/actions";
+import { deleteExpense, saveExpense } from "@/src/app/ledger/[id]/actions";
 import { CURRENCIES, CURRENCY_LIST } from "@/src/lib/currencies";
 import {
+  blankExactIds,
+  blankRowFill,
+  blankRowsLabel,
+  checkSplit,
   composerImpact,
   createdAtFor,
   dayLabel,
   dayString,
+  DELETE_PROMPT,
+  emptyForm,
   equalSplitExtraCentMembers,
+  formatMoney,
+  formCents,
+  formToSplits,
   joinNames,
   parseAmountCents,
-  splitEqually
+  reopenSplit,
+  restrictForm,
+  rowsShowSave,
+  seedForMode,
+  splitTotals,
+  type Expense,
+  type SaveSnapshot,
+  type Split,
+  type SplitCheckInput,
+  type SplitForm,
+  type SplitMode
 } from "@/src/lib/glow";
+import { pickableMembers } from "@/src/lib/members";
 import { Avatar } from "./Avatar";
 import { Button } from "./Button";
 import { CheckIcon, ChevronDownIcon } from "./icons";
@@ -43,6 +65,7 @@ import { SegmentedControl } from "./SegmentedControl";
 import { StatusStrip } from "./StatusStrip";
 import { clearComposerPrefill, peekComposerPrefill } from "./composerPrefill";
 import { usePanelDirty } from "./panelStore";
+import { ExactBody, PercentBody, SharesBody, type SplitRow } from "./SplitBodies";
 import { usePanelNav } from "./usePanel";
 import { useDismiss } from "./useDismiss";
 import { useIsPhone } from "./useIsPhone";
@@ -51,7 +74,7 @@ import { useGlowData, useViewer } from "./ViewerProvider";
 const DESCRIPTION_MAX = 50;
 const SAVE_FAILED = "Couldn't save that. Check your connection and try again.";
 
-type Mode = "equal" | "exact" | "percent" | "shares";
+type Mode = SplitMode;
 const MODES = [
   { value: "equal", label: "Equally" },
   { value: "exact", label: "Exact" },
@@ -155,7 +178,17 @@ const optionClass =
 
 // ---------- the composer ----------
 
-export function ExpenseComposer() {
+// Rows saved after T04 carry these; older rows have them null.
+type ExpenseRow = Expense & { split_mode?: string | null; created_by?: string | null };
+type SplitRowData = Split & { weight?: number | string | null };
+
+const WAIT_FOR_ROWS_MS = 5000;
+
+/**
+ * `editId` set: edit that expense, reopened in the mode it was saved in.
+ * Left out: a new expense (possibly prefilled by Duplicate).
+ */
+export function ExpenseComposer({ editId }: { editId?: string }) {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const ledgerId = params.id;
@@ -163,62 +196,145 @@ export function ExpenseComposer() {
   const isPhone = useIsPhone();
   const { data, currency: baseCurrency, slots } = useGlowData();
   const { viewerId, pickable, members } = useViewer();
+  const editing = editId !== undefined;
+
+  // Edit works from a snapshot of the stored rows, taken once: the form must not
+  // change under the person's hands when a refresh brings new data.
+  const [original] = useState(() => {
+    if (!editId) return null;
+    const expense = data.expenses.find((e) => e.id === editId) as ExpenseRow | undefined;
+    if (!expense) return null;
+    return { expense, splits: data.splits.filter((s) => s.expense_id === editId) as SplitRowData[] };
+  });
 
   // A Duplicate (T12) leaves a prefill for exactly one opening. Read it for the
   // first render; clear it after mount (an effect, so React's dev double render
   // can't use it up before the real one).
-  const [prefill] = useState(peekComposerPrefill);
+  const [prefill] = useState(() => (editing ? null : peekComposerPrefill()));
   useEffect(() => {
     clearComposerPrefill();
   }, []);
 
-  const [description, setDescription] = useState(prefill?.description ?? "");
-  const [currency, setCurrency] = useState(baseCurrency);
+  const [description, setDescription] = useState(original?.expense.description ?? prefill?.description ?? "");
+  const [currency, setCurrency] = useState(original?.expense.original_currency || baseCurrency);
   const decimals = (CURRENCIES[currency] ?? CURRENCIES[baseCurrency] ?? CURRENCIES.CAD).decimals;
-  const [amountText, setAmountText] = useState(() =>
-    prefill ? (prefill.amountCents / 10 ** decimals).toFixed(decimals) : ""
-  );
+  const [amountText, setAmountText] = useState(() => {
+    const cents = original?.expense.amount_cents ?? prefill?.amountCents;
+    return cents === undefined ? "" : (cents / 10 ** decimals).toFixed(decimals);
+  });
   // The payer is the viewer until someone picks another (the viewer may only
   // be known after the first render, so it isn't copied into state).
-  const [chosenPayer, setChosenPayer] = useState<string | null>(prefill?.payerId ?? null);
+  const [chosenPayer, setChosenPayer] = useState<string | null>(
+    original?.expense.payer_id ?? prefill?.payerId ?? null
+  );
   const payerId = chosenPayer ?? viewerId;
-  const [date, setDate] = useState(() => dayString(new Date()));
-  const [mode, setMode] = useState<Mode>("equal");
-  const [included, setIncluded] = useState<string[]>(() => {
-    const everyone = pickable.map((m) => m.id);
-    if (!prefill) return everyone;
-    const wanted = new Set(prefill.participantIds);
-    const kept = everyone.filter((id) => wanted.has(id));
-    return kept.length > 0 ? kept : everyone;
+  const [date, setDate] = useState(() =>
+    dayString(original ? new Date(original.expense.created_at) : new Date())
+  );
+
+  // Who gets a row: everyone in the group, plus anyone archived who is already
+  // on the expense being edited (so saving doesn't silently drop them).
+  const rowMembers = useMemo(
+    () =>
+      editing && original
+        ? pickableMembers(members, [original.expense.payer_id, ...original.splits.map((s) => s.user_id)])
+        : pickable,
+    [editing, original, members, pickable]
+  );
+  const rowIds = useMemo(() => rowMembers.map((m) => m.id), [rowMembers]);
+
+  const [form, setForm] = useState<SplitForm>(() => {
+    const stored = original
+      ? {
+          mode: original.expense.split_mode,
+          rows: original.splits.map((s) => ({ userId: s.user_id, amountCents: s.amount_cents, weight: s.weight }))
+        }
+      : prefill?.splits
+        ? { mode: prefill.splitMode ?? null, rows: prefill.splits }
+        : null;
+    if (stored) {
+      const reopened = restrictForm(reopenSplit(stored.mode, stored.rows, decimals), rowIds);
+      if (reopened.mode !== "equal" || reopened.included.length > 0) return reopened;
+    }
+    const fresh = emptyForm(rowIds);
+    if (prefill) {
+      const wanted = new Set(prefill.participantIds);
+      const kept = rowIds.filter((id) => wanted.has(id));
+      if (kept.length > 0) fresh.included = kept;
+    }
+    return fresh;
   });
+  // Which tabs hold the person's own numbers. A tab that doesn't is filled from
+  // the tab they leave when they switch to it (docs/03).
+  const [touched, setTouched] = useState<Record<Mode, boolean>>(() => ({
+    equal: false,
+    exact: false,
+    percent: false,
+    shares: false,
+    [form.mode]: true
+  }));
+  const mode = form.mode;
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savedId, setSavedId] = useState<string | null>(null);
+  const [saved, setSaved] = useState<{ id: string; snapshot: SaveSnapshot } | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleted, setDeleted] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
+  const saveRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const deleteRef = useRef<HTMLButtonElement>(null);
+  const confirmedOnce = useRef(false);
   const tabsId = useId();
 
-  usePanelDirty(description.trim() !== "" || amountText.trim() !== "");
-
-  // ----- numbers (all from T03) -----
-  const memberOrder = data.memberOrder;
-  const amountCents = parseAmountCents(amountText, decimals);
-  const hasAmount = amountCents !== null && amountCents > 0;
-  const includedIds = useMemo(
-    () => pickable.map((m) => m.id).filter((id) => included.includes(id)),
-    [pickable, included]
+  // Unsaved input: add asks once something is typed; edit asks once anything
+  // differs from what was opened.
+  const signature = JSON.stringify([description, amountText, currency, chosenPayer, date, form]);
+  const [openedSignature] = useState(signature);
+  usePanelDirty(
+    editing ? signature !== openedSignature : description.trim() !== "" || amountText.trim() !== ""
   );
-  const shares = useMemo(
-    () => splitEqually(hasAmount ? amountCents : 0, includedIds, memberOrder),
-    [hasAmount, amountCents, includedIds, memberOrder]
+
+  // Focus the safe choice when the delete question appears, and hand focus back
+  // to Delete if it is dismissed (as in the details panel).
+  useEffect(() => {
+    if (confirming) {
+      confirmedOnce.current = true;
+      cancelRef.current?.focus();
+    } else if (confirmedOnce.current) {
+      deleteRef.current?.focus();
+    }
+  }, [confirming]);
+
+  // ----- numbers (all from T03, through composerSplit) -----
+  const memberOrder = data.memberOrder;
+  const parsedAmount = parseAmountCents(amountText, decimals);
+  const total = parsedAmount !== null && parsedAmount > 0 ? parsedAmount : null;
+  const hasAmount = total !== null;
+  const totals = useMemo(() => splitTotals(form, decimals), [form, decimals]);
+  const cents = useMemo(
+    () => (total === null ? {} : formCents(total, form, decimals, memberOrder)),
+    [total, form, decimals, memberOrder]
   );
   const extraCentIds = useMemo(
-    () => (hasAmount ? equalSplitExtraCentMembers(amountCents, includedIds, memberOrder) : []),
-    [hasAmount, amountCents, includedIds, memberOrder]
+    () => (total !== null && mode === "equal" ? equalSplitExtraCentMembers(total, form.included, memberOrder) : []),
+    [total, mode, form.included, memberOrder]
   );
+  const format = (c: number) => formatMoney(c, { currency });
+
+  const splitInput: SplitCheckInput =
+    mode === "equal"
+      ? { mode, includedCount: form.included.length }
+      : mode === "exact"
+        ? { mode, sumCents: totals.exactSum }
+        : mode === "percent"
+          ? { mode, sumHundredths: totals.percentSum }
+          : { mode, totalShares: totals.shareTotal };
+  const check = checkSplit({ amountCents: total, split: splitInput, format });
   const impact =
-    hasAmount && viewerId && payerId && includedIds.length > 0
-      ? composerImpact({ viewerId, payerId, amountCents, shares })
+    check.strip?.detail?.kind === "impact" && total !== null && viewerId && payerId
+      ? composerImpact({ viewerId, payerId, amountCents: total, shares: cents })
       : null;
 
   const nameOf = (id: string, lower = false) => {
@@ -233,38 +349,96 @@ export function ExpenseComposer() {
       <Avatar name={name} slot={slots.get(id)} id={id} size={size} />
     );
   };
+  const rows: SplitRow[] = rowMembers.map((m) => ({
+    id: m.id,
+    name: nameOf(m.id),
+    possessive: m.id === viewerId ? "Your" : `${nameOf(m.id)}'s`,
+    avatar: avatarOf(m.id)
+  }));
 
   // ----- can it be saved? The reason is the Save button's label (docs/04) -----
   const blockedReason: string | null = !hasAmount
-    ? "Enter an amount"
+    ? check.blockedLabel
     : !payerId
       ? "Choose who paid"
-      : mode !== "equal"
-        ? "Split equally to save"
-        : includedIds.length === 0
-          ? "Pick at least one person"
-          : null;
+      : check.blockedLabel;
   const blocked = blockedReason !== null;
 
+  // ----- changing numbers -----
+  function changeMode(next: Mode) {
+    if (next === mode) return;
+    setForm((cur) => {
+      const seeded =
+        next !== "equal" && !touched[next]
+          ? seedForMode(next, cur, { totalCents: total, decimals, memberOrder, everyoneIds: rowIds })
+          : {};
+      return { ...cur, ...seeded, mode: next };
+    });
+  }
+  const touch = (m: Mode) => setTouched((t) => (t[m] ? t : { ...t, [m]: true }));
+  const setExactText = (id: string, text: string) => {
+    touch("exact");
+    setForm((cur) => ({ ...cur, exact: { ...cur.exact, [id]: text } }));
+  };
+  const setPercentText = (id: string, text: string) => {
+    touch("percent");
+    setForm((cur) => ({ ...cur, percent: { ...cur.percent, [id]: text } }));
+  };
+  const setShareCount = (id: string, n: number) => {
+    touch("shares");
+    setForm((cur) => ({ ...cur, shares: { ...cur.shares, [id]: n } }));
+  };
+  const toggleIncluded = (id: string) => {
+    touch("equal");
+    setForm((cur) => ({
+      ...cur,
+      included: cur.included.includes(id) ? cur.included.filter((x) => x !== id) : [...cur.included, id]
+    }));
+  };
+
+  // Exact's helper: what's left, shared across the rows with nothing typed.
+  const blankIds = mode === "exact" ? blankExactIds(form, rowIds) : [];
+  const remaining = total === null ? 0 : total - totals.exactSum;
+  const showFill = mode === "exact" && remaining > 0 && blankIds.length > 0;
+  function fillBlankRows() {
+    const fill = blankRowFill(remaining, blankIds, memberOrder);
+    touch("exact");
+    setForm((cur) => ({
+      ...cur,
+      exact: {
+        ...cur.exact,
+        ...Object.fromEntries(Object.entries(fill).map(([id, c]) => [id, (c / 10 ** decimals).toFixed(decimals)]))
+      }
+    }));
+    // The helper disappears once the rows are full; keep focus somewhere real.
+    saveRef.current?.focus();
+  }
+
   async function save(addAnother: boolean) {
-    if (blocked || saving || !hasAmount || !payerId) return;
-    const createdAt = createdAtFor(date, new Date());
+    if (blocked || saving || confirming || total === null || !payerId) return;
+    // An edit that keeps its day keeps its exact time too, so the row doesn't
+    // jump in the ledger. A new day is written per D7.
+    const unchangedDay = original && date === dayString(new Date(original.expense.created_at));
+    const createdAt = unchangedDay ? original.expense.created_at : createdAtFor(date, new Date());
     if (!createdAt) {
       setError("Pick a valid date.");
       return;
     }
+    const splits = formToSplits(total, form, decimals, memberOrder);
+    const trimmed = description.trim() === "" ? null : description;
     setSaving(true);
     setError(null);
     try {
-      const result = await saveExpense(ledgerId, null, {
+      const result = await saveExpense(ledgerId, editId ?? null, {
         payerId,
-        description: description.trim() === "" ? null : description,
-        amountCents,
+        description: trimmed,
+        amountCents: total,
         currency,
         createdAt,
-        splitMode: "equal",
-        createdBy: viewerId,
-        splits: includedIds.map((id) => ({ userId: id, amountCents: shares[id], weight: null }))
+        splitMode: mode,
+        // "Added by" names whoever first added it; the database ignores this on edit.
+        createdBy: editing ? null : viewerId,
+        splits
       });
       if (!result.ok) {
         setError(result.error);
@@ -273,17 +447,31 @@ export function ExpenseComposer() {
       }
       router.refresh();
       if (addAnother) {
-        // Keep payer, date, mode and participants; start the next one.
+        // Keep payer, date, mode and participants; start the next one. Exact
+        // amounts belonged to the last total, so they go; percentages and
+        // shares still mean something.
         setDescription("");
         setAmountText("");
+        setForm((cur) => ({ ...cur, exact: {} }));
+        setTouched((t) => ({ ...t, exact: false }));
         setSaving(false);
         nav.dispatch({ type: "saved", id: result.data.id, another: true });
         amountRef.current?.focus();
       } else {
-        // Wait for the refreshed rows to include the new expense before the
-        // panel switches to its details, or the new `?e=` would be dropped as
-        // an id that doesn't exist yet (see the effect below).
-        setSavedId(result.data.id);
+        // Wait for the refreshed rows to show the change before the panel
+        // switches to details, or the URL rewrite would race the refresh and
+        // Next would drop it (see the effect below).
+        setSaved({
+          id: result.data.id,
+          snapshot: {
+            amountCents: total,
+            payerId,
+            description: trimmed,
+            splitMode: mode,
+            day: date,
+            splits
+          }
+        });
       }
     } catch {
       setError(SAVE_FAILED);
@@ -292,17 +480,54 @@ export function ExpenseComposer() {
   }
 
   useEffect(() => {
-    if (!savedId) return;
-    const arrived = data.expenses.some((e) => e.id === savedId);
+    if (!saved) return;
+    const arrived = editing
+      ? rowsShowSave(
+          data.expenses.find((e) => e.id === saved.id),
+          data.splits.filter((s) => s.expense_id === saved.id) as SplitRowData[],
+          saved.snapshot,
+          (iso) => dayString(new Date(iso))
+        )
+      : data.expenses.some((e) => e.id === saved.id);
     if (arrived) {
-      nav.dispatch({ type: "saved", id: savedId });
+      nav.dispatch({ type: "saved", id: saved.id });
       return;
     }
-    // The refresh never showed it (someone else deleted it, or the network
+    // The refresh never showed it (someone else changed it, or the network
     // dropped). Move on rather than leave the form spinning.
-    const timer = setTimeout(() => nav.dispatch({ type: "saved", id: savedId }), 5000);
+    const timer = setTimeout(() => nav.dispatch({ type: "saved", id: saved.id }), WAIT_FOR_ROWS_MS);
     return () => clearTimeout(timer);
-  }, [savedId, data.expenses, nav]);
+  }, [saved, editing, data.expenses, data.splits, nav]);
+
+  async function remove() {
+    if (!editId || deleting) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const result = await deleteExpense(ledgerId, editId);
+      if (!result.ok) {
+        setError(result.error);
+        setDeleting(false);
+        return;
+      }
+      // The panel empties once the refreshed rows no longer have it (effect below).
+      setDeleted(true);
+      router.refresh();
+    } catch {
+      setError("Couldn't delete this expense. Check your connection and try again.");
+      setDeleting(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!deleted) return;
+    if (!data.expenses.some((e) => e.id === editId)) {
+      nav.dispatch({ type: "deleted" });
+      return;
+    }
+    const timer = setTimeout(() => nav.dispatch({ type: "deleted" }), WAIT_FOR_ROWS_MS);
+    return () => clearTimeout(timer);
+  }, [deleted, editId, data.expenses, nav]);
 
   function onKeyDown(e: KeyboardEvent<HTMLFormElement>) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -310,6 +535,9 @@ export function ExpenseComposer() {
       void save(false);
     }
   }
+
+  // The expense can vanish from under an edit (deleted elsewhere); nothing to edit.
+  if (editing && !original) return null;
 
   // ----- the pieces -----
   const payerOptions = members.filter((m) => !m.archived_at || m.id === chosenPayer);
@@ -321,7 +549,20 @@ export function ExpenseComposer() {
     const d = new Date();
     return dayString(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 12));
   })();
-  const allIncluded = includedIds.length === pickable.length;
+  const allIncluded = rowIds.every((id) => form.included.includes(id));
+  const stripDetail =
+    check.strip?.detail?.kind === "text"
+      ? check.strip.detail.text
+      : check.strip?.detail?.kind === "impact" && impact !== null
+        ? impact.kind === "none"
+          ? "This doesn't change your balance"
+          : (
+              <>
+                You&apos;ll {impact.kind === "owed" ? "be owed" : "owe"}{" "}
+                <Money cents={Math.abs(impact.cents)} currency={currency} className="font-bold" /> more
+              </>
+            )
+        : null;
 
   return (
     <form
@@ -489,7 +730,7 @@ export function ExpenseComposer() {
         id={tabsId}
         options={MODES}
         value={mode}
-        onChange={setMode}
+        onChange={changeMode}
       />
 
       {/* Mode body */}
@@ -503,13 +744,16 @@ export function ExpenseComposer() {
           <>
             <div className="flex min-h-11 items-center justify-between text-[length:var(--text-meta)]">
               <span className="text-text-muted">
-                {includedIds.length} of {pickable.length} people included
+                {form.included.length} of {rowIds.length} people included
               </span>
               {allIncluded ? null : (
                 <Button
                   variant="text"
                   tone="positive"
-                  onClick={() => setIncluded(pickable.map((m) => m.id))}
+                  onClick={() => {
+                    touch("equal");
+                    setForm((cur) => ({ ...cur, included: [...rowIds] }));
+                  }}
                   className="px-1"
                 >
                   Include everyone
@@ -517,19 +761,15 @@ export function ExpenseComposer() {
               )}
             </div>
             <ul className="m-0 flex list-none flex-col p-0">
-              {pickable.map((m) => {
-                const on = included.includes(m.id);
+              {rowMembers.map((m) => {
+                const on = form.included.includes(m.id);
                 return (
                   <li key={m.id}>
                     <button
                       type="button"
                       role="checkbox"
                       aria-checked={on}
-                      onClick={() =>
-                        setIncluded((cur) =>
-                          cur.includes(m.id) ? cur.filter((id) => id !== m.id) : [...cur, m.id]
-                        )
-                      }
+                      onClick={() => toggleIncluded(m.id)}
                       className="grid min-h-11 w-full cursor-pointer grid-cols-[22px_32px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-input border-0 bg-transparent py-1 text-left text-[length:var(--text-body)] text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     >
                       <span
@@ -541,7 +781,7 @@ export function ExpenseComposer() {
                       {avatarOf(m.id)}
                       <span className={`font-semibold ${on ? "" : "text-text-muted"}`}>{nameOf(m.id)}</span>
                       {on ? (
-                        <Money cents={shares[m.id] ?? 0} currency={currency} className="font-bold" />
+                        <Money cents={cents[m.id] ?? 0} currency={currency} className="font-bold" />
                       ) : (
                         <span className="text-[length:var(--text-meta)] text-text-muted">not included</span>
                       )}
@@ -550,44 +790,35 @@ export function ExpenseComposer() {
                 );
               })}
             </ul>
-            {extraCentIds.length > 0 && amountCents !== null ? (
+            {extraCentIds.length > 0 && total !== null ? (
               <p className="m-0 mt-1 text-[length:var(--text-meta)] text-text-muted">
-                <Money cents={amountCents} currency={currency} /> doesn&apos;t divide evenly by{" "}
-                {includedIds.length}, so{" "}
+                <Money cents={total} currency={currency} /> doesn&apos;t divide evenly by {form.included.length},
+                so{" "}
                 {extraCentIds.length === 1
                   ? `${nameOf(extraCentIds[0], true)} ${extraCentIds[0] === viewerId ? "take" : "takes"} an extra cent.`
                   : `${joinNames(extraCentIds.map((id) => nameOf(id, true)))} each take an extra cent.`}
               </p>
             ) : null}
           </>
+        ) : mode === "exact" ? (
+          <ExactBody rows={rows} values={form.exact} decimals={decimals} currency={currency} onChange={setExactText} />
+        ) : mode === "percent" ? (
+          <PercentBody rows={rows} values={form.percent} cents={cents} currency={currency} onChange={setPercentText} />
         ) : (
-          <p className="m-0 py-3 text-text-muted">
-            Exact, Percent and Shares aren&apos;t built yet. Pick Equally to split this expense.
-          </p>
+          <SharesBody rows={rows} values={form.shares} cents={cents} currency={currency} onChange={setShareCount} />
         )}
       </div>
 
-      {/* Status strip: hidden until there's an amount (docs/04) */}
-      {hasAmount && mode === "equal" ? (
-        includedIds.length === 0 ? (
-          <StatusStrip tone="warning" message="Pick at least one person" />
-        ) : (
-          <StatusStrip
-            tone="positive"
-            message="Fully assigned"
-            detail={
-              impact === null ? null : impact.kind === "none" ? (
-                "This doesn't change your balance"
-              ) : (
-                <>
-                  You&apos;ll {impact.kind === "owed" ? "be owed" : "owe"}{" "}
-                  <Money cents={Math.abs(impact.cents)} currency={currency} className="font-bold" />{" "}
-                  more
-                </>
-              )
-            }
-          />
-        )
+      {/* Status strip: hidden until there's an amount (docs/04). One element, so
+          its changes are announced. */}
+      {check.strip ? (
+        <StatusStrip tone={check.strip.tone} message={check.strip.message} detail={stripDetail} />
+      ) : null}
+
+      {showFill ? (
+        <Button variant="soft" inPanel size={44} onClick={fillBlankRows}>
+          {blankRowsLabel(format(remaining), blankIds.length)}
+        </Button>
       ) : null}
 
       {error ? (
@@ -599,27 +830,71 @@ export function ExpenseComposer() {
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="soft"
-          inPanel
-          size={48}
-          disabled={blocked || saving}
-          onClick={() => void save(true)}
-          className="flex-[1_1_150px]"
-        >
-          Save and add another
-        </Button>
-        <Button
-          type="submit"
-          size={48}
-          disabled={blocked || saving}
-          kbd={isPhone || blocked || saving ? undefined : "⌘↵"}
-          className="flex-[1_1_150px]"
-        >
-          {saving ? "Saving…" : (blockedReason ?? "Save expense")}
-        </Button>
-      </div>
+      {confirming ? (
+        <div role="group" aria-label="Confirm delete" className="flex flex-col gap-3">
+          <p className="m-0 font-semibold">{DELETE_PROMPT}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              ref={cancelRef}
+              size={48}
+              variant="secondary"
+              className="flex-[1_1_110px]"
+              onClick={() => {
+                setConfirming(false);
+                setError(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size={48}
+              variant="text"
+              tone="negative"
+              disabled={deleting}
+              className="flex-[1_1_110px] font-extrabold"
+              onClick={() => void remove()}
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {editing ? (
+            <Button
+              ref={deleteRef}
+              size={48}
+              variant="text"
+              tone="negative"
+              onClick={() => setConfirming(true)}
+            >
+              Delete
+            </Button>
+          ) : (
+            <Button
+              variant="soft"
+              inPanel
+              size={48}
+              disabled={blocked || saving}
+              onClick={() => void save(true)}
+              className="flex-[1_1_150px]"
+            >
+              Save and add another
+            </Button>
+          )}
+          <Button
+            ref={saveRef}
+            type="submit"
+            size={48}
+            disabled={blocked || saving}
+            kbd={isPhone || blocked || saving ? undefined : "⌘↵"}
+            className="flex-[1_1_150px]"
+          >
+            {saving ? "Saving…" : (blockedReason ?? (editing ? "Save changes" : "Save expense"))}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
+
