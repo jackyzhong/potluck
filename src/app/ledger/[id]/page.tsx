@@ -2,14 +2,13 @@
 import { db } from "@/src/lib/server/supabase";
 import { isUuid } from "@/src/lib/validation";
 import { notFound } from "next/navigation";
-import ExpenseCard from "./ExpenseCard";
-import PaymentCard from "./PaymentCard";
-import { Expense, Split } from "./ExpenseModal";
-import { Payment } from "@/src/lib/balances";
+import { Split } from "./ExpenseModal";
 import GroupFrame from "./GroupFrame";
 import BalancesView from "./BalancesView";
 import { getExchangeRates } from "@/src/lib/balances";
 import { ViewerProvider } from "@/src/components/glow/ViewerProvider";
+import { LedgerList } from "@/src/components/glow/LedgerList";
+import { LedgerTable } from "@/src/components/glow/LedgerTable";
 
 export default async function LedgerPage({
   params,
@@ -78,37 +77,7 @@ export default async function LedgerPage({
   // Create a quick lookup map for user names
   const userMap = new Map(initialUsers.map(u => [u.id, u.name]));
 
-  // Index the splits once rather than rescanning them for every expense card.
-  const splitsByExpense = new Map<string, Split[]>();
-  for (const split of allSplits) {
-    const bucket = splitsByExpense.get(split.expense_id);
-    if (bucket) bucket.push(split);
-    else splitsByExpense.set(split.expense_id, [split]);
-  }
   const baseCurrency = ledger.base_currency || "CAD";
-
-  // Get unique currencies used
-  // Expenses and settlements share one chronological history: a payment only
-  // makes sense next to the expenses it is paying off.
-  type ActivityItem =
-    | { kind: "expense"; id: string; createdAt: string; expense: Expense; splits: Split[] }
-    | { kind: "payment"; id: string; createdAt: string; payment: Payment };
-
-  const activity: ActivityItem[] = [
-    ...ledgerExpenses.map((expense): ActivityItem => ({
-      kind: "expense",
-      id: expense.id,
-      createdAt: expense.created_at,
-      expense,
-      splits: splitsByExpense.get(expense.id) ?? []
-    })),
-    ...ledgerPayments.map((payment): ActivityItem => ({
-      kind: "payment",
-      id: payment.id,
-      createdAt: payment.created_at,
-      payment
-    }))
-  ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   const currenciesUsed = Array.from(new Set([
     ...ledgerExpenses.map(e => e.original_currency),
@@ -135,39 +104,17 @@ export default async function LedgerPage({
         users={initialUsers}
         tab={tab === "balances" ? "balances" : "activity"}
         // summary: T08 (hero, share card) · toolbar: T10 · panel: T11
-        // ledger: T09 replaces the card list below with LedgerTable / LedgerList
+        // ledger: T09. Both layouts are in the DOM; CSS shows one (phone below 640px).
         ledger={
           tab === "balances" ? undefined : (
-            <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-              {activity.length === 0 ? (
-                <div className="rounded-3xl bg-surface p-6 py-20 text-center text-text-muted shadow-card">
-                  Nothing here yet. Start by adding an expense!
-                </div>
-              ) : (
-                activity.map((item) =>
-                  item.kind === "expense" ? (
-                    <ExpenseCard
-                      key={item.id}
-                      expense={item.expense}
-                      splits={item.splits}
-                      users={initialUsers}
-                      userMap={userMap}
-                      ledgerId={ledger.id}
-                      baseCurrency={baseCurrency}
-                    />
-                  ) : (
-                    <PaymentCard
-                      key={item.id}
-                      payment={item.payment}
-                      users={initialUsers}
-                      userMap={userMap}
-                      ledgerId={ledger.id}
-                      baseCurrency={baseCurrency}
-                    />
-                  )
-                )
-              )}
-            </div>
+            <>
+              <div className="max-sm:hidden">
+                <LedgerTable />
+              </div>
+              <div className="sm:hidden">
+                <LedgerList />
+              </div>
+            </>
           )
         }
         // balances: T16 replaces BalancesView
