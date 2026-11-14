@@ -251,7 +251,7 @@ hand, and say how in your log entry.
 After the last merge of the batch:
 
 ```bash
-npm test && npm run lint && npm run build     # on the merged result
+npm test && npm run lint && npx tsc --noEmit && npm run build     # on the merged result; tsc catches barrel name clashes the build doesn't
 ```
 
 Then, in `PROGRESS.md`:

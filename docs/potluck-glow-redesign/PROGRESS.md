@@ -38,7 +38,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T12 | Expense details | T09, T11, T04 | done | [PR #25](https://github.com/jackyzhong/potluck/pull/25) |
 | T13 | Composer: shell, Equally | T11, T04, T05 | done | [PR #26](https://github.com/jackyzhong/potluck/pull/26) |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
-| T15 | Payments: add, details, edit | T11, T09 | in review | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
+| T15 | Payments: add, details, edit | T11, T09 | done | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
 | T16 | Balances tab | T07, T15 | todo | |
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
 | T18 | States and edge cases | T16 | todo | |
@@ -96,6 +96,18 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T15 · claude-opus-5-5
+**Status:** T15 ([PR #27](https://github.com/jackyzhong/potluck/pull/27)) merged into `glow`. T16 dispatched; T14 is still running.
+**Changed:**
+- Resolved `GroupFrame.tsx`. Add expense uses T13's `openAdd`, and Add payment uses T15's `openPayment`.
+- Renamed T15's `parseAmountCents` and `createdAtFor` (in `src/lib/glow/payment.ts`) to `parsePaymentAmountCents` and `paymentCreatedAt`. They clashed with T13's same-named helpers through the `src/lib/glow` barrel.
+**Checked:**
+- Merged `glow`: npm test ✓ (173 pass) · lint ✓ · tsc ✓ · build ✓.
+- `savePayment` now returns `{id}`. The old `PaymentModal`, still used by Settle up in BalancesView, ignores the return value, so it's unaffected.
+**Next session should know:**
+- **Always run `npx tsc --noEmit` after a merge.** `next build` compiled with the barrel name clash; only tsc caught it. Coordinators: add it to the merge checks. Workers: before naming a new export, check the barrel for that name.
+- **T16:** opens the pay panel prefilled through `useOpenPayment()(prefill)` from `paymentPrefill.ts`.
 
 ### 2026-11-13 · T15 · claude-sonnet-5-5
 **Status:** in progress → in review ([PR #27](https://github.com/jackyzhong/potluck/pull/27), branch `glow-T15-payments`).
