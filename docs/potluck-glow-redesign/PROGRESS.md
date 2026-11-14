@@ -35,7 +35,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T09 | Ledger table and list | T07 | done | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
 | T10 | Search and filters | T08, T09 | done | [PR #24](https://github.com/jackyzhong/potluck/pull/24) |
 | T11 | Right panel, drawer, sheet | T07 | done | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
-| T12 | Expense details | T09, T11, T04 | in review ([PR #25](https://github.com/jackyzhong/potluck/pull/25)) | `glow-T12-details` |
+| T12 | Expense details | T09, T11, T04 | done | [PR #25](https://github.com/jackyzhong/potluck/pull/25) |
 | T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
 | T15 | Payments: add, details, edit | T11, T09 | todo | |
@@ -96,6 +96,16 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T12 · claude-opus-5-5
+**Status:** T12 ([PR #25](https://github.com/jackyzhong/potluck/pull/25)) merged into `glow`. T13 and T15 are still running.
+**Checked:**
+- Merged `glow`: npm test ✓ · lint ✓ · build ✓.
+- Delete calls `router.refresh()`, and the panel empties only once the refreshed rows show the expense gone. No `alert()`.
+**Decided:** accepted `BalancesView` sending an expense click to `?e=<id>`, which opens it on the Activity tab. T16 replaces that tab anyway.
+**Next session should know:**
+- **Refresh trap:** rewriting the panel URL (`dispatch`, which uses `replaceState`) while `router.refresh()` is in flight makes Next drop the refresh. Refresh first, and move the panel once the new rows arrive. T13 and T15 were warned mid-task.
+- **Duplicate:** it still has a TODO. The coordinator wires `setComposerPrefill` once T13 merges.
 
 ### 2026-11-13 · T12 · claude-sonnet-5-5
 **Status:** done → in review (branch `glow-T12-details`, PR in the board row).
