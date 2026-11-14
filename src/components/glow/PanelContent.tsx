@@ -11,6 +11,7 @@
 
 import { useState } from "react";
 import { Button } from "./Button";
+import { ExpenseDetails } from "./ExpenseDetails";
 import { Kbd } from "./Kbd";
 import { CloseIcon } from "./icons";
 import { Money } from "./Money";
@@ -112,6 +113,15 @@ function DetailsPlaceholder({ id }: { id: string }) {
   );
 }
 
+// Expenses get ExpenseDetails (T12). Payment ids still fall through to the
+// placeholder until T15 builds their details.
+function DetailsBody({ id }: { id: string }) {
+  const { data } = useGlowData();
+  if (data.payments.some((p) => p.id === id)) return <DetailsPlaceholder id={id} />;
+  // Not a payment: an expense, which may be mid-delete (ExpenseDetails copes).
+  return <ExpenseDetails id={id} />;
+}
+
 function ComposerPlaceholder({ mode, id }: { mode: "add" | "edit"; id?: string }) {
   const nav = usePanelNav();
   const [draft, setDraft] = useState("");
@@ -142,7 +152,7 @@ export function PanelBody({ state }: { state: PanelState }) {
     case "empty":
       return <EmptyPlaceholder />;
     case "details":
-      return <DetailsPlaceholder id={state.id} />;
+      return <DetailsBody id={state.id} />;
     case "add":
       return <ComposerPlaceholder mode="add" />;
     case "edit":
