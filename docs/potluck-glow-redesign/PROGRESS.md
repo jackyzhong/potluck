@@ -44,13 +44,19 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T18 | States and edge cases | T16 | done | [PR #31](https://github.com/jackyzhong/potluck/pull/31) |
 | T19 | Accessibility and motion pass | T18 | done | [PR #32](https://github.com/jackyzhong/potluck/pull/32) |
 | T20 | Home and create-group restyle | T02 | done | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
-| T21 | Ship | all | todo | |
+| T21 | Ship | all | in progress (agent part done; owner: production migration, merge `glow` → `main`) | `glow-T21-ship` → `glow` |
 
 ---
 
 ## Open questions
 
-_None yet._ Format:
+> **Q1 · T21 · 2026-11-14** On boards 09/10 the add-expense panel starts at the top of the right column, beside the hero, with "So far" moved to the middle. In the app, "So far" stays top right and the panel starts at the toolbar row, so at 1280×920 and 1440×1040 the page scrolls while the composer is open. Options: (a) keep it as is; (b) restructure the frame so the panel spans from the hero row down (T07's `GroupFrame` layout, about a day's work). I'd pick (a) for shipping and (b) as a follow-up, because it's a layout refactor touching every slot.
+> **Answer:** _(owner)_
+
+> **Q2 · T21 · 2026-11-14** Boards 17/18 draw the phone add-expense sheet as a floating, fully rounded card. The app uses an edge-to-edge sheet with a grabber and top-rounded corners (T11, docs/04's "full-height sheet"). Options: (a) keep the sheet; (b) restyle it as a floating card. I'd pick (a): docs/04 asks for the full-height sheet with swipe-down, and the board shows the composer's look, not the shell.
+> **Answer:** _(owner)_
+
+Format:
 
 > **Q1 · T13 · 2026-11-20** What should happen when …? Options: (a) … (b) …
 > I'd pick (a) because …
@@ -96,6 +102,50 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 ```
 
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
+
+---
+
+### 2026-11-14 · T21 (agent part) · claude-opus-5-5
+**Status:** agent part done, merged into `glow`. The owner's part is left: the production migration, and merging `glow` into `main` (see PLAN T21, and the steps below).
+**Changed:**
+- Moved the `Expense`/`Split` row types to `src/lib/types.ts`, with the T04 columns.
+- Deleted `ExpenseModal.tsx`, `ExpenseCard.tsx` and `ExpenseDetailsModal.tsx`. T18 had already deleted `BalancesView`, `PaymentCard` and `PaymentModal`. No `alert()` or `confirm()` is left, and lint is clean with no suppressions.
+- Added `useHydrated()`. Details panels format dates only in the browser, which fixes the UTC-versus-local date mismatch T19 found.
+- Updated `features.md` (split modes, payments), `db-chart.md` (the `split_mode`, `created_by` and `weight` columns) and `KNOWN-ISSUES.md` (removed 1.2, 4.3 and 5.2; updated 5.1).
+- Merged the polish fixes from the 24-board pass ([PR #33](https://github.com/jackyzhong/potluck/pull/33)):
+  - the amount input is filtered;
+  - legacy equal rows read "split equally, N ways";
+  - the details panel has a 400px basis;
+  - "Save and add another" stays on one line;
+  - Exact amounts show two decimals on blur;
+  - the Balances breakdown no longer wraps.
+**Checked:**
+- npm test ✓ (236 pass) · lint ✓ · tsc ✓ · build ✓.
+- 24-board pass, compared in the browser at the manifest sizes. Every number and string matches for Jacky and Stephen. The remaining differences:
+  - **Q1 and Q2:** the two layout choices above, left to the owner.
+  - **Board 03/23's older inspector:** T12 built from 15/16 instead.
+  - **"Show N expenses" count:** 5, not the board's 7, because the app counts expenses, not lines.
+  - **Smaller items:** Everyone rows start collapsed, the Balances Net column still wraps "gets back CA$185.41" at 1280, and the header emoji is slightly smaller.
+- The dark twins 12/14/16/18/20/22/24 were judged from their light renders, not photographed.
+- **Migration order:** checked `main`'s `saveExpense` against the T04 migration. Production calls `save_expense` with the 8 original named arguments; the 2 new ones default to null, and splits without `weight` pass the new check. So the migration is backward compatible and can be applied to production **before** merging `glow`.
+**Next session should know:**
+- **Owner's ship steps:**
+  1. Apply `supabase/migrations/20261113224445_split_mode_weights_created_by.sql` to production, recorded under that version.
+  2. Merge `glow` into `main` (one PR).
+  3. Check production: open a real group, add, edit and delete a test expense and payment, check the numbers.
+- No new environment variables are needed.
+
+### 2026-11-14 · T21 polish · claude-sonnet-5-5
+**Status:** six polish fixes on `glow-T21-ship`, PR into `glow-T21-ship`.
+**Changed:**
+- Amount inputs (ExpenseComposer, PaymentComposer) only accept digits, one point and commas (`filterAmountInput` in `composer.ts`); `parseAmountCents` still validates.
+- `details.ts`: a null `split_mode` row whose 2+ shares are within one cent and sum to the total reads "equally, N ways" (Pizza Badiali, board 15). Tests added.
+- Details panel gets the 400px basis (`globals.css` `data-panel-kind` rule).
+- "Save and add another" is `whitespace-nowrap`.
+- Exact body pads to "20.00" on blur; stored cents unchanged.
+- EveryoneBreakdown: Payments cells `whitespace-nowrap`; expanded-row lines wrap instead of truncating (this applies to the "Paid for the group" column too, since both use `Line`).
+**Checked:** npm test ✓ · lint ✓ · tsc ✓ · build ✓ · browser, light mode, on the seeded group (nothing saved): typed text in amount shows "64.50"; Pizza reads "equally, 6 ways" and the panel is 400px at 1280 and 1440 with no page overflow (ledger 816px at 1280, 976px at 1440); Save and add another is one line at 1280 and 390; Exact "20" becomes "20.00" on Tab; Balances Payments on one line and share labels wrap at 1280. Not checked: PaymentComposer amount field in the browser, the details panel at 1024-1100 widths, the Percent and Shares bodies.
+**Differs from the boards:** the Net column in Balances still wraps "gets back CA$185.41" at 1280 (not in scope).
 
 ---
 

@@ -2,7 +2,7 @@
 import { db } from "@/src/lib/server/supabase";
 import { isUuid } from "@/src/lib/validation";
 import { notFound } from "next/navigation";
-import { Split } from "./ExpenseModal";
+import type { Split } from "@/src/lib/types";
 import GroupFrame from "./GroupFrame";
 import { ViewerProvider } from "@/src/components/glow/ViewerProvider";
 import { LedgerList } from "@/src/components/glow/LedgerList";

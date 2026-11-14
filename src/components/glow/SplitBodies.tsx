@@ -70,6 +70,14 @@ export function ExactBody({
                 aria-label={`${r.possessive} amount`}
                 value={values[r.id] ?? ""}
                 onChange={(e) => onChange(r.id, sanitizeDecimalInput(e.target.value, decimals))}
+                onBlur={(e) => {
+                  // "20" reads "20.00" once you leave the field; the cents don't change.
+                  const text = e.target.value;
+                  if (!/\d/.test(text)) return;
+                  const [whole, fraction = ""] = text.split(".");
+                  const padded = `${whole || "0"}${decimals > 0 ? "." + fraction.padEnd(decimals, "0") : ""}`;
+                  if (padded !== text) onChange(r.id, padded);
+                }}
                 className={bareInput}
               />
             </span>
