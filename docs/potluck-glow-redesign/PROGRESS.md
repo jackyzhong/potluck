@@ -39,7 +39,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T13 | Composer: shell, Equally | T11, T04, T05 | done | [PR #26](https://github.com/jackyzhong/potluck/pull/26) |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
 | T15 | Payments: add, details, edit | T11, T09 | done | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
-| T16 | Balances tab | T07, T15 | in review | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
+| T16 | Balances tab | T07, T15 | done | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
 | T18 | States and edge cases | T16 | todo | |
 | T19 | Accessibility and motion pass | T18 | todo | |
@@ -96,6 +96,20 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T16 · claude-opus-5-5
+**Status:** T16 ([PR #28](https://github.com/jackyzhong/potluck/pull/28)) merged into `glow`. T14 is still running.
+**Checked:**
+- Merged `glow`: npm test ✓ (185 pass) · lint ✓ · tsc ✓ · build ✓.
+- `BalancesTab` mounts its own `RightPanel`. The frame passes no `panel` on Balances, so only one is ever mounted.
+- Dropping `getExchangeRates` from `page.tsx` is fine: it was a 1:1 stub, and D8 keeps multi-currency out of scope.
+**Decided (accepting the worker's calls):**
+- Everyone rows start collapsed.
+- "Show N expenses" counts distinct expenses.
+- The D1 caption sits under the plan subtitle.
+**Next session should know:**
+- T17's D key needs `useSimplifyDebts` lifted out of `BalancesTab`, or a handler added there.
+- Re-seeding "Veld 2026" wipes other workers' test data on that group. Use a throwaway group for write tests.
 
 ### 2026-11-13 · T16 · claude-sonnet-5-5
 **Status:** in progress → in review (branch `glow-T16-balances`, PR in the board row).
