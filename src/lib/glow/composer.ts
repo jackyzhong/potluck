@@ -24,6 +24,13 @@ export function parseAmountCents(text: string, decimals = 2): number | null {
   return Number.isSafeInteger(cents) ? cents : null;
 }
 
+/** What an amount field lets through: digits, one decimal point, commas. */
+export function filterAmountInput(text: string): string {
+  const kept = text.replace(/[^0-9.,]/g, "");
+  const dot = kept.indexOf(".");
+  return dot === -1 ? kept : kept.slice(0, dot + 1) + kept.slice(dot + 1).replace(/\./g, "");
+}
+
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** The local calendar day as "YYYY-MM-DD", the value of a date input. */

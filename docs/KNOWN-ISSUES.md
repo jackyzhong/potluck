@@ -14,18 +14,6 @@ of the code and looks wrong but has not been exercised.
 
 ## 1. Correctness — affects users today
 
-### 1.2 Editing a percentage split silently converts it to exact amounts · Observed
-
-`ExpenseModal.tsx:87-108` infers the split mode when opening an existing
-expense. It only distinguishes "looks equal" from everything else, and
-everything else becomes `EXACT`. A split originally entered as percentages
-reopens as fixed amounts, so re-saving writes the amounts rather than the
-percentages, and the original intent is lost. Changing the expense total
-afterwards will not re-divide it the way the author expected.
-
-**Fix:** persist the split mode on the expense (a `split_mode` column) rather
-than re-deriving it, and store the percentages used.
-
 ### 1.4 Multi-currency balances are silently wrong · Confirmed (pre-existing)
 
 `getExchangeRates()` in `src/lib/balances.ts` is a stub that pegs every
@@ -84,20 +72,13 @@ server actions rather than database change feeds; see HANDOFF for the design.
 ### 4.2 Breakdown rows and expense details will disagree on currency · Observed
 
 In the balances drill-down, row amounts are converted to the ledger's base
-currency, but the expense details modal it opens shows the expense in its
+currency, but the expense details panel it opens shows the expense in its
 original currency. Invisible today only because rates are pegged 1:1 (see 1.4).
-Once real rates land, clicking a row reading `CA$45.00` will open a modal
+Once real rates land, clicking a row reading `CA$45.00` will open details
 saying `¥5000`.
 
 **Fix:** when rates become real, show both — the original amount with the
 converted value beside it.
-
-### 4.3 Errors are reported with `alert()` · Known
-
-Every failure path in `ExpenseModal`, `BalancesView` and `UserManagementModal`
-uses a browser `alert()`. It blocks the page, cannot be styled, and reads as
-broken on mobile. Fine for MVP, worth replacing with inline error state or a
-toast before any wider release.
 
 ## 5. Engineering & tooling
 
@@ -109,26 +90,16 @@ arithmetic as randomized property tests over 300 generated ledgers, and it is
 what caught 1.5.
 
 `src/lib/validation.test.ts` covers the parsing every server action does on
-its input. The `save_expense()` database function was exercised against a
+its input. The Glow redesign added tests for every pure piece of the UI
+logic under `src/lib/glow/`: the viewer calculations (checked against
+`docs/potluck-glow-redesign/fixtures/expected.json`), the four split modes and
+their validation, panel state, search and filters, keyboard shortcuts, and
+the hero and details wording. `npm run lint` is clean. The `save_expense()` database function was exercised against a
 local Postgres when written, but has no automated test.
 
 What is still uncovered: every React component and the server actions' calls
 to Supabase. Those need a browser or a live database, so they remain manual. Adding a component test setup is the next step if this
 starts to bite.
-
-### 5.2 One lint error remains: form state set inside an effect · Confirmed
-
-`npm run lint` is down to a single error. `ExpenseModal` copies the expense
-being edited into its form state from a `useEffect`, which React's
-`set-state-in-effect` rule flags because it renders twice on every open.
-It works, but the right fix is structural: give the modal a `key` from the
-parent so each open remounts it, and seed the form from `useState`
-initialisers instead of an effect. That needs checking in a browser, which is
-why it was not done alongside the lint cleanup.
-
-Once it is fixed, lint is clean and can be made a CI gate.
-
-*On the `glow` branch (2026-11-13) the rule is disabled around that one effect, with a comment, so lint is a clean gate for the Glow tasks. The Glow composer (T13/T14) replaces this modal; delete the modal and the comment together.*
 
 ### 5.4 The remote sandbox cannot reach Supabase · Environment note
 

@@ -133,6 +133,22 @@ export function splitRows(
   });
 }
 
+/**
+ * Rows saved before Glow have no split mode. When every share is within one
+ * cent of the others and they add up to the total, it was an equal split.
+ */
+export function inferSplitMode(
+  mode: string | null | undefined,
+  shares: Record<string, number>,
+  totalCents: number
+): string | null | undefined {
+  if (mode) return mode;
+  const v = Object.values(shares);
+  if (v.length < 2) return mode;
+  const sum = v.reduce((a, b) => a + b, 0);
+  return sum === totalCents && Math.max(...v) - Math.min(...v) <= 1 ? "equal" : mode;
+}
+
 export function detailsModel(input: DetailsInput): DetailsModel {
   const payerIsViewer = input.viewerId === input.payerId;
   const people = Object.keys(input.shares).length;
@@ -141,7 +157,7 @@ export function detailsModel(input: DetailsInput): DetailsModel {
     impact: impactStrip(input),
     payerName: payerIsViewer ? "You" : input.nameOf(input.payerId),
     payerIsViewer,
-    splitText: splitSentence(input.splitMode, people),
+    splitText: splitSentence(inferSplitMode(input.splitMode, input.shares, input.totalCents), people),
     rows: splitRows(input)
   };
 }

@@ -21,6 +21,7 @@ import {
   parsePaymentAmountCents,
   paymentProblem
 } from "@/src/lib/glow/payment";
+import { filterAmountInput } from "@/src/lib/glow/composer";
 import type { Payment } from "@/src/lib/glow/ledger";
 import type { AvatarSlot } from "@/src/lib/glow/avatar";
 import { Avatar } from "./Avatar";
@@ -244,7 +245,7 @@ export function PaymentComposer({ paymentId }: { paymentId?: string }) {
             placeholder={centsToInput(0, decimals)}
             value={amount}
             onChange={(e) => {
-              setAmount(e.target.value);
+              setAmount(filterAmountInput(e.target.value));
               setError(null);
             }}
             aria-invalid={error !== null && parsePaymentAmountCents(amount, decimals) === null}
