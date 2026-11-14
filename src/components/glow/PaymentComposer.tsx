@@ -15,10 +15,10 @@ import { CURRENCIES } from "@/src/lib/currencies";
 import { pickableMembers } from "@/src/lib/members";
 import {
   centsToInput,
-  createdAtFor,
+  paymentCreatedAt,
   currencyDecimals,
   dateInputValue,
-  parseAmountCents,
+  parsePaymentAmountCents,
   paymentProblem
 } from "@/src/lib/glow/payment";
 import type { Payment } from "@/src/lib/glow/ledger";
@@ -183,9 +183,9 @@ export function PaymentComposer({ paymentId }: { paymentId?: string }) {
       setError(problem);
       return;
     }
-    const amountCents = parseAmountCents(amount, decimals);
+    const amountCents = parsePaymentAmountCents(amount, decimals);
     if (amountCents === null) return;
-    const createdAt = createdAtFor(date, existing?.created_at ?? null);
+    const createdAt = paymentCreatedAt(date, existing?.created_at ?? null);
     setSaving(true);
     setError(null);
     const result = await savePayment(ledgerId, existing?.id ?? null, {
@@ -247,7 +247,7 @@ export function PaymentComposer({ paymentId }: { paymentId?: string }) {
               setAmount(e.target.value);
               setError(null);
             }}
-            aria-invalid={error !== null && parseAmountCents(amount, decimals) === null}
+            aria-invalid={error !== null && parsePaymentAmountCents(amount, decimals) === null}
             className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[length:var(--text-amount-input)] font-extrabold leading-tight tracking-[-0.03em] text-on-glow outline-none placeholder:text-on-glow/50 focus-visible:underline focus-visible:decoration-2 focus-visible:underline-offset-4"
           />
           <span className="shrink-0 rounded-pill bg-on-glow-tile px-3.5 py-2 font-bold">{currencyCode}</span>
