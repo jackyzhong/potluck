@@ -38,7 +38,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T12 | Expense details | T09, T11, T04 | todo | |
 | T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
-| T15 | Payments: add, details, edit | T11, T09 | todo | |
+| T15 | Payments: add, details, edit | T11, T09 | in progress | `glow-T15-payments` |
 | T16 | Balances tab | T07, T15 | todo | |
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
 | T18 | States and edge cases | T16 | todo | |
