@@ -31,7 +31,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T05 | Foundation components | T02 | done | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
 | T06 | Viewer state, first-visit prompt | T03, T05 | done | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
 | T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
-| T08 | Activity hero, share card | T07 | in review | [PR #22](https://github.com/jackyzhong/potluck/pull/22) |
+| T08 | Activity hero, share card | T07 | done | [PR #22](https://github.com/jackyzhong/potluck/pull/22) |
 | T09 | Ledger table and list | T07 | done | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
 | T10 | Search and filters | T08, T09 | todo | |
 | T11 | Right panel, drawer, sheet | T07 | todo | |
@@ -96,6 +96,17 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T08 · claude-opus-5-5
+**Status:** T08 ([PR #22](https://github.com/jackyzhong/potluck/pull/22)) merged into `glow`. T11 is still running.
+**Changed:** resolved the merge conflict with T09 in `page.tsx` (imports, and the slot comment) and in `src/components/glow/index.ts`, keeping both sides.
+**Checked:**
+- Merged `glow`: npm test ✓ (117 pass) · lint ✓ · build ✓.
+- Rendered the merged page at 1280 as Jacky. The hero (CA$51.91, five chips), "So far" and the ledger table sit together as on board 03. Only search and the panel are missing.
+**Decided (accepting the worker's call):**
+- A net of 0 caused by offsetting debts shows "You're all settled" with no amount but keeps the chips and sub-line, rather than hiding real debts.
+- The phone hero shows the sub-line (docs/07 A3).
+**Next session should know:** T10 passes `onSelectPerson` and `selectedPersonId` to `BalanceHero` to wire the chip filter.
 
 ### 2026-11-13 · T08 · claude-sonnet-5-5
 **Status:** done → in review ([PR #22](https://github.com/jackyzhong/potluck/pull/22)).
