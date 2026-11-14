@@ -36,7 +36,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T10 | Search and filters | T08, T09 | done | [PR #24](https://github.com/jackyzhong/potluck/pull/24) |
 | T11 | Right panel, drawer, sheet | T07 | done | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
 | T12 | Expense details | T09, T11, T04 | todo | |
-| T13 | Composer: shell, Equally | T11, T04, T05 | in progress | `glow-T13-composer` |
+| T13 | Composer: shell, Equally | T11, T04, T05 | in review | [PR #26](https://github.com/jackyzhong/potluck/pull/26) |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
 | T15 | Payments: add, details, edit | T11, T09 | todo | |
 | T16 | Balances tab | T07, T15 | todo | |
@@ -98,7 +98,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 ---
 
 ### 2026-11-13 · T13 · claude-sonnet-5-5
-**Status:** in progress → in review (PR linked on the board; branch `glow-T13-composer`).
+**Status:** in progress → in review ([PR #26](https://github.com/jackyzhong/potluck/pull/26), branch `glow-T13-composer`).
 **Changed:**
 - `src/components/glow/ExpenseComposer.tsx` (new): add mode, Equally. Gradient card (description with n/50, 48px amount, currency pill), "Paid by [●] on [date]" pills (small shared `PillPopover`: Esc, outside press, arrows, focus back to the pill), `SegmentedControl` split tabs, Equally body (checkbox rows, "Include everyone", remainder note), `StatusStrip` with the impact line, error line, "Save and add another" and "Save expense ⌘↵" with the blocked reason as its label.
 - `src/components/glow/composerPrefill.ts` (new): `setComposerPrefill(prefill)`, `ComposerPrefill` type (`description`, `amountCents`, `payerId`, `participantIds`), plus `peek`/`clear`. The composer reads it on its first render and clears it in an effect, so it applies to one opening. **T12's Duplicate:** call `setComposerPrefill(...)` then `usePanelNav().openAdd()`. The coordinator wires that. Date is not prefilled (today).
