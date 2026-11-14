@@ -101,3 +101,12 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
 }
+
+/* T11: the group page's right-panel slot only has room as an inline column from
+   1024px up. Below that the panel is a drawer or sheet rendered in a portal, so
+   the (server-rendered) inline wrapper must take no space. */
+@media (max-width: 1023px) {
+  [data-slot="panel"] {
+    display: none;
+  }
+}

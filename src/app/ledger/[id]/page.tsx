@@ -11,6 +11,7 @@ import { LedgerList } from "@/src/components/glow/LedgerList";
 import { LedgerTable } from "@/src/components/glow/LedgerTable";
 import { BalanceHero } from "@/src/components/glow/BalanceHero";
 import { ShareOfSpendCard } from "@/src/components/glow/ShareOfSpendCard";
+import { RightPanel } from "@/src/components/glow/RightPanel";
 
 export default async function LedgerPage({
   params,
@@ -114,6 +115,7 @@ export default async function LedgerPage({
             </>
           )
         }
+        panel={tab === "balances" ? undefined : <RightPanel />}
         // ledger: T09. Both layouts are in the DOM; CSS shows one (phone below 640px).
         ledger={
           tab === "balances" ? undefined : (
