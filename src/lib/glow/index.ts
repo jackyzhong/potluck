@@ -10,3 +10,4 @@ export * from "./filter.ts";
 export * from "./payment.ts";
 export * from "./details.ts";
 export * from "./composer.ts";
+export * from "./balances.ts";

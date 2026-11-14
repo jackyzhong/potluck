@@ -4,8 +4,6 @@ import { isUuid } from "@/src/lib/validation";
 import { notFound } from "next/navigation";
 import { Split } from "./ExpenseModal";
 import GroupFrame from "./GroupFrame";
-import BalancesView from "./BalancesView";
-import { getExchangeRates } from "@/src/lib/balances";
 import { ViewerProvider } from "@/src/components/glow/ViewerProvider";
 import { LedgerList } from "@/src/components/glow/LedgerList";
 import { LedgerTable } from "@/src/components/glow/LedgerTable";
@@ -14,6 +12,7 @@ import { FilterProvider } from "@/src/components/glow/FilterProvider";
 import { ActivityToolbar } from "@/src/components/glow/ActivityToolbar";
 import { ShareOfSpendCard } from "@/src/components/glow/ShareOfSpendCard";
 import { RightPanel } from "@/src/components/glow/RightPanel";
+import { BalancesTab } from "@/src/components/glow/BalancesTab";
 
 export default async function LedgerPage({
   params,
@@ -79,16 +78,7 @@ export default async function LedgerPage({
     }
   }
 
-  // Create a quick lookup map for user names
-  const userMap = new Map(initialUsers.map(u => [u.id, u.name]));
-
   const baseCurrency = ledger.base_currency || "CAD";
-
-  const currenciesUsed = Array.from(new Set([
-    ...ledgerExpenses.map(e => e.original_currency),
-    ...ledgerPayments.map(p => p.original_currency)
-  ]));
-  const exchangeRates = await getExchangeRates(baseCurrency, currenciesUsed);
 
   return (
     <ViewerProvider
@@ -134,22 +124,10 @@ export default async function LedgerPage({
         }
         // toolbar: T10. Hidden below 640px by the frame (D20).
         toolbar={tab === "balances" ? undefined : <ActivityToolbar />}
-        // balances: T16 replaces BalancesView
+        // balances: T16. The tab mounts its own right panel (Mark paid, expense details).
         balances={
           tab === "balances" ? (
-            <div className="mx-auto w-full max-w-2xl">
-              <BalancesView
-                ledgerId={ledger.id}
-                expenses={ledgerExpenses}
-                splits={allSplits}
-                payments={ledgerPayments}
-                users={initialUsers}
-                userMap={userMap}
-                baseCurrency={baseCurrency}
-                exchangeRates={exchangeRates}
-                isSimplified={ledger.simplify_debts ?? true}
-              />
-            </div>
+            <BalancesTab ledgerId={ledger.id} simplified={ledger.simplify_debts ?? true} />
           ) : undefined
         }
       />
