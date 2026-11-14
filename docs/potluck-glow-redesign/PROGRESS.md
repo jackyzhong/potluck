@@ -33,7 +33,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
 | T08 | Activity hero, share card | T07 | done | [PR #22](https://github.com/jackyzhong/potluck/pull/22) |
 | T09 | Ledger table and list | T07 | done | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
-| T10 | Search and filters | T08, T09 | in review | PR (see log) `glow-T10-search` |
+| T10 | Search and filters | T08, T09 | in review | [PR #24](https://github.com/jackyzhong/potluck/pull/24) |
 | T11 | Right panel, drawer, sheet | T07 | todo | |
 | T12 | Expense details | T09, T11, T04 | todo | |
 | T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
@@ -98,7 +98,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 ---
 
 ### 2026-11-13 · T10 · claude-sonnet-5-5
-**Status:** done → in review (branch `glow-T10-search`, PR into `glow`).
+**Status:** done → in review ([PR #24](https://github.com/jackyzhong/potluck/pull/24), branch `glow-T10-search`).
 **Changed:**
 - `src/lib/glow/filter.ts` + `filter.test.ts` (new, exported from the index): `filterLedger`, `matchesQuery`, `amountQuery`, `participantsByRow`, `resetForViewerChange`. Runs on the rows `viewerLedger` already built, so balances are untouched.
 - `src/components/glow/`: `FilterProvider` (+ `useFilters`, one small context holding kind, "with {name}" person and search text, with a 150ms debounce), `ActivityToolbar` (search, filter chips, removable "With {name}" chip), `FilteredHero` (hero with chips wired). `useLedgerView` filters its rows and re-derives the day grouping, so the date shows on the first visible row of each day. `LedgerTable`: empty state and a Balance header tooltip while filtered. `LedgerList`: calls `useLedgerView({ applyFilters: false })`.
