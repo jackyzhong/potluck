@@ -35,7 +35,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T09 | Ledger table and list | T07 | done | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
 | T10 | Search and filters | T08, T09 | done | [PR #24](https://github.com/jackyzhong/potluck/pull/24) |
 | T11 | Right panel, drawer, sheet | T07 | done | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
-| T12 | Expense details | T09, T11, T04 | todo | |
+| T12 | Expense details | T09, T11, T04 | in review ([PR #25](https://github.com/jackyzhong/potluck/pull/25)) | `glow-T12-details` |
 | T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
 | T15 | Payments: add, details, edit | T11, T09 | todo | |
@@ -96,6 +96,28 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T12 · claude-sonnet-5-5
+**Status:** done → in review (branch `glow-T12-details`, PR in the board row).
+**Changed:**
+- `src/lib/glow/details.ts` + `details.test.ts` (new, exported from the index; 8 tests): `detailsModel`, `impactStrip`, `splitRows`, `splitSentence`, `detailsMeta`, `DELETE_PROMPT`. All the wording, from the viewer's side.
+- `src/components/glow/ExpenseDetails.tsx` (new, not in the barrel): impact strip, "Paid by … and split …" pills, split rows, Edit / Duplicate / Delete.
+- `PanelContent.tsx`: only the details case, through a small `DetailsBody` (payment ids still reach `DetailsPlaceholder` for T15; anything else is an expense).
+- `BalancesView.tsx` (outside the file list): it was the only thing rendering `ExpenseDetailsModal`. A click on an expense there now does `router.push("?e=<id>")`, which opens the Activity tab's panel. T16 rebuilds that tab. `ExpenseDetailsModal.tsx` is left for T21; nothing imports it.
+**Checked:** npm test ✓ (155 pass) · lint ✓ · tsc ✓ · build ✓ · built-in browser, own tab, seeded Veld on `npm run dev` (port 3412, stopped):
+- As Jacky, Pizza Badiali: "You paid, so you lent +CA$91.45"; "Paid by You and split custom split"; rows "You paid, share CA$18.29", then "owes you CA$18.29" for the other five.
+- As Stephen, same expense: "Your share −CA$18.29"; payer Jacky; rows "You owe Jacky CA$18.29", "Jacky paid, share CA$18.29", then "owes Jacky CA$18.29".
+- Delete: inline question "Delete this expense? This can't be undone.", focus on Cancel, Cancel returns focus to Delete, Delete removes the row and empties the panel. Re-seeded afterwards.
+- Edit opens the old modal, filled; closing returns to the details. Duplicate goes to `?panel=add`.
+- Not checked: the "not involved" strip and the "equally, N ways" / exact / percent / shares sentences in the browser (the seed has no row for them: unit-tested only; seeded rows have `split_mode` null, so they say "custom split" and have no "added by"); the failed-delete message; light mode; a true 1280 and 390 comparison against boards 15/16 (the pane rendered about 800px wide); the sheet and drawer layouts.
+**Differs from the boards:** nothing noticed beyond that the 44px amount is tight in the 300px inline panel (T13 sets a wider basis for the composer; details may want 400px too). Board 23's panel is the older inspector; I built from 15/16.
+**Decided:**
+- Delete: the panel empties when the refreshed rows arrive, not right after `router.refresh()`. Calling `dispatch({type:"deleted"})` (which rewrites the URL with `replaceState`) while the refresh was in flight made Next drop the refresh, and the deleted row stayed on screen. Swapping the order did not fix it. Anything that rewrites the panel URL right after `router.refresh()` may hit the same thing (T13/T14/T15 saves).
+- Delete confirmation text is the D14 wording, not docs/06's suggested one.
+- Payer not in the split gets a row reading "paid" with no amount. Rows order: viewer, payer, then ledger order.
+- Edit uses a local `ExpenseModal` (old edit flow). The old modal has no dark styling (pre-existing).
+**New copy:** "paid" (payer outside the split), "Deleting…", "Couldn't delete this expense. Check your connection and try again."
+**Next session should know:** Duplicate has `// TODO(coordinator): setComposerPrefill once T13 merges` in `ExpenseDetails.tsx`. The E key hint on Edit is drawn, but the shortcut is T17's. T14 should replace the local `ExpenseModal` with `nav.openEdit()`.
 
 ### 2026-11-13 · review T10, T11 · claude-opus-5-5
 **Status:** T11 ([PR #23](https://github.com/jackyzhong/potluck/pull/23)) and T10 ([PR #24](https://github.com/jackyzhong/potluck/pull/24)) merged into `glow`. T12, T13 and T15 dispatched.
