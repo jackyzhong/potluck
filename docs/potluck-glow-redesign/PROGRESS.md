@@ -38,7 +38,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T12 | Expense details | T09, T11, T04 | done | [PR #25](https://github.com/jackyzhong/potluck/pull/25) |
 | T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
-| T15 | Payments: add, details, edit | T11, T09 | in review | PR_LINK |
+| T15 | Payments: add, details, edit | T11, T09 | in review | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
 | T16 | Balances tab | T07, T15 | todo | |
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
 | T18 | States and edge cases | T16 | todo | |
@@ -98,7 +98,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 ---
 
 ### 2026-11-13 · T15 · claude-sonnet-5-5
-**Status:** in progress → in review (PR_LINK, branch `glow-T15-payments`).
+**Status:** in progress → in review ([PR #27](https://github.com/jackyzhong/potluck/pull/27), branch `glow-T15-payments`).
 **Changed:**
 - `src/lib/glow/panel.ts` + tests: new `pay` state at `?panel=pay` (action `{type:"pay"}`, close returns to where it was opened from, "Discard this payment?"). `usePanel.ts`: one line, so a `pay` open remembers `previous` like `add` does.
 - `src/lib/glow/payment.ts` + tests (new): amount text to cents (exact, no floats, rejects negatives), date field helpers, `paymentProblem`, `paymentTitle`.
