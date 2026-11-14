@@ -28,6 +28,7 @@ import { PhoneActionBar } from "@/src/components/glow/PhoneActionBar";
 import { ShortcutFooter } from "@/src/components/glow/ShortcutFooter";
 import { usePanelNav } from "@/src/components/glow/usePanel";
 import { useOpenPayment } from "@/src/components/glow/paymentPrefill";
+import { useShortcuts } from "@/src/components/glow/useShortcuts";
 import UserManagementModal from "./UserManagementModal";
 
 type User = {
@@ -74,6 +75,7 @@ export default function GroupFrame({
   // Add expense opens the composer in the right panel (T13), not the old modal.
   const { openAdd } = usePanelNav();
   const openPayment = useOpenPayment(); // Add payment and P open the right panel (T15)
+  useShortcuts({ tab, viewerMenuOpen: viewerOpen, setViewerMenuOpen: setViewerOpen }); // T17
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg pb-[calc(88px+env(safe-area-inset-bottom))] text-text sm:pb-0">
