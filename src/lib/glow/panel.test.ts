@@ -9,6 +9,7 @@ import {
   panelToParams,
   parsePanel,
   readPanelParams,
+  toastFor,
   transition,
   withPanelState,
   type PanelState
@@ -196,4 +197,21 @@ test("a dirty pay asks before leaving, with payment wording", () => {
   assert.equal(needsDiscardPrompt(pay, details("x1"), false), false);
   assert.equal(needsDiscardPrompt(pay, pay, true), false);
   assert.equal(discardTitle(pay), "Discard this payment?");
+});
+
+test("toastFor: saves and deletes get one polite message, anything else none", () => {
+  const saved = { type: "saved", id: "x" } as const;
+  assert.equal(toastFor(add, saved, false), "Expense added");
+  assert.equal(toastFor(add, { ...saved, another: true }, false), "Expense added");
+  assert.equal(toastFor({ kind: "pay" }, saved, false), "Payment added");
+  assert.equal(toastFor(edit("x"), saved, false), "Changes saved");
+  assert.equal(toastFor(edit("x"), saved, true), "Changes saved");
+  // A repeated report after the panel has already moved to details says nothing.
+  assert.equal(toastFor(details("x"), saved, false), null);
+  assert.equal(toastFor(empty, saved, false), null);
+
+  assert.equal(toastFor(details("x"), { type: "deleted" }, false), "Expense deleted");
+  assert.equal(toastFor(details("x"), { type: "deleted" }, true), "Payment deleted");
+  assert.equal(toastFor(empty, { type: "deleted" }, false), "Expense deleted");
+  assert.equal(toastFor(details("x"), { type: "close" }, false), null);
 });

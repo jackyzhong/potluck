@@ -5,7 +5,10 @@
 // anywhere on the row selects it.
 
 import { Avatar } from "./Avatar";
+import { Button } from "./Button";
+import { useFilters } from "./FilterProvider";
 import { LedgerEmpty } from "./LedgerEmpty";
+import { usePanelNav } from "./usePanel";
 import { Money } from "./Money";
 import { useLedgerView, type LedgerItem } from "./useLedgerView";
 
@@ -47,6 +50,7 @@ function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string;
               e.stopPropagation();
               onSelect();
             }}
+            title={item.title}
             className={`min-w-0 truncate rounded-input text-left ${
               selected ? "font-extrabold" : row.kind === "expense" ? "font-bold" : "font-normal"
             }`}
@@ -63,14 +67,16 @@ function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string;
           ) : null}
         </div>
       </td>
-      <td className={cell}>
-        <span className="flex items-center gap-2.5 whitespace-nowrap">
+      <td className={`${cell} max-w-[200px]`}>
+        <span className="flex min-w-0 items-center gap-2.5 whitespace-nowrap">
           {item.payer.isViewer ? (
             <Avatar name={item.payer.name} variant="you" size={28} />
           ) : (
             <Avatar name={item.payer.name} slot={item.payer.slot} id={item.payer.id} size={28} />
           )}
-          {item.payer.isViewer ? "You" : item.payer.name}
+          <span className="min-w-0 truncate" title={item.payer.isViewer ? undefined : item.payer.name}>
+            {item.payer.isViewer ? "You" : item.payer.name}
+          </span>
         </span>
       </td>
       <td className={`${cell} text-right`}>
@@ -88,13 +94,37 @@ function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string;
 
 export function LedgerTable() {
   const { items, currency, ready, hasViewer, totalCount, filtered, query, select } = useLedgerView();
+  const nav = usePanelNav();
+  const { clearAll } = useFilters();
 
   if (!ready) return <LedgerEmpty />;
   if (!hasViewer) return <LedgerEmpty>Pick who you are to see your numbers.</LedgerEmpty>;
   if (items.length === 0 && totalCount > 0) {
-    return <LedgerEmpty>{query ? `Nothing matches "${query}"` : "Nothing matches these filters."}</LedgerEmpty>;
+    return (
+      <LedgerEmpty
+        title={query ? `Nothing matches "${query}"` : "Nothing matches these filters."}
+        action={
+          <Button variant="secondary" size={48} onClick={clearAll}>
+            {query ? "Clear search and filters" : "Clear filters"}
+          </Button>
+        }
+      >
+        Try a different name, amount or word.
+      </LedgerEmpty>
+    );
   }
-  if (items.length === 0) return <LedgerEmpty>Nothing here yet. Start by adding an expense!</LedgerEmpty>;
+  if (items.length === 0) return (
+      <LedgerEmpty
+        title="No expenses yet"
+        action={
+          <Button size={48} kbd="N" onClick={nav.openAdd}>
+            Add expense
+          </Button>
+        }
+      >
+        Add the first one and Potluck keeps the tally.
+      </LedgerEmpty>
+    );
 
   return (
     <div className="overflow-x-auto rounded-hero bg-surface px-2 shadow-card">

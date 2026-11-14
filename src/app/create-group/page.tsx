@@ -32,6 +32,7 @@ export default function CreateGroup() {
   const [currencySearch, setCurrencySearch] = useState("");
   
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -68,11 +69,17 @@ export default function CreateGroup() {
   const handleCreateGroup = async () => {
     if (!groupName.trim()) return;
     setIsLoading(true);
+    setError(null);
 
-    const result = await createLedger({ title: groupName, emoji, baseCurrency: currency });
+    let result: Awaited<ReturnType<typeof createLedger>>;
+    try {
+      result = await createLedger({ title: groupName, emoji, baseCurrency: currency });
+    } catch {
+      result = { ok: false, error: "Couldn't create the group. Check your connection and try again." };
+    }
 
     if (!result.ok) {
-      alert(result.error);
+      setError(result.error);
       setIsLoading(false);
       return;
     }
@@ -138,7 +145,10 @@ export default function CreateGroup() {
             type="text"
             placeholder="e.g. Toronto Trip 2026"
             value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
+            onChange={(e) => {
+              setGroupName(e.target.value);
+              setError(null);
+            }}
             className="text-text placeholder:text-text-muted w-full text-xl p-4 bg-surface-sunken border border-line-strong rounded-2xl focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all text-center mb-6"
             autoFocus
           />
@@ -200,6 +210,12 @@ export default function CreateGroup() {
             
             {/* Future settings can be added here, and the container will scroll */}
           </div>
+
+          {error ? (
+            <p role="alert" className="m-0 mb-4 w-full text-center text-sm font-semibold text-negative">
+              {error}
+            </p>
+          ) : null}
 
           <button
             type="submit"

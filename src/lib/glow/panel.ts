@@ -183,3 +183,30 @@ export function layoutForWidth(width: number): PanelLayout {
 export function isPanelVisible(layout: PanelLayout, state: PanelState): boolean {
   return layout === "inline" || state.kind !== "empty";
 }
+
+// ---------- the success toast (D15) ----------
+
+/**
+ * What the toast says after a finished save or delete, or null when the action
+ * isn't one (a "saved" reported after the panel already moved on to details
+ * says nothing). No Undo this round.
+ * `isPayment` says whether `state`'s row is a payment, for edits and deletes.
+ */
+export function toastFor(
+  state: PanelState,
+  action: PanelAction,
+  isPayment: boolean
+): string | null {
+  if (action.type === "saved") {
+    if (state.kind === "add") return "Expense added";
+    if (state.kind === "pay") return "Payment added";
+    if (state.kind === "edit") return "Changes saved";
+    return null;
+  }
+  if (action.type === "deleted") {
+    // Whatever state the panel is in: once the row is gone the URL's ?e= is
+    // already treated as absent, so the panel reads "empty" by this point.
+    return isPayment ? "Payment deleted" : "Expense deleted";
+  }
+  return null;
+}
