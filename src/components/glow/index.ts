@@ -31,3 +31,8 @@ export { ViewerAvatarButton, ViewerPill } from "./ViewerPill";
 export { ViewerMenu, type ViewerMenuProps } from "./ViewerMenu";
 export { ViewerSheet, type ViewerSheetProps } from "./ViewerSheet";
 export { ViewerSwitcher, type ViewerSwitcherProps } from "./ViewerSwitcher";
+
+// Activity summary (T08).
+export { BalanceHero, type BalanceHeroProps } from "./BalanceHero";
+export { PersonChips, type PersonChipsProps } from "./PersonChips";
+export { ShareOfSpendCard } from "./ShareOfSpendCard";
