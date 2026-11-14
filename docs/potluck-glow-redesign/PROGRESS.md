@@ -41,7 +41,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T15 | Payments: add, details, edit | T11, T09 | done | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
 | T16 | Balances tab | T07, T15 | done | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | done | [PR #30](https://github.com/jackyzhong/potluck/pull/30) |
-| T18 | States and edge cases | T16 | in progress (`glow-T18-states`) | |
+| T18 | States and edge cases | T16 | in review | [PR #31](https://github.com/jackyzhong/potluck/pull/31) |
 | T19 | Accessibility and motion pass | T18 | todo | |
 | T20 | Home and create-group restyle | T02 | done | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
 | T21 | Ship | all | todo | |
