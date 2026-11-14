@@ -31,7 +31,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T05 | Foundation components | T02 | done | [PR #18](https://github.com/jackyzhong/potluck/pull/18) |
 | T06 | Viewer state, first-visit prompt | T03, T05 | done | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
 | T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
-| T08 | Activity hero, share card | T07 | in review | PR_URL |
+| T08 | Activity hero, share card | T07 | in review | [PR #22](https://github.com/jackyzhong/potluck/pull/22) |
 | T09 | Ledger table and list | T07 | todo | |
 | T10 | Search and filters | T08, T09 | todo | |
 | T11 | Right panel, drawer, sheet | T07 | todo | |
@@ -98,7 +98,7 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 ---
 
 ### 2026-11-13 · T08 · claude-sonnet-5-5
-**Status:** done → in review (PR_URL).
+**Status:** done → in review ([PR #22](https://github.com/jackyzhong/potluck/pull/22)).
 **Changed:**
 - `src/components/glow/`: `BalanceHero`, `PersonChips`, `ShareOfSpendCard` (all in the barrel). `BalanceHero` and `ShareOfSpendCard` read `useViewer()` / `useGlowData()` themselves; `PersonChips` is presentational (`chips`, `members`, `currency`, `onSelect`, optional `selectedId`).
 - `src/lib/glow/hero.ts` + `hero.test.ts`: `heroCopy` (label and sub-line for owed, owe, settled; docs/06) and `heroScale` (amount shrinks past 9 characters). One export line added to `src/lib/glow/index.ts`.
