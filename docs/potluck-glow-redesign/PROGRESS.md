@@ -40,7 +40,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | done | [PR #29](https://github.com/jackyzhong/potluck/pull/29) |
 | T15 | Payments: add, details, edit | T11, T09 | done | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
 | T16 | Balances tab | T07, T15 | done | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
-| T17 | Keyboard shortcuts | T10, T12, T14, T16 | in review | [PR #30](https://github.com/jackyzhong/potluck/pull/30) |
+| T17 | Keyboard shortcuts | T10, T12, T14, T16 | done | [PR #30](https://github.com/jackyzhong/potluck/pull/30) |
 | T18 | States and edge cases | T16 | todo | |
 | T19 | Accessibility and motion pass | T18 | todo | |
 | T20 | Home and create-group restyle | T02 | done | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
@@ -96,6 +96,16 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T17 · claude-opus-5-5
+**Status:** T17 ([PR #30](https://github.com/jackyzhong/potluck/pull/30)) merged into `glow`. T18 is still running.
+**Checked:**
+- Merged `glow`: npm test ✓ · lint ✓ · tsc ✓ · build ✓.
+- One document listener, cleaned up on unmount. It skips typing targets, other open modal dialogs, and Cmd/Ctrl/Alt.
+**Next session should know (for T19):**
+- Any non-panel modal turns every shortcut off, Esc included. That's fine because native dialogs handle their own Esc. Confirm it in the a11y pass.
+- Focused checkboxes count as inputs.
+- The footer lists only docs/06's keys, not 1/2/V.
 
 ### 2026-11-13 · T17 · claude-sonnet-5-5
 **Status:** in progress → in review (branch `glow-T17-keys`).
