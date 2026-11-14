@@ -42,6 +42,7 @@ function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string;
         <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
+            data-nav-row={row.id}
             onClick={(e) => {
               e.stopPropagation();
               onSelect();
