@@ -41,7 +41,7 @@ function Meta({ item, currency }: { item: LedgerItem; currency: string }) {
 }
 
 export function LedgerList() {
-  const { items, currency, ready, hasViewer, select } = useLedgerView();
+  const { items, currency, ready, hasViewer, select } = useLedgerView({ applyFilters: false });
 
   if (!ready) return <LedgerEmpty />;
   if (!hasViewer) return <LedgerEmpty>Pick who you are to see your numbers.</LedgerEmpty>;

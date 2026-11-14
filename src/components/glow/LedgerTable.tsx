@@ -86,10 +86,13 @@ function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string;
 }
 
 export function LedgerTable() {
-  const { items, currency, ready, hasViewer, select } = useLedgerView();
+  const { items, currency, ready, hasViewer, totalCount, filtered, query, select } = useLedgerView();
 
   if (!ready) return <LedgerEmpty />;
   if (!hasViewer) return <LedgerEmpty>Pick who you are to see your numbers.</LedgerEmpty>;
+  if (items.length === 0 && totalCount > 0) {
+    return <LedgerEmpty>{query ? `Nothing matches "${query}"` : "Nothing matches these filters."}</LedgerEmpty>;
+  }
   if (items.length === 0) return <LedgerEmpty>Nothing here yet. Start by adding an expense!</LedgerEmpty>;
 
   return (
@@ -102,7 +105,13 @@ export function LedgerTable() {
             <th scope="col" className={`${th} text-left`}>Paid by</th>
             <th scope="col" className={`${th} text-right`}>Total</th>
             <th scope="col" className={`${th} text-right`}>Your impact</th>
-            <th scope="col" className={`${th} text-right`}>Balance</th>
+            <th
+              scope="col"
+              className={`${th} text-right`}
+              title={filtered ? "Balance after each row, counting the whole history, not just these rows" : undefined}
+            >
+              Balance
+            </th>
           </tr>
         </thead>
         <tbody>

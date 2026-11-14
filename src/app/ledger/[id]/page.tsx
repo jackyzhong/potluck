@@ -9,7 +9,9 @@ import { getExchangeRates } from "@/src/lib/balances";
 import { ViewerProvider } from "@/src/components/glow/ViewerProvider";
 import { LedgerList } from "@/src/components/glow/LedgerList";
 import { LedgerTable } from "@/src/components/glow/LedgerTable";
-import { BalanceHero } from "@/src/components/glow/BalanceHero";
+import { FilteredHero } from "@/src/components/glow/FilteredHero";
+import { FilterProvider } from "@/src/components/glow/FilterProvider";
+import { ActivityToolbar } from "@/src/components/glow/ActivityToolbar";
 import { ShareOfSpendCard } from "@/src/components/glow/ShareOfSpendCard";
 
 export default async function LedgerPage({
@@ -98,6 +100,7 @@ export default async function LedgerPage({
     >
       {/* T07 built the frame. Each slot below is filled by a later task; until
           then it holds today's content, narrowed so it stays readable. */}
+      <FilterProvider>
       <GroupFrame
         ledgerId={ledger.id}
         title={ledger.title}
@@ -109,7 +112,7 @@ export default async function LedgerPage({
         summary={
           tab === "balances" ? undefined : (
             <>
-              <BalanceHero />
+              <FilteredHero />
               <ShareOfSpendCard />
             </>
           )
@@ -127,6 +130,8 @@ export default async function LedgerPage({
             </>
           )
         }
+        // toolbar: T10. Hidden below 640px by the frame (D20).
+        toolbar={tab === "balances" ? undefined : <ActivityToolbar />}
         // balances: T16 replaces BalancesView
         balances={
           tab === "balances" ? (
@@ -146,6 +151,7 @@ export default async function LedgerPage({
           ) : undefined
         }
       />
+      </FilterProvider>
     </ViewerProvider>
   );
 }
