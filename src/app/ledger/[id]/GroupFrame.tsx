@@ -26,6 +26,7 @@ import { useState, type ReactNode } from "react";
 import { GroupHeader } from "@/src/components/glow/GroupHeader";
 import { PhoneActionBar } from "@/src/components/glow/PhoneActionBar";
 import { ShortcutFooter } from "@/src/components/glow/ShortcutFooter";
+import { usePanelNav } from "@/src/components/glow/usePanel";
 import ExpenseModal from "./ExpenseModal";
 import PaymentModal from "./PaymentModal";
 import UserManagementModal from "./UserManagementModal";
@@ -70,6 +71,8 @@ export default function GroupFrame({
   const [modal, setModal] = useState<Modal>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const close = () => setModal(null);
+  // Add expense opens the composer in the right panel (T13), not the old modal.
+  const { openAdd } = usePanelNav();
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg pb-[calc(88px+env(safe-area-inset-bottom))] text-text sm:pb-0">
@@ -78,7 +81,7 @@ export default function GroupFrame({
         title={title}
         emoji={emoji}
         onAddPayment={() => setModal("payment")}
-        onAddExpense={() => setModal("expense")}
+        onAddExpense={openAdd}
         viewerMenu={{
           open: viewerOpen,
           onOpenChange: setViewerOpen,
@@ -126,7 +129,7 @@ export default function GroupFrame({
       <PhoneActionBar
         hidden={viewerOpen || modal !== null}
         onAddPayment={() => setModal("payment")}
-        onAddExpense={() => setModal("expense")}
+        onAddExpense={openAdd}
       />
 
       {/* The old modals, until T13 (expense) and T15 (payment) replace them. */}

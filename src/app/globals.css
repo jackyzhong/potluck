@@ -110,3 +110,9 @@ body {
     display: none;
   }
 }
+
+/* T13: the composer needs a 400px basis (docs/03); details stay at the slot's
+   300px. The inline card says which one it holds. T14's edit mode uses the same. */
+[data-slot="panel"]:has([data-panel-kind="add"], [data-panel-kind="edit"]) {
+  flex-basis: 400px;
+}

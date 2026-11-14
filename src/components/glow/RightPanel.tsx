@@ -161,6 +161,7 @@ function PanelShell({
       <aside
         ref={ref}
         data-panel-shell="inline"
+        data-panel-kind={state.kind}
         aria-label={open ? undefined : "Expense details"}
         aria-labelledby={open ? titleId : undefined}
         className="flex flex-col gap-3.5 rounded-hero bg-surface p-5 text-text shadow-card"
