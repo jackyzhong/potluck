@@ -36,7 +36,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T10 | Search and filters | T08, T09 | done | [PR #24](https://github.com/jackyzhong/potluck/pull/24) |
 | T11 | Right panel, drawer, sheet | T07 | done | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
 | T12 | Expense details | T09, T11, T04 | todo | |
-| T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
+| T13 | Composer: shell, Equally | T11, T04, T05 | in progress | `glow-T13-composer` |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
 | T15 | Payments: add, details, edit | T11, T09 | todo | |
 | T16 | Balances tab | T07, T15 | todo | |
