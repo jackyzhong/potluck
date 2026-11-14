@@ -43,6 +43,7 @@ import {
   formCents,
   formToSplits,
   joinNames,
+  filterAmountInput,
   parseAmountCents,
   reopenSplit,
   restrictForm,
@@ -602,7 +603,7 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
               autoComplete="off"
               placeholder="0.00"
               value={amountText}
-              onChange={(e) => setAmountText(e.target.value)}
+              onChange={(e) => setAmountText(filterAmountInput(e.target.value))}
               className="box-border h-14 w-full min-w-0 rounded-input border-0 bg-transparent p-0 text-[length:var(--text-amount-input)] font-extrabold tracking-[-0.03em] text-on-glow tabular-nums placeholder:text-on-glow/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-glow"
             />
           </label>
@@ -881,7 +882,7 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
               size={48}
               disabled={blocked || saving}
               onClick={() => void save(true)}
-              className="flex-[1_1_150px]"
+              className="flex-[1_1_150px] whitespace-nowrap"
             >
               Save and add another
             </Button>
