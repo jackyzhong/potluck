@@ -33,8 +33,8 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
 | T08 | Activity hero, share card | T07 | done | [PR #22](https://github.com/jackyzhong/potluck/pull/22) |
 | T09 | Ledger table and list | T07 | done | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
-| T10 | Search and filters | T08, T09 | in review | [PR #24](https://github.com/jackyzhong/potluck/pull/24) |
-| T11 | Right panel, drawer, sheet | T07 | in review | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
+| T10 | Search and filters | T08, T09 | done | [PR #24](https://github.com/jackyzhong/potluck/pull/24) |
+| T11 | Right panel, drawer, sheet | T07 | done | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
 | T12 | Expense details | T09, T11, T04 | todo | |
 | T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
@@ -96,6 +96,20 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T10, T11 · claude-opus-5-5
+**Status:** T11 ([PR #23](https://github.com/jackyzhong/potluck/pull/23)) and T10 ([PR #24](https://github.com/jackyzhong/potluck/pull/24)) merged into `glow`. T12, T13 and T15 dispatched.
+**Changed:** resolved the merge conflicts in `page.tsx` and both barrels (`src/components/glow/index.ts`, `src/lib/glow/index.ts`), keeping every side. `FilterProvider` (T10) wraps `GroupFrame`; the `panel` (T11) and `toolbar` (T10) props are both filled.
+**Checked:**
+- Merged `glow`: npm test ✓ (147 pass) · lint ✓ · tsc ✓ · build ✓.
+- Rendered at 1280 with `?e=` set: hero, toolbar, table with the selected row, and the details panel shell all sit as on board 03.
+- Panel width: 300px is right for details. docs/03 gives a 400px basis for the composer, which T13 sets.
+**Decided:**
+- Accepted `history.replaceState` for panel URLs, so browser Back leaves the page rather than closing the panel. The spec doesn't say either way. Revisit in T19 if it feels wrong on phones.
+- Accepted T10's call that the phone list ignores filters (D20 gives phones no filter controls).
+**Next session should know:**
+- T12, T13 and T15 each fill one case in `PanelContent.tsx`, and will conflict there. Keep every side.
+- Workers can't name branches `glow/…` (git refuses them while `glow` exists). PLAN allows any name containing the task id.
 
 ### 2026-11-13 · T10 · claude-sonnet-5-5
 **Status:** done → in review ([PR #24](https://github.com/jackyzhong/potluck/pull/24), branch `glow-T10-search`).
