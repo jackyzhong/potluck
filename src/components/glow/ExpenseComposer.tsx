@@ -250,7 +250,7 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
           rows: original.splits.map((s) => ({ userId: s.user_id, amountCents: s.amount_cents, weight: s.weight }))
         }
       : prefill?.splits
-        ? { mode: prefill.splitMode ?? null, rows: prefill.splits }
+        ? { mode: prefill.splitMode, rows: prefill.splits }
         : null;
     if (stored) {
       const reopened = restrictForm(reopenSplit(stored.mode, stored.rows, decimals), rowIds);
