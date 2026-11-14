@@ -16,9 +16,10 @@
 // history.replaceState, which Next syncs into useSearchParams without a server
 // round trip, and without piling up history entries.
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
+  EMPTY_PANEL,
   discardTitle,
   needsDiscardPrompt,
   parsePanel,
@@ -68,16 +69,45 @@ export function writePanelUrl(pathname: string, state: PanelState) {
 // Two reports of the same finished save (the row arriving and the fallback
 // timer) must give one toast.
 let lastToast = { message: "", at: 0 };
+function announce(toast: ReturnType<typeof useToast>, message: string | null) {
+  const now = Date.now();
+  if (!message || (message === lastToast.message && now - lastToast.at < 1500)) return;
+  lastToast = { message, at: now };
+  toast.show(message);
+}
+
+/**
+ * Toast "Expense deleted" / "Payment deleted" when the row the panel was
+ * showing disappears from the data. Mount it once, in the panel. The details
+ * component can't report this itself: the refreshed data drops the row, the URL
+ * cleanup empties the panel, and the component is gone before its own "deleted"
+ * report runs. (A row someone else deleted while it was open reads the same.)
+ */
+export function useDeletedToast() {
+  const { state } = usePanelState();
+  const { data } = useGlowData();
+  const toast = useToast();
+  const prev = useRef<{ id: string; payment: boolean } | null>(null);
+  const stateId = "id" in state ? state.id : "";
+  useEffect(() => {
+    const exists = (id: string) =>
+      data.expenses.some((e) => e.id === id) || data.payments.some((p) => p.id === id);
+    const was = prev.current;
+    if (was && !exists(was.id)) {
+      announce(toast, toastFor(EMPTY_PANEL, { type: "deleted" }, was.payment));
+      prev.current = null;
+    }
+    if (!stateId) prev.current = null; // closed normally: nothing to announce later
+    else if (exists(stateId)) {
+      prev.current = { id: stateId, payment: data.payments.some((p) => p.id === stateId) };
+    }
+  }, [stateId, data.expenses, data.payments, toast]);
+}
 
 export function usePanelNav() {
   const pathname = usePathname();
   const { state } = usePanelState();
   const toast = useToast();
-  const { data } = useGlowData();
-  // A deleted payment is gone from `data` by the time its delete is reported,
-  // so remember the ids that were payments while they still existed.
-  const paymentIds = useRef(new Set<string>());
-  for (const p of data.payments) paymentIds.current.add(p.id);
 
   const dispatch = useCallback(
     (action: PanelAction) => {
@@ -85,13 +115,8 @@ export function usePanelNav() {
       // A finished save or delete has nothing left to discard.
       if (action.type === "saved" || action.type === "deleted") {
         clearPanelDirty();
-        const id = "id" in state ? state.id : "";
-        const message = toastFor(state, action, paymentIds.current.has(id));
-        const now = Date.now();
-        if (message && !(message === lastToast.message && now - lastToast.at < 1500)) {
-          lastToast = { message, at: now };
-          toast.show(message);
-        }
+        // Deletes are announced by useDeletedToast, once the row is really gone.
+        if (action.type === "saved") announce(toast, toastFor(state, action, false));
       }
       const next = transition(state, action, previous);
       if (samePanelState(state, next)) return;
