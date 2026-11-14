@@ -13,7 +13,7 @@ export function currencyDecimals(code: string): number {
  * positive amount: empty, negative, letters, or more decimals than the currency has.
  * "1,250.5" and "12." are fine; the minus sign never is.
  */
-export function parseAmountCents(input: string, decimals = 2): number | null {
+export function parsePaymentAmountCents(input: string, decimals = 2): number | null {
   const text = input.trim().replace(/,/g, "");
   if (!/^\d*\.?\d*$/.test(text) || text === "" || text === ".") return null;
   const [whole, frac = ""] = text.split(".");
@@ -33,7 +33,7 @@ export type PaymentDraft = { payerId: string; payeeId: string; amount: string };
 export function paymentProblem(draft: PaymentDraft, decimals = 2): string | null {
   if (!draft.payerId || !draft.payeeId) return "Choose who paid and who received it.";
   if (draft.payerId === draft.payeeId) return "Pick two different people.";
-  if (parseAmountCents(draft.amount, decimals) === null) return "Enter an amount greater than zero.";
+  if (parsePaymentAmountCents(draft.amount, decimals) === null) return "Enter an amount greater than zero.";
   return null;
 }
 
@@ -49,7 +49,7 @@ export function dateInputValue(iso: string | Date): string {
  * moment (an edit must not shift the time of day); a changed date keeps the
  * original time of day on the new day, and "today" on a new payment is now.
  */
-export function createdAtFor(dateValue: string, original: string | null, now: Date = new Date()): string {
+export function paymentCreatedAt(dateValue: string, original: string | null, now: Date = new Date()): string {
   const base = original ? new Date(original) : now;
   if (original && dateInputValue(base) === dateValue) return base.toISOString();
   const [y, m, d] = dateValue.split("-").map(Number);
