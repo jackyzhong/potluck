@@ -35,3 +35,8 @@ export { ViewerSwitcher, type ViewerSwitcherProps } from "./ViewerSwitcher";
 // Ledger table and list (T09).
 export { LedgerList } from "./LedgerList";
 export { LedgerTable } from "./LedgerTable";
+
+// Activity summary (T08).
+export { BalanceHero, type BalanceHeroProps } from "./BalanceHero";
+export { PersonChips, type PersonChipsProps } from "./PersonChips";
+export { ShareOfSpendCard } from "./ShareOfSpendCard";
