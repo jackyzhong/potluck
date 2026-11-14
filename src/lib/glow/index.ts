@@ -4,3 +4,4 @@ export * from "./ledger.ts";
 export * from "./money.ts";
 export * from "./avatar.ts";
 export * from "./viewer.ts";
+export * from "./panel.ts";

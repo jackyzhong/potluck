@@ -10,6 +10,7 @@ import GroupFrame from "./GroupFrame";
 import BalancesView from "./BalancesView";
 import { getExchangeRates } from "@/src/lib/balances";
 import { ViewerProvider } from "@/src/components/glow/ViewerProvider";
+import { RightPanel } from "@/src/components/glow/RightPanel";
 
 export default async function LedgerPage({
   params,
@@ -134,7 +135,8 @@ export default async function LedgerPage({
         baseCurrency={baseCurrency}
         users={initialUsers}
         tab={tab === "balances" ? "balances" : "activity"}
-        // summary: T08 (hero, share card) · toolbar: T10 · panel: T11
+        // summary: T08 (hero, share card) · toolbar: T10
+        panel={tab === "balances" ? undefined : <RightPanel />}
         // ledger: T09 replaces the card list below with LedgerTable / LedgerList
         ledger={
           tab === "balances" ? undefined : (

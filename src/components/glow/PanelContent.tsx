@@ -1,0 +1,151 @@
+"use client";
+
+// What goes inside the right panel for each state. These are PLACEHOLDERS (T11
+// builds the shell only):
+//   details  T12 replaces DetailsPlaceholder with ExpenseDetails (boards 15/16)
+//   add/edit T13/T14 replace ComposerPlaceholder with ExpenseComposer
+//   payments T15 adds its own states
+// Whatever you put here gets the panel header from PanelHeader, marks its first
+// meaningful control `data-autofocus`, and reports unsaved input with
+// usePanelDirty() (panelStore.ts).
+
+import { useState } from "react";
+import { Button } from "./Button";
+import { Kbd } from "./Kbd";
+import { CloseIcon } from "./icons";
+import { Money } from "./Money";
+import { useGlowData } from "./ViewerProvider";
+import { usePanelNav } from "./usePanel";
+import { usePanelDirty } from "./panelStore";
+import type { PanelState } from "@/src/lib/glow/panel";
+
+/**
+ * Title row of every panel state (boards 15/17): 20px title, the Esc hint on
+ * devices with a keyboard, and a 44px close button. On a phone sheet the row is
+ * also the swipe-down handle (`data-panel-grab`).
+ */
+export function PanelHeader({
+  title,
+  titleId,
+  focusTitle,
+  onClose
+}: {
+  title: string;
+  titleId?: string;
+  /** Put focus on the title when the panel opens (details: "the title in details"). */
+  focusTitle?: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <div data-panel-grab className="flex items-center justify-between gap-3">
+      <h2
+        id={titleId}
+        tabIndex={-1}
+        data-autofocus={focusTitle ? "" : undefined}
+        className="m-0 min-w-0 text-[20px] font-extrabold leading-tight tracking-[-0.01em] outline-none"
+      >
+        {title}
+      </h2>
+      <button
+        type="button"
+        aria-label="Close"
+        data-modal-close
+        onClick={onClose}
+        className="flex h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-transparent px-1.5 text-text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
+        <Kbd aria-hidden="true">Esc</Kbd>
+        <CloseIcon size={20} />
+      </button>
+    </div>
+  );
+}
+
+/** What the title row says for a state. */
+export function usePanelTitle(state: PanelState): string {
+  const { data } = useGlowData();
+  switch (state.kind) {
+    case "add":
+      return "Add expense";
+    case "edit":
+      return "Edit expense";
+    case "details": {
+      const expense = data.expenses.find((e) => e.id === state.id);
+      if (expense) return expense.description?.trim() || "Untitled expense";
+      return data.payments.some((p) => p.id === state.id) ? "Payment" : "Details";
+    }
+    case "empty":
+      return "";
+  }
+}
+
+export function EmptyPlaceholder() {
+  const nav = usePanelNav();
+  return (
+    <div className="flex flex-col items-start gap-4 py-2">
+      <p className="m-0 text-text-muted">Select an expense to see how it was split.</p>
+      <Button size={48} kbd="N" onClick={nav.openAdd}>
+        Add expense
+      </Button>
+    </div>
+  );
+}
+
+function DetailsPlaceholder({ id }: { id: string }) {
+  const { data, currency } = useGlowData();
+  const nav = usePanelNav();
+  const expense = data.expenses.find((e) => e.id === id);
+  const payment = expense ? undefined : data.payments.find((p) => p.id === id);
+  const cents = expense?.amount_cents ?? payment?.amount_cents ?? 0;
+  return (
+    <>
+      <span className="text-[44px] font-extrabold leading-[1.05] tracking-[-0.03em]">
+        <Money cents={cents} currency={currency} />
+      </span>
+      {expense ? (
+        <div className="flex flex-wrap gap-2">
+          <Button size={48} kbd="E" onClick={nav.openEdit} className="flex-[1_1_110px]">
+            Edit
+          </Button>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function ComposerPlaceholder({ mode, id }: { mode: "add" | "edit"; id?: string }) {
+  const nav = usePanelNav();
+  const [draft, setDraft] = useState("");
+  usePanelDirty(draft !== "");
+  return (
+    <>
+      <label className="flex flex-col gap-1 text-[length:var(--text-meta)] font-semibold">
+        Placeholder field (the composer arrives in T13)
+        <input
+          data-autofocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          className="h-11 rounded-input border border-line-strong bg-surface-sunken px-3 font-normal text-text"
+        />
+      </label>
+      {mode === "edit" && id ? (
+        <Button size={48} onClick={() => nav.dispatch({ type: "saved", id })}>
+          Save changes
+        </Button>
+      ) : null}
+    </>
+  );
+}
+
+/** Everything below the header, for one state. */
+export function PanelBody({ state }: { state: PanelState }) {
+  switch (state.kind) {
+    case "empty":
+      return <EmptyPlaceholder />;
+    case "details":
+      return <DetailsPlaceholder id={state.id} />;
+    case "add":
+      return <ComposerPlaceholder mode="add" />;
+    case "edit":
+      return <ComposerPlaceholder mode="edit" id={state.id} />;
+  }
+}

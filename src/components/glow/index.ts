@@ -31,3 +31,9 @@ export { ViewerAvatarButton, ViewerPill } from "./ViewerPill";
 export { ViewerMenu, type ViewerMenuProps } from "./ViewerMenu";
 export { ViewerSheet, type ViewerSheetProps } from "./ViewerSheet";
 export { ViewerSwitcher, type ViewerSwitcherProps } from "./ViewerSwitcher";
+
+// Right panel, drawer and sheet (T11). Fill GroupFrame's `panel` slot with <RightPanel />.
+export { RightPanel, usePanelLayout } from "./RightPanel";
+export { PanelHeader } from "./PanelContent";
+export { usePanelNav, usePanelState } from "./usePanel";
+export { usePanelDirty } from "./panelStore";
