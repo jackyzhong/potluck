@@ -99,6 +99,20 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
 
+### 2026-11-14 · T21 polish · claude-sonnet-5-5
+**Status:** six polish fixes on `glow-T21-ship`, PR into `glow-T21-ship`.
+**Changed:**
+- Amount inputs (ExpenseComposer, PaymentComposer) only accept digits, one point and commas (`filterAmountInput` in `composer.ts`); `parseAmountCents` still validates.
+- `details.ts`: a null `split_mode` row whose 2+ shares are within one cent and sum to the total reads "equally, N ways" (Pizza Badiali, board 15). Tests added.
+- Details panel gets the 400px basis (`globals.css` `data-panel-kind` rule).
+- "Save and add another" is `whitespace-nowrap`.
+- Exact body pads to "20.00" on blur; stored cents unchanged.
+- EveryoneBreakdown: Payments cells `whitespace-nowrap`; expanded-row lines wrap instead of truncating (this applies to the "Paid for the group" column too, since both use `Line`).
+**Checked:** npm test ✓ · lint ✓ · tsc ✓ · build ✓ · browser, light mode, on the seeded group (nothing saved): typed text in amount shows "64.50"; Pizza reads "equally, 6 ways" and the panel is 400px at 1280 and 1440 with no page overflow (ledger 816px at 1280, 976px at 1440); Save and add another is one line at 1280 and 390; Exact "20" becomes "20.00" on Tab; Balances Payments on one line and share labels wrap at 1280. Not checked: PaymentComposer amount field in the browser, the details panel at 1024-1100 widths, the Percent and Shares bodies.
+**Differs from the boards:** the Net column in Balances still wraps "gets back CA$185.41" at 1280 (not in scope).
+
+---
+
 ### 2026-11-14 · review T19 · claude-opus-5-5
 **Status:** T19 ([PR #32](https://github.com/jackyzhong/potluck/pull/32)) merged into `glow`. Every build task (T01–T20) is now done. T21's agent part is next.
 **Checked:**

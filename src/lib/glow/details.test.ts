@@ -89,6 +89,19 @@ test("split sentence by stored mode; null says custom split", () => {
   assert.equal(splitSentence("weird", 3), "custom split");
 });
 
+test("legacy rows with equal shares read as an equal split; others stay custom", () => {
+  const legacy = { ...base, splitMode: null, shares: { j: 1829, s: 1829, an: 1829, al: 1829, m: 1829, jo: 1829 } };
+  assert.equal(detailsModel(legacy).splitText, "equally, 6 ways");
+  assert.equal(detailsModel({ ...legacy, splitMode: undefined }).splitText, "equally, 6 ways");
+  // A stored mode always wins.
+  assert.equal(detailsModel({ ...legacy, splitMode: "exact" }).splitText, "by exact amounts");
+  // Unequal, or not adding up to the total, stays custom.
+  const uneven = { j: 5000, s: 3000, an: 2974 };
+  assert.equal(detailsModel({ ...legacy, shares: uneven }).splitText, "custom split");
+  assert.equal(detailsModel({ ...legacy, totalCents: 10000 }).splitText, "custom split");
+  assert.equal(detailsModel({ ...legacy, shares: { j: 10974 } }).splitText, "custom split");
+});
+
 test("meta leaves out 'added by' on old rows", () => {
   assert.equal(detailsMeta("Sep 8", null, "j", nameOf), "Sep 8");
   assert.equal(detailsMeta("Sep 8", "s", "j", nameOf), "Sep 8 · added by Stephen");
