@@ -36,7 +36,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T10 | Search and filters | T08, T09 | done | [PR #24](https://github.com/jackyzhong/potluck/pull/24) |
 | T11 | Right panel, drawer, sheet | T07 | done | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
 | T12 | Expense details | T09, T11, T04 | done | [PR #25](https://github.com/jackyzhong/potluck/pull/25) |
-| T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
+| T13 | Composer: shell, Equally | T11, T04, T05 | in review | [PR #26](https://github.com/jackyzhong/potluck/pull/26) |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
 | T15 | Payments: add, details, edit | T11, T09 | todo | |
 | T16 | Balances tab | T07, T15 | todo | |
@@ -96,6 +96,36 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T13 · claude-sonnet-5-5
+**Status:** in progress → in review ([PR #26](https://github.com/jackyzhong/potluck/pull/26), branch `glow-T13-composer`).
+**Changed:**
+- `src/components/glow/ExpenseComposer.tsx` (new): add mode, Equally. Gradient card (description with n/50, 48px amount, currency pill), "Paid by [●] on [date]" pills (small shared `PillPopover`: Esc, outside press, arrows, focus back to the pill), `SegmentedControl` split tabs, Equally body (checkbox rows, "Include everyone", remainder note), `StatusStrip` with the impact line, error line, "Save and add another" and "Save expense ⌘↵" with the blocked reason as its label.
+- `src/components/glow/composerPrefill.ts` (new): `setComposerPrefill(prefill)`, `ComposerPrefill` type (`description`, `amountCents`, `payerId`, `participantIds`), plus `peek`/`clear`. The composer reads it on its first render and clears it in an effect, so it applies to one opening. **T12's Duplicate:** call `setComposerPrefill(...)` then `usePanelNav().openAdd()`. The coordinator wires that. Date is not prefilled (today).
+- `src/lib/glow/composer.ts` + `composer.test.ts` (new, exported from the index): `parseAmountCents`, `dayString`, `createdAtFor` (D7), `dayLabel`, `joinNames`. The test also pins the 6450 / 4 example through `splitEqually`, `equalSplitExtraCentMembers` and `composerImpact`.
+- Shared files, only the planned lines: `PanelContent.tsx` (the `add` case renders `ExpenseComposer`; the edit placeholder stays for T14); `GroupFrame.tsx` (header and phone-bar Add expense call `usePanelNav().openAdd`); `RightPanel.tsx` (one attribute, `data-panel-kind` on the inline card); `globals.css` (one rule: a panel slot holding add or edit gets `flex-basis: 400px`, details stay 300px).
+**Checked:** npm test ✓ (153 pass, 1 skipped as before) · lint ✓ · tsc ✓ · build ✓. In the built-in browser on seeded Veld with `npm run dev` (port 3413, stopped), my own tab, dark theme only, viewed as Jacky:
+- Board 09 example: 64.50, Angus and Matthew unticked gives You 16.13, Stephen 16.13, Alvin 16.12, Jonah 16.12; note "CA$64.50 doesn't divide evenly by 4, so you and Stephen each take an extra cent."; strip "Fully assigned · You'll be owed CA$48.37 more".
+- ⌘↵ with focus in a checkbox saved. Dev DB row: `split_mode` equal, `created_by` the viewer, `weight` null, splits 1613/1613/1612/1612. The row showed in the ledger with +CA$48.37 and the panel moved to details, without a reload.
+- A failed save (amount over the server limit) showed "Enter an amount greater than zero." in a red line above the actions, kept every field and stayed on add.
+- Save and add another: row appeared without reload, description and amount cleared, focus on amount, panel stayed on add.
+- Esc with an amount typed opened "Discard this expense?"; Discard closed the panel. Payer and date popovers open. Phone (390): the sheet renders with no ⌘↵ hint. Panel is about 400px wide at 1440.
+- Test expenses deleted from dev (`T13 …`). I did not reseed; someone else reseeded Veld while I worked.
+- **Not checked:** light mode, a true side-by-side with boards 09/10/17/18, screen reader, the drawer (640–1023), the currency pill's menu, picking a date from the calendar, Prefill (no caller yet, so only read through), a keyboard-only pass.
+**Saving and the refresh (coordinator's note):** on a normal save the composer calls `router.refresh()` and does NOT switch panels yet. An effect watches `useGlowData().data.expenses` for the new id and dispatches `{type:"saved"}` once it arrives (5s fallback). Dispatching straight away would write `?e=<new id>`, which `parsePanel` drops as unknown, and the URL rewrite races the refresh. "Save and add another" dispatches `saved` with `another: true`, which leaves the URL alone.
+**Differs from the boards:** nothing noticed at the pixel level in the screenshots I took, but not compared side by side. Exact, Percent and Shares tabs are selectable but show "Exact, Percent and Shares aren't built yet..." and Save reads "Split equally to save" until T14. "Include everyone" is hidden (not greyed) when everyone is already included.
+**Decided:**
+- Payer = the viewer until someone picks (kept as a choice, not copied into state, because the viewer is only known after the first render). With no viewer yet the pill says "Choose" and Save reads "Choose who paid"; the impact detail is omitted.
+- Dirty = description or amount has text. Changing payer, date or participants alone doesn't prompt.
+- No N key exists in the frame yet (T17 builds shortcuts), so only the Add expense buttons were switched. `ExpenseModal` is still mounted in `GroupFrame` but nothing opens it any more; T14 removes it.
+- Remainder note grammar: one extra-cent person gets "so Stephen takes an extra cent." / "so you take an extra cent."; two or more keep docs/06's "each take".
+- The date control is a popover (Today, Yesterday, native date input) rather than a custom calendar. Date is written per D7 (`createdAtFor`). Currency pill uses the app's existing 3-currency list (D8).
+- No toast on save: D15's toast belongs to T18.
+**New copy:** "Choose" and "Choose who paid" (no payer yet); "Pick a date"; "Split equally to save" and the not-built-yet line (placeholders for T14); "Saving…"; "Couldn't save that. Check your connection and try again." (network failure; server errors show the server's message); "Pick a valid date."
+**Next session should know:**
+- T14: `mode` is already state in `ExpenseComposer`; the body switch and the `save()` splits/`splitMode`/`weight` are the places to extend. Edit mode: `data-panel-kind="edit"` already gets the 400px basis.
+- `ExpenseComposer` reads the ledger id from `useParams()`.
+- A breakpoint resize remounts the shell and loses the form (known from T11).
 
 ### 2026-11-13 · review T12 · claude-opus-5-5
 **Status:** T12 ([PR #25](https://github.com/jackyzhong/potluck/pull/25)) merged into `glow`. T13 and T15 are still running.
