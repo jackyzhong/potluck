@@ -174,7 +174,7 @@ export async function savePayment(
   ledgerId: unknown,
   paymentId: unknown,
   input: unknown
-): Promise<ActionResult> {
+): Promise<ActionResult<{ id: string }>> {
   if (!isUuid(ledgerId)) return rejected("Invalid request.");
   if (paymentId !== null && !isUuid(paymentId)) return rejected("Invalid request.");
   const parsed = parsePaymentInput(input);
@@ -205,7 +205,7 @@ export async function savePayment(
 
   if (error) return failed("savePayment", error);
   if (!data?.length) return rejected("That payment no longer exists.");
-  return { ok: true, data: undefined };
+  return { ok: true, data: { id: String(data[0].id) } };
 }
 
 export async function deletePayment(ledgerId: unknown, paymentId: unknown): Promise<ActionResult> {

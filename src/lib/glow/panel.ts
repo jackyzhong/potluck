@@ -4,6 +4,7 @@
 //   (nothing)                  empty
 //   ?e=<id>                    details(id)
 //   ?panel=add                 add
+//   ?panel=pay                 pay (add a payment, T15)
 //   ?e=<id>&panel=edit         edit(id)
 //
 // Other params (?tab=, anything a later task adds) pass through untouched.
@@ -12,6 +13,7 @@ export type PanelState =
   | { kind: "empty" }
   | { kind: "details"; id: string }
   | { kind: "add" }
+  | { kind: "pay" }
   | { kind: "edit"; id: string };
 
 /** The two params the panel owns. */
@@ -52,6 +54,10 @@ export function parsePanel(
     if (e) return { state: { kind: "details", id: e }, needsCleanup: true };
     return { state: { kind: "add" }, needsCleanup: staleE };
   }
+  if (params.panel === "pay") {
+    if (e) return { state: { kind: "details", id: e }, needsCleanup: true };
+    return { state: { kind: "pay" }, needsCleanup: staleE };
+  }
   if (params.panel === "edit") {
     if (!e) return { state: EMPTY_PANEL, needsCleanup: true };
     if (opts.editingId && opts.editingId !== e) {
@@ -72,6 +78,8 @@ export function panelToParams(state: PanelState): PanelParams {
       return { e: state.id, panel: null };
     case "add":
       return { e: null, panel: "add" };
+    case "pay":
+      return { e: null, panel: "pay" };
     case "edit":
       return { e: state.id, panel: "edit" };
   }
@@ -98,6 +106,7 @@ export function samePanelState(a: PanelState, b: PanelState): boolean {
 export type PanelAction =
   | { type: "select"; id: string } // click a row, Enter on a row
   | { type: "add" } // Add expense, N, Duplicate
+  | { type: "pay" } // Add payment, P, Mark paid
   | { type: "edit" } // Edit, E (only from details)
   | { type: "close" } // Esc, close button, scrim, swipe down
   | { type: "saved"; id: string; another?: boolean } // a save finished
@@ -118,12 +127,15 @@ export function transition(
       return { kind: "details", id: action.id };
     case "add":
       return { kind: "add" };
+    case "pay":
+      return { kind: "pay" };
     case "edit":
       if (state.kind === "details" || state.kind === "edit") return { kind: "edit", id: state.id };
       return state;
     case "close":
       switch (state.kind) {
         case "add":
+        case "pay":
           return previous.kind === "details" ? previous : EMPTY_PANEL;
         case "edit":
           return { kind: "details", id: state.id };
@@ -131,7 +143,7 @@ export function transition(
           return EMPTY_PANEL;
       }
     case "saved":
-      if (state.kind === "add") {
+      if (state.kind === "add" || state.kind === "pay") {
         return action.another ? state : { kind: "details", id: action.id };
       }
       if (state.kind === "edit") return { kind: "details", id: state.id };
@@ -146,12 +158,13 @@ export function transition(
 /** Leaving an add or an edit with unsaved input must ask first. Moving to the same state doesn't. */
 export function needsDiscardPrompt(from: PanelState, to: PanelState, dirty: boolean): boolean {
   if (!dirty) return false;
-  if (from.kind !== "add" && from.kind !== "edit") return false;
+  if (from.kind !== "add" && from.kind !== "pay" && from.kind !== "edit") return false;
   return !samePanelState(from, to);
 }
 
 /** docs/06 "discard": "Discard this expense?" for a new one, "Discard changes?" for an edit. */
 export function discardTitle(from: PanelState): string {
+  if (from.kind === "pay") return "Discard this payment?";
   return from.kind === "edit" ? "Discard changes?" : "Discard this expense?";
 }
 

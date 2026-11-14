@@ -160,3 +160,40 @@ test("only the inline panel shows while empty", () => {
   assert.equal(isPanelVisible("sheet", empty), false);
   assert.equal(isPanelVisible("sheet", details("a")), true);
 });
+
+// ---------- add payment (T15) ----------
+
+const pay: PanelState = { kind: "pay" };
+
+test("?panel=pay is the add-payment state and round-trips", () => {
+  assert.deepEqual(parsePanel(p(null, "pay")).state, pay);
+  assert.deepEqual(panelToParams(pay), p(null, "pay"));
+  assert.equal(withPanelState("tab=activity&e=a", pay), "tab=activity&panel=pay");
+  const back = parsePanel(readPanelParams(new URLSearchParams(withPanelState("", pay)))).state;
+  assert.deepEqual(back, pay);
+});
+
+test("a row click next to ?panel=pay wins, and a stale e is cleaned", () => {
+  const r = parsePanel(p("x2", "pay"));
+  assert.deepEqual(r.state, details("x2"));
+  assert.equal(r.needsCleanup, true);
+  const stale = parsePanel(p("gone", "pay"), { knownIds: new Set(["x1"]) });
+  assert.deepEqual(stale.state, pay);
+  assert.equal(stale.needsCleanup, true);
+});
+
+test("any state -> pay; close goes back; save lands on the new payment's details", () => {
+  assert.deepEqual(transition(details("x1"), { type: "pay" }), pay);
+  assert.deepEqual(transition(add, { type: "pay" }), pay);
+  assert.deepEqual(transition(pay, { type: "close" }, details("x1")), details("x1"));
+  assert.deepEqual(transition(pay, { type: "close" }), empty);
+  assert.deepEqual(transition(pay, { type: "saved", id: "p1" }), details("p1"));
+  assert.deepEqual(transition(edit("p1"), { type: "saved", id: "p1" }), details("p1"));
+});
+
+test("a dirty pay asks before leaving, with payment wording", () => {
+  assert.equal(needsDiscardPrompt(pay, details("x1"), true), true);
+  assert.equal(needsDiscardPrompt(pay, details("x1"), false), false);
+  assert.equal(needsDiscardPrompt(pay, pay, true), false);
+  assert.equal(discardTitle(pay), "Discard this payment?");
+});
