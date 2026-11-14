@@ -7,12 +7,13 @@
 // and an itemised expense opens its details, so the panel has to exist here as
 // it does on Activity. It takes no room while it is closed.
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { planHeroLine, settlePlan } from "@/src/lib/glow/balances";
 import { BalancesHero } from "./BalancesHero";
 import { EveryoneBreakdown } from "./EveryoneBreakdown";
 import { RightPanel } from "./RightPanel";
 import { SettleUpPlan } from "./SettleUpPlan";
+import { useRegisterSimplifyToggle } from "./simplifyShortcut";
 import { useSimplifyDebts } from "./useSimplifyDebts";
 import { usePanelState } from "./usePanel";
 import { useGlowData, useViewer } from "./ViewerProvider";
@@ -27,6 +28,12 @@ export function BalancesTab({ ledgerId, simplified: savedSimplified }: BalancesT
   const { viewerId, members } = useViewer();
   const { data } = useGlowData();
   const { simplified, saving, error, set } = useSimplifyDebts(ledgerId, savedSimplified);
+
+  // The D key (T17). Like a click on the switch, it does nothing while a save is in flight.
+  const toggleSimplify = useCallback(() => {
+    if (!saving) set(!simplified);
+  }, [saving, set, simplified]);
+  useRegisterSimplifyToggle(toggleSimplify);
 
   const plan = useMemo(() => settlePlan(data, simplified, viewerId), [data, simplified, viewerId]);
   const nameOf = (id: string) => members.find((m) => m.id === id)?.name ?? "Someone";

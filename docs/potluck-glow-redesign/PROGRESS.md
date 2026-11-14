@@ -37,10 +37,10 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T11 | Right panel, drawer, sheet | T07 | done | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
 | T12 | Expense details | T09, T11, T04 | done | [PR #25](https://github.com/jackyzhong/potluck/pull/25) |
 | T13 | Composer: shell, Equally | T11, T04, T05 | done | [PR #26](https://github.com/jackyzhong/potluck/pull/26) |
-| T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
+| T14 | Composer: Exact, Percent, Shares, Edit | T13 | done | [PR #29](https://github.com/jackyzhong/potluck/pull/29) |
 | T15 | Payments: add, details, edit | T11, T09 | done | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
 | T16 | Balances tab | T07, T15 | done | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
-| T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
+| T17 | Keyboard shortcuts | T10, T12, T14, T16 | done | [PR #30](https://github.com/jackyzhong/potluck/pull/30) |
 | T18 | States and edge cases | T16 | in progress (`glow-T18-states`) | |
 | T19 | Accessibility and motion pass | T18 | todo | |
 | T20 | Home and create-group restyle | T02 | done | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
@@ -94,6 +94,89 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 ```
 
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
+
+---
+
+### 2026-11-13 · review T17 · claude-opus-5-5
+**Status:** T17 ([PR #30](https://github.com/jackyzhong/potluck/pull/30)) merged into `glow`. T18 is still running.
+**Checked:**
+- Merged `glow`: npm test ✓ · lint ✓ · tsc ✓ · build ✓.
+- One document listener, cleaned up on unmount. It skips typing targets, other open modal dialogs, and Cmd/Ctrl/Alt.
+**Next session should know (for T19):**
+- Any non-panel modal turns every shortcut off, Esc included. That's fine because native dialogs handle their own Esc. Confirm it in the a11y pass.
+- Focused checkboxes count as inputs.
+- The footer lists only docs/06's keys, not 1/2/V.
+
+### 2026-11-13 · T17 · claude-sonnet-5-5
+**Status:** in progress → in review (branch `glow-T17-keys`).
+**Changed:**
+- `src/lib/glow/shortcuts.ts` + `shortcuts.test.ts` (new, 10 tests, exported from the index): `shortcutAction` (key to action), `isTypingTarget`, `moveIndex`, `escapeStep`.
+- `src/components/glow/useShortcuts.ts` (new): the one document keydown listener, mounted once in `GroupFrame`. `simplifyShortcut.ts` (new): `BalancesTab` registers its toggle there so D works without lifting `useSimplifyDebts`.
+- Minimum wiring: `GroupFrame` (one hook call), `BalancesTab` (register D), `data-nav-row` on the ledger row buttons (`LedgerTable`, `LedgerList`) and the Balances person buttons (`EveryoneBreakdown`), `data-shortcut="search"` on the search field in `ActivityToolbar`.
+- `Kbd` and `ShortcutFooter` now show only for fine pointers (`hover: hover` and `pointer: fine`); `Kbd` was only hiding on `hover: none`.
+**Checked:** npm test ✓ (233 pass, 1 skipped) · lint ✓ · tsc ✓ · build ✓. Built-in browser, my own tab, `npm run dev` on port 3717 (stopped), seeded Veld, dark, as Jacky:
+- N, P, E, Esc, J/K, Enter, `/`, 1, 2, D, V all work on Activity; N, P, J/K, Enter, D, Esc, 1 work on Balances. D flipped Simplify off and on again (restored to on).
+- Not firing: N, P and the rest with the "Which one are you?" dialog open; letters typed into the composer's amount field (no panel or tab change); N inside the open viewing-as menu. Esc closed the menu, then the panel, then cleared the search, then blurred it. Esc on a dirty edit gave one Discard prompt (no double close); N under that prompt did nothing.
+- Edit save, Cmd+Enter and Save were not exercised (nothing written); Cmd+Enter is the composers' own handler and is skipped by the listener.
+- **Not checked:** touch device (the hide rule is in the built CSS only), light mode, the drawer/sheet layouts with keys, a screen reader. Another worker's server navigated my first tab (tab-1) mid-run; I closed my second tab and only pressed N in tab-1 on the other worker's page (UI only, nothing saved).
+**Differs from the boards:** nothing visual changed.
+**Decided:**
+- Enter has no handler: J/K move real focus onto a row's button (ledger description button, Balances person button) and Enter then clicks it natively. Before the first J, Enter does nothing. J/K start from the focused row, else the row in `?e=`, and stop at the ends.
+- Typing means input, textarea, select, contenteditable, or anything inside `role="menu"`/`listbox` (so type-ahead in the viewing-as menu is safe). Checkboxes count as inputs: shortcuts are off while one is focused.
+- Any modal dialog other than the panel's drawer/sheet (members, viewer sheet, Discard prompt) switches every key off, Esc included; a native dialog handles its own Esc. Ctrl, Cmd and Alt are never ours; Shift only for `/`.
+- Esc: the viewing-as menu closes itself first; the inline panel closes itself when focus is inside it; otherwise the listener closes the panel (through the Discard guard), then clears the search (Activity), then blurs the field.
+- E works only while details is showing (expenses and payments); D only when the Balances tab is mounted and no save is in flight.
+- `V` toggles the viewing-as menu; `/` and `E` are ignored on Balances, `D` on Activity.
+**Next session should know:** T19 can check focus rings on J/K-focused rows. The footer hints still list only the docs/06 keys (no `1 2` or `V`).
+
+### 2026-11-13 · review T14 · claude-opus-5-5
+**Status:** T14 ([PR #29](https://github.com/jackyzhong/potluck/pull/29)) merged into `glow`. T17 dispatched; T18 resumed after the usage limit.
+**Checked:**
+- Merged `glow`: npm test ✓ (223 pass) · lint ✓ · tsc ✓ · build ✓.
+- Percent validation works in integer hundredths. Every docs/04 "Validation per mode" row has a test.
+- Money goes through `splitAmounts` (D5/D6).
+- KNOWN-ISSUES 1.2 is fixed per the worker's dev-DB check (a percent expense reopens as percent with its weights). T21 updates KNOWN-ISSUES.
+**Remaining `alert()`/`confirm()`:**
+- `ExpenseModal`, `PaymentModal` and `BalancesView`: no longer rendered, so T21 deletes them.
+- `UserManagementModal` and `create-group/page.tsx`: T18 replaces them.
+**Decided (accepting the worker's calls):**
+- Rows with zero shares or amount aren't saved.
+- Switching tabs fills an untouched tab from the previous one, which can be a cent off between Exact and Percent.
+- Shares are capped at 999.
+- An edit sends `createdBy` null, so "added by" stays the original adder.
+
+### 2026-11-13 · T14 · claude-sonnet-5-5
+**Status:** in progress → in review (branch `glow-T14-modes`, PR in the board row). **KNOWN-ISSUES 1.2 is fixed** (T21 updates that file): a percent expense reopens as percent with the typed numbers.
+**Changed:**
+- `src/lib/glow/composerSplit.ts` (+ test, exported): the split form as data. `reopenSplit` (stored mode and weights; null mode or a weighted row with a missing weight opens in Exact, D13), `formCents` / `formToSplits` (all cents through `splitAmounts`, so D5/D6 hold; percent is held in hundredths so "exactly 100" is an integer check), `seedForMode` (carry numbers across tabs), the blank-rows helper, input sanitising, `rowsShowSave`.
+- `src/lib/glow/composerValidation.ts` (+ test, exported): `checkSplit`, one test per row of docs/04 "Validation per mode" plus "no amount".
+- `src/components/glow/SplitBodies.tsx` (new): Exact, Percent and Shares bodies (Shares: integer steppers, default 1, min 0, D17).
+- `ExpenseComposer.tsx`: all four modes, edit mode (`editId` prop: "Edit expense" from the panel title, "Save changes", Delete with the D14 inline confirm), validation and strip from `checkSplit`.
+- `composerPrefill.ts`: `ComposerPrefill` gained `splitMode` and `splits`; `ExpenseDetails.tsx`: Edit calls `nav.openEdit()`, Duplicate passes mode and weights, `ExpenseModal` import and mount removed.
+- `PanelContent.tsx`: only the `edit` case for expense ids (payment ids still go through T15's `PaymentOr`); `ComposerPlaceholder` removed. `GroupFrame.tsx`: `ExpenseModal` mount and the `"expense"` modal state removed (`baseCurrency` prop stays in the type, unused). `ExpenseModal.tsx` is left for T21; only its types are still imported.
+**Checked:** npm test ✓ (211 pass, 1 skipped as before) · lint ✓ · tsc ✓ · build ✓. Built-in browser, own tab, seeded Veld on `npm run dev` (port 3414, stopped), viewed as Jacky, 1280 wide, dark theme only:
+- Exact (64.50): equal seed, then 20 / 14.50 / 10 gives "CA$20.00 left to assign" · "CA$44.50 of CA$64.50", the helper "Split CA$20.00 across the 3 blank rows", Save reading "Assign CA$20.00 more to save" (board 11/12). 80 for You gives "CA$40.00 too much" and "Remove CA$40.00 to save". The helper then fills 6.67 / 6.67 / 6.66 and the strip goes to Fully assigned.
+- Percent: 40+30 gives "30% left to assign" · "70% of 100%", 40/30/20 gives 10% left, 150 gives "50% too much", Save reads "Make it add up to 100%". 40/30/20/10 gives "100% assigned" and "You'll be owed CA$38.70 more" (board 13/14, looked the same in a screenshot).
+- Saved 40/30/25/5 on 64.50 (dev DB: `split_mode` percent, cents 2580/1935/1613/322, weights 40/30/25/5). Details showed it, Edit reopened Percent with 40/30/blank/25/blank/5 (KNOWN-ISSUES 1.2). Editing description and percentages and Save changes updated the ledger row in about 1.2s with no reload, then the panel went to details.
+- Shares: seed 1 each; 3/1/1/1/0/0 on 10.01 shows 5.00 / 1.67 / 1.67 / 1.67; all zero gives "Add at least one share" (blocked). Saved, Edit reopened Shares with the same counts.
+- Old null-mode row (Pizza Badiali) opened in Exact with 18.29 each. Switching to Percent then Esc asked "Discard changes?"; Discard closed.
+- Delete from edit: inline "Delete this expense? This can't be undone.", focus on Cancel, Cancel returns focus to Delete, Delete removes the row and empties the panel (about 0.9s).
+- Duplicate of the percent expense opens add in Percent with the same percentages.
+- Re-seeded afterwards.
+- **Not checked:** light mode; phone (390) and drawer layouts; a true side-by-side with boards 11-14 beyond one screenshot of Percent; Equally edit and Exact edit saves (only unit-tested); changing currency in edit; screen reader and keyboard-only pass; the ⌘↵ shortcut in the new bodies.
+**Differs from the boards:** nothing noticed in the one Percent screenshot. Edit has no board: Delete sits as a text button left of "Save changes", and "Save and add another" is hidden in edit.
+**Decided:**
+- Zero rows are not saved (Exact blank or 0, Percent 0, Shares 0): they reopen as blank or 0. Percent and Shares rows carry `weight`; Exact and Equally carry null.
+- Switching tabs fills a tab the person hasn't typed in from the one they leave (equal to exact: each equal share; exact to percent: percentages by largest remainder over 100.00, so they sum to exactly 100; to shares: 1 each for whoever was in). A tab they have typed in keeps its numbers. Exact to percent is lossy by a cent at times (Pizza: 91.45 became 91.44); the strip shows it.
+- Percent under 100 shows each row as its own percent of the total (the rest unassigned); over 100 shows no amounts.
+- Fields are cleaned as typed (digits, one point, currency decimals; percent 2 decimals; shares 0 to 999, a UI sanity cap).
+- Edit sends `createdBy` null (the database ignores it on edit) and keeps `created_at` untouched when the day isn't changed.
+- Edit's "dirty" is any difference from what was opened. Edit shows archived members only if they are on the expense.
+**New copy:** "Add at least one share" as the blocked Save label (docs/06 has it only for the strip); "Put {x} in the blank row" and the other helper strings are docs/06's; "Couldn't delete this expense. Check your connection and try again." (same as details); stepper labels "Fewer shares for {name}" / "More shares for {name}".
+**Next session should know:**
+- After an edit save the composer calls `router.refresh()` and moves to details only when `rowsShowSave` sees the new rows (5s fallback), so the URL write doesn't race the refresh. Delete does the same.
+- `nav.openEdit()` takes no id: it edits whatever details shows. `PanelContent` keys the composer by id.
+- T17's `E` and `⌘↵` shortcuts can use `usePanelNav().openEdit()` and the form's own submit.
 
 ---
 
