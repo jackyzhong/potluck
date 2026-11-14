@@ -37,7 +37,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T11 | Right panel, drawer, sheet | T07 | done | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
 | T12 | Expense details | T09, T11, T04 | done | [PR #25](https://github.com/jackyzhong/potluck/pull/25) |
 | T13 | Composer: shell, Equally | T11, T04, T05 | done | [PR #26](https://github.com/jackyzhong/potluck/pull/26) |
-| T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
+| T14 | Composer: Exact, Percent, Shares, Edit | T13 | in review | [PR #29](https://github.com/jackyzhong/potluck/pull/29) |
 | T15 | Payments: add, details, edit | T11, T09 | done | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
 | T16 | Balances tab | T07, T15 | done | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
@@ -94,6 +94,41 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 ```
 
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
+
+---
+
+### 2026-11-13 · T14 · claude-sonnet-5-5
+**Status:** in progress → in review (branch `glow-T14-modes`, PR in the board row). **KNOWN-ISSUES 1.2 is fixed** (T21 updates that file): a percent expense reopens as percent with the typed numbers.
+**Changed:**
+- `src/lib/glow/composerSplit.ts` (+ test, exported): the split form as data. `reopenSplit` (stored mode and weights; null mode or a weighted row with a missing weight opens in Exact, D13), `formCents` / `formToSplits` (all cents through `splitAmounts`, so D5/D6 hold; percent is held in hundredths so "exactly 100" is an integer check), `seedForMode` (carry numbers across tabs), the blank-rows helper, input sanitising, `rowsShowSave`.
+- `src/lib/glow/composerValidation.ts` (+ test, exported): `checkSplit`, one test per row of docs/04 "Validation per mode" plus "no amount".
+- `src/components/glow/SplitBodies.tsx` (new): Exact, Percent and Shares bodies (Shares: integer steppers, default 1, min 0, D17).
+- `ExpenseComposer.tsx`: all four modes, edit mode (`editId` prop: "Edit expense" from the panel title, "Save changes", Delete with the D14 inline confirm), validation and strip from `checkSplit`.
+- `composerPrefill.ts`: `ComposerPrefill` gained `splitMode` and `splits`; `ExpenseDetails.tsx`: Edit calls `nav.openEdit()`, Duplicate passes mode and weights, `ExpenseModal` import and mount removed.
+- `PanelContent.tsx`: only the `edit` case for expense ids (payment ids still go through T15's `PaymentOr`); `ComposerPlaceholder` removed. `GroupFrame.tsx`: `ExpenseModal` mount and the `"expense"` modal state removed (`baseCurrency` prop stays in the type, unused). `ExpenseModal.tsx` is left for T21; only its types are still imported.
+**Checked:** npm test ✓ (211 pass, 1 skipped as before) · lint ✓ · tsc ✓ · build ✓. Built-in browser, own tab, seeded Veld on `npm run dev` (port 3414, stopped), viewed as Jacky, 1280 wide, dark theme only:
+- Exact (64.50): equal seed, then 20 / 14.50 / 10 gives "CA$20.00 left to assign" · "CA$44.50 of CA$64.50", the helper "Split CA$20.00 across the 3 blank rows", Save reading "Assign CA$20.00 more to save" (board 11/12). 80 for You gives "CA$40.00 too much" and "Remove CA$40.00 to save". The helper then fills 6.67 / 6.67 / 6.66 and the strip goes to Fully assigned.
+- Percent: 40+30 gives "30% left to assign" · "70% of 100%", 40/30/20 gives 10% left, 150 gives "50% too much", Save reads "Make it add up to 100%". 40/30/20/10 gives "100% assigned" and "You'll be owed CA$38.70 more" (board 13/14, looked the same in a screenshot).
+- Saved 40/30/25/5 on 64.50 (dev DB: `split_mode` percent, cents 2580/1935/1613/322, weights 40/30/25/5). Details showed it, Edit reopened Percent with 40/30/blank/25/blank/5 (KNOWN-ISSUES 1.2). Editing description and percentages and Save changes updated the ledger row in about 1.2s with no reload, then the panel went to details.
+- Shares: seed 1 each; 3/1/1/1/0/0 on 10.01 shows 5.00 / 1.67 / 1.67 / 1.67; all zero gives "Add at least one share" (blocked). Saved, Edit reopened Shares with the same counts.
+- Old null-mode row (Pizza Badiali) opened in Exact with 18.29 each. Switching to Percent then Esc asked "Discard changes?"; Discard closed.
+- Delete from edit: inline "Delete this expense? This can't be undone.", focus on Cancel, Cancel returns focus to Delete, Delete removes the row and empties the panel (about 0.9s).
+- Duplicate of the percent expense opens add in Percent with the same percentages.
+- Re-seeded afterwards.
+- **Not checked:** light mode; phone (390) and drawer layouts; a true side-by-side with boards 11-14 beyond one screenshot of Percent; Equally edit and Exact edit saves (only unit-tested); changing currency in edit; screen reader and keyboard-only pass; the ⌘↵ shortcut in the new bodies.
+**Differs from the boards:** nothing noticed in the one Percent screenshot. Edit has no board: Delete sits as a text button left of "Save changes", and "Save and add another" is hidden in edit.
+**Decided:**
+- Zero rows are not saved (Exact blank or 0, Percent 0, Shares 0): they reopen as blank or 0. Percent and Shares rows carry `weight`; Exact and Equally carry null.
+- Switching tabs fills a tab the person hasn't typed in from the one they leave (equal to exact: each equal share; exact to percent: percentages by largest remainder over 100.00, so they sum to exactly 100; to shares: 1 each for whoever was in). A tab they have typed in keeps its numbers. Exact to percent is lossy by a cent at times (Pizza: 91.45 became 91.44); the strip shows it.
+- Percent under 100 shows each row as its own percent of the total (the rest unassigned); over 100 shows no amounts.
+- Fields are cleaned as typed (digits, one point, currency decimals; percent 2 decimals; shares 0 to 999, a UI sanity cap).
+- Edit sends `createdBy` null (the database ignores it on edit) and keeps `created_at` untouched when the day isn't changed.
+- Edit's "dirty" is any difference from what was opened. Edit shows archived members only if they are on the expense.
+**New copy:** "Add at least one share" as the blocked Save label (docs/06 has it only for the strip); "Put {x} in the blank row" and the other helper strings are docs/06's; "Couldn't delete this expense. Check your connection and try again." (same as details); stepper labels "Fewer shares for {name}" / "More shares for {name}".
+**Next session should know:**
+- After an edit save the composer calls `router.refresh()` and moves to details only when `rowsShowSave` sees the new rows (5s fallback), so the URL write doesn't race the refresh. Delete does the same.
+- `nav.openEdit()` takes no id: it edits whatever details shows. `PanelContent` keys the composer by id.
+- T17's `E` and `⌘↵` shortcuts can use `usePanelNav().openEdit()` and the form's own submit.
 
 ---
 
