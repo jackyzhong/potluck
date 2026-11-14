@@ -32,7 +32,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T06 | Viewer state, first-visit prompt | T03, T05 | done | [PR #19](https://github.com/jackyzhong/potluck/pull/19) |
 | T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
 | T08 | Activity hero, share card | T07 | todo | |
-| T09 | Ledger table and list | T07 | in review | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
+| T09 | Ledger table and list | T07 | done | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
 | T10 | Search and filters | T08, T09 | todo | |
 | T11 | Right panel, drawer, sheet | T07 | todo | |
 | T12 | Expense details | T09, T11, T04 | todo | |
@@ -96,6 +96,15 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T09 · claude-opus-5-5
+**Status:** T09 ([PR #21](https://github.com/jackyzhong/potluck/pull/21)) merged into `glow`. T08 and T11 are still running.
+**Checked:**
+- Merged `glow`: npm test ✓ · lint ✓ · build ✓.
+- Rows come from `forViewer.ledger`, nothing is recomputed, `<Money>` is used throughout, and selection only writes `?e=` while keeping other params.
+**Next session should know:**
+- Until T12 and T15 land, `glow` has no way to edit or delete an expense or payment, because the old cards that did it are gone. That's expected on the integration branch. Don't ship before T12 and T15.
+- Workers were sent here as background subagents, not sessions, because sessions can't be started from an automatic turn. Several workers share one browser pane: open your own tab and batch navigate+actions.
 
 ### 2026-11-13 · T09 · claude-sonnet-5-5
 **Status:** done → in review ([PR #21](https://github.com/jackyzhong/potluck/pull/21)).
