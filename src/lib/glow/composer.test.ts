@@ -1,8 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createdAtFor, dayLabel, dayString, joinNames, parseAmountCents } from "./composer.ts";
+import { createdAtFor, dayLabel, dayString, filterAmountInput, joinNames, parseAmountCents } from "./composer.ts";
 import { equalSplitExtraCentMembers, splitEqually } from "./split.ts";
 import { composerImpact } from "./ledger.ts";
+
+test("amount fields only let digits, one point and commas through", () => {
+  assert.equal(filterAmountInput("64.50"), "64.50");
+  assert.equal(filterAmountInput("Late-night 64.50"), "64.50");
+  assert.equal(filterAmountInput("1,234.5.6"), "1,234.56");
+  assert.equal(filterAmountInput("CA$ 12"), "12");
+});
 
 test("parseAmountCents accepts the forms in docs/03", () => {
   assert.equal(parseAmountCents("45"), 4500);

@@ -45,7 +45,7 @@ function Line({ line, currency, onOpen }: { line: BreakdownLine; currency: strin
       onClick={() => onOpen(line.expenseId)}
       className="-mx-1 flex w-[calc(100%+8px)] cursor-pointer items-baseline justify-between gap-2 rounded-input border-0 bg-transparent px-1 text-left text-inherit hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent max-sm:min-h-11 max-sm:items-center sm:py-0.5"
     >
-      <span className="min-w-0 truncate">
+      <span className="min-w-0">
         {line.description}
         <span className="text-text-muted"> · {lineDate(line.createdAt)}</span>
       </span>
@@ -241,7 +241,7 @@ export function EveryoneBreakdown() {
                       <span className="text-text-muted">none</span>
                     ) : (
                       cells.map((c) => (
-                        <span key={c.kind}>
+                        <span key={c.kind} className="whitespace-nowrap">
                           {c.kind} <Money cents={c.cents} currency={currency} />
                         </span>
                       ))
