@@ -76,7 +76,7 @@ export function usePanelNav() {
       if (samePanelState(state, next)) return;
 
       const go = () => {
-        if (next.kind === "add") setPanelHistory({ previous: state });
+        if (next.kind === "add" || next.kind === "pay") setPanelHistory({ previous: state });
         setPanelHistory({ editingId: next.kind === "edit" ? next.id : null });
         writePanelUrl(pathname, next);
       };

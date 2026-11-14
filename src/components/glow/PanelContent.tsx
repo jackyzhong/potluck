@@ -17,6 +17,7 @@ import { CloseIcon } from "./icons";
 import { Money } from "./Money";
 import { ExpenseComposer } from "./ExpenseComposer";
 import { useGlowData } from "./ViewerProvider";
+import { AddPayment, PaymentOr } from "./PaymentPanel";
 import { usePanelNav } from "./usePanel";
 import { usePanelDirty } from "./panelStore";
 import type { PanelState } from "@/src/lib/glow/panel";
@@ -68,8 +69,10 @@ export function usePanelTitle(state: PanelState): string {
   switch (state.kind) {
     case "add":
       return "Add expense";
+    case "pay":
+      return "Add payment";
     case "edit":
-      return "Edit expense";
+      return data.payments.some((p) => p.id === state.id) ? "Edit payment" : "Edit expense";
     case "details": {
       const expense = data.expenses.find((e) => e.id === state.id);
       if (expense) return expense.description?.trim() || "Untitled expense";
@@ -114,8 +117,8 @@ function DetailsPlaceholder({ id }: { id: string }) {
   );
 }
 
-// Expenses get ExpenseDetails (T12). Payment ids still fall through to the
-// placeholder until T15 builds their details.
+// Expenses get ExpenseDetails (T12). Payment ids are caught by PaymentOr (T15) before
+// this runs, so the placeholder branch below is only a fallback.
 function DetailsBody({ id }: { id: string }) {
   const { data } = useGlowData();
   if (data.payments.some((p) => p.id === id)) return <DetailsPlaceholder id={id} />;
@@ -154,10 +157,20 @@ export function PanelBody({ state }: { state: PanelState }) {
     case "empty":
       return <EmptyPlaceholder />;
     case "details":
-      return <DetailsBody id={state.id} />;
+      return (
+        <PaymentOr id={state.id} mode="details">
+          <DetailsBody id={state.id} />
+        </PaymentOr>
+      );
+    case "pay":
+      return <AddPayment />;
     case "add":
       return <ExpenseComposer />;
     case "edit":
-      return <ComposerPlaceholder mode="edit" id={state.id} />;
+      return (
+        <PaymentOr id={state.id} mode="edit">
+          <ComposerPlaceholder mode="edit" id={state.id} />
+        </PaymentOr>
+      );
   }
 }
