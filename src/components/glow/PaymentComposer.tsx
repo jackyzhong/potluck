@@ -6,7 +6,7 @@
 // [●]": money one member actually handed to another (docs/payments-design.md).
 //
 // Saves through the `savePayment` server action, then `router.refresh()`, then
-// `dispatch({ type: "saved" })`. Errors show inline (D15), never in an alert().
+// `dispatch({ type: "saved" })`. Errors show inline (D15), never in a browser dialog.
 
 import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
