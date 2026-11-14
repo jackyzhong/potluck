@@ -34,7 +34,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T08 | Activity hero, share card | T07 | todo | |
 | T09 | Ledger table and list | T07 | todo | |
 | T10 | Search and filters | T08, T09 | todo | |
-| T11 | Right panel, drawer, sheet | T07 | in progress | `claude/glow-t11-panel` |
+| T11 | Right panel, drawer, sheet | T07 | in review | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
 | T12 | Expense details | T09, T11, T04 | todo | |
 | T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
 | T14 | Composer: Exact, Percent, Shares, Edit | T13 | todo | |
@@ -96,6 +96,52 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T11 · claude-sonnet-5-5
+**Status:** in progress → in review ([PR #23](https://github.com/jackyzhong/potluck/pull/23)).
+**Changed:**
+- `src/lib/glow/panel.ts` + `panel.test.ts` (new, pure; 19 tests): `PanelState`, `parsePanel`, `withPanelState`, `transition`, `needsDiscardPrompt`, `discardTitle`, `layoutForWidth`, `isPanelVisible`. Exported from `src/lib/glow/index.ts`.
+- `src/components/glow/` (new): `RightPanel` (the three shells and the Discard dialog), `PanelContent` (`PanelHeader` and the placeholder bodies), `usePanel` (`usePanelState`, `usePanelNav`), `panelStore` (dirty flag, pending prompt, opener). Added to the barrel.
+- `src/lib/useModalKeyboard.ts`: extended, still backward compatible. New optional third argument `{ escape: "document"|"inside"|"none", trapFocus, getOpener, skipInitialFocus }`, a generic ref type, and a `data-autofocus` preference on open. The opener is now captured once per open in a layout effect (before a native dialog's `showModal()` moves focus), which also fixes it under React's dev double-mount. The old modals are unchanged in behaviour (defaults).
+- `page.tsx`: only the `panel` prop (plus one import). `globals.css`: one rule hiding `[data-slot="panel"]` below 1024px (outside the task's file list; see Decided).
+**How it works (for T09, T12, T13, T14, T15, T17):**
+- **URL shape (D18):** `?e=<id>` is details, `?panel=add` is add, `?e=<id>&panel=edit` is edit. Written with `history.replaceState(null, …)`, which Next syncs into `useSearchParams` with no server round trip. It must be `null` state: passing `history.state` makes Next skip the sync.
+- **Rows (T09):** call `usePanelNav().openDetails(id)`. Setting `?e=` by hand also works, and even a dirty form is guarded then (the panel puts the URL back and asks), but `openDetails` is the clean path.
+- **Add expense / N / Duplicate (T13, T12, T17):** `nav.openAdd()`. **Edit / E:** `nav.openEdit()`. **After a save:** `nav.dispatch({ type: "saved", id, another? })`; after a delete `{ type: "deleted" }`. Both clear the dirty flag first, so no prompt.
+- **Dirty forms (T13, T14):** call `usePanelDirty(isDirty)` in the form. Close, Esc, scrim, swipe down and a row click then ask "Discard this expense?" (add) or "Discard changes?" (edit) with Keep editing / Discard (docs/06).
+- **Content (T12/T13):** edit `PanelBody` in `PanelContent.tsx`. Put `data-autofocus` on the first control (details title, composer amount). Use `PanelHeader` for the title row.
+- **Layout:** `usePanelLayout()` (inline / drawer / sheet). One shell is mounted at a time; the drawer and sheet are native modal `<dialog>`s in a portal, so focus trap, inert background and Esc come from the browser, and Esc is routed through the guarded close.
+**Checked:** npm test ✓ (128 pass, 1 skipped as before; 19 new) · lint ✓ · build ✓ · browser, the built-in one, on the seeded Veld group with `npm run dev` (port 3111, stopped afterwards), with `?e=` set by hand (T09 isn't merged):
+- **docs/04 table:** empty to add (the empty card's button); add to empty on Esc/close; empty to details; details to another details; details to edit (Edit button); edit to details on close; close from details to empty. Add from details, Duplicate and "Save and add another" are covered by the unit tests only, because nothing in the page calls them yet.
+- **Refresh keeps state:** reloaded on `?e=` at 1280 (inline card) and at 800 (drawer opens on load). A stale `?e=` is dropped from the URL.
+- **Focus, inline (1280):** moves to the title on open from a button, returns to the opener on Esc and on close, does not steal focus on a page load, and Esc is ignored when focus is outside the panel.
+- **Focus, drawer (800):** into the title on open; back to the opener on Close, Esc (`cancel`) and a scrim click.
+- **Focus, sheet (375):** into the title; back to the opener on close; focusing a button behind the sheet is refused (inert); edit opens with focus in the field.
+- **Discard prompt:** Esc on a dirty edit (inline), a swipe down on a dirty edit (sheet) and a hand-set `?e=` change while dirty all open it. Esc on the prompt keeps editing, and focus goes back to the field. Discard moves on.
+- **Swipe down:** synthetic pointer events only (the pane can't send a touch drag): translateY follows the drag and releasing past 80px closes.
+- Not checked: a real touch swipe, a screen reader, Tab cycling by hand (it is the native dialog's trap), light mode, the panel at 1280/390 against boards 15/17 side by side (see Differs), the drawer and sheet transitions (there are none), resizing across a breakpoint with a form open.
+**Differs from the boards:**
+- Contents are placeholders: details shows only the title, the amount and an Edit button; no impact strip, sentence or split rows (T12). The add and edit bodies are a labelled stub field.
+- The inline card is a plain `rounded-hero bg-surface p-5 shadow-card` at the slot wrapper's width (about 300px of the row). Board 15 shows a 440px-wide details panel and docs/03 wants 400px for the composer. The slot wrapper is `flex: 1 1 300px` (T07) and I didn't change it. T13 should size the composer by giving the wrapper or the card a wider basis.
+- Seen only in dark, because the dev machine's system theme was dark.
+- The sheet has a grabber and no board for the details sheet; boards 17/18 show a padded card on the page background instead. I used the plan's grabber and a full-bleed sheet with a 28px top radius.
+- No slide or fade transitions on the drawer or sheet (docs/04 asks for reduced motion to be respected; there is no motion yet).
+**Decided:**
+- **Branch name:** `glow/T11-panel` can't exist because a local `glow` branch does, so `claude/glow-t11-panel`.
+- **Edit URL:** D18 only names `?e=` and `?panel=add`, so edit is `?e=<id>&panel=edit`.
+- **A row click while adding or editing:** `?panel=add` next to a new `?e=` means a row was clicked, and details wins. For edit, the id the edit was opened with is remembered in memory; a different `?e=` with `panel=edit` also means a row click. After a refresh the URL is trusted.
+- **Close from add** goes back to the details it was opened from, remembered in memory only. After a refresh it goes to empty.
+- **replaceState, not push:** opening and closing the panel doesn't add history entries, so the browser Back button leaves the page, not the panel. D19 (no phone back) is separate. Say if Back should close the sheet.
+- **Server round trips:** none for panel changes. Tab switching (T07's `router.replace`) still re-renders on the server.
+- **Slot wrapper below 1024:** the drawer and sheet render in a portal, so the slot's own wrapper would still reserve a 300px basis. A rule in `globals.css` hides `[data-slot="panel"]` under 1024px. The server render always draws the inline card (the width is unknown there) and CSS hides it on narrow screens, so a phone never sees a flash of it.
+- **A breakpoint resize remounts the shell**, so an open form loses its state. Rare; T13 may want to lift the form state into `panelStore` if it matters.
+- **Escape:** inline, only when focus is inside the panel (T17's "close the menu, then the panel, then clear search" order is still to build). Drawer, sheet and the Discard dialog use the native `cancel` event, so only the top one closes.
+- **`beforeunload`** is armed while a form is dirty (reload and tab close). The browser Back button isn't guarded.
+**New copy:** the empty panel's "Add expense" button is docs/06's label; "Select an expense to see how it was split." is docs/06's. Placeholder only: "Placeholder field (the composer arrives in T13)", and "Details" / "Payment" as fallback titles. "Discard this expense?", "Discard changes?", "Keep editing" and "Discard" are docs/06's.
+**Next session should know:**
+- T09 must show `aria-selected` and highlight from `?e=` (use `usePanelState()` or read the param). Add shows no selection by design: `?panel=add` has no `e`.
+- Dev data: the seeded group was reseeded at the start (`seed-dev.mjs`) and not modified since.
+- The browser pane is shared with other workers; one of my tabs showed another worker's port. I only drove my own (port 3111).
 
 ### 2026-11-13 · review T07 · claude-opus-5-5
 **Status:** T07 ([PR #20](https://github.com/jackyzhong/potluck/pull/20)) merged into `glow`. T08, T09 and T11 dispatched in parallel.
