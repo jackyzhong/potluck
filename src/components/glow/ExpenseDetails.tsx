@@ -3,16 +3,15 @@
 // The details panel for an expense (boards 15/16). Everything is worded from the
 // viewer's side by src/lib/glow/details.ts; this file only draws it and runs the
 // three actions:
-//   Edit       opens the old ExpenseModal until T14 builds the composer's edit mode
-//   Duplicate  opens the add panel (the prefill is wired once T13 merges)
+//   Edit       opens the composer in edit mode (?e=<id>&panel=edit, T14)
+//   Duplicate  opens the add panel prefilled, split and all
 //   Delete     asks inline first (D14, no Undo), then deleteExpense
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteExpense } from "@/src/app/ledger/[id]/actions";
-import ExpenseModal from "@/src/app/ledger/[id]/ExpenseModal";
 import { DELETE_PROMPT, detailsModel, type RowTone } from "@/src/lib/glow/details";
-import type { Expense } from "@/src/lib/glow/ledger";
+import type { Expense, Split } from "@/src/lib/glow/ledger";
 import { Avatar } from "./Avatar";
 import { Button } from "./Button";
 import { Money } from "./Money";
@@ -46,7 +45,6 @@ export function ExpenseDetails({ id }: { id: string }) {
   const nav = usePanelNav();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleted, setDeleted] = useState(false);
@@ -217,7 +215,7 @@ export function ExpenseDetails({ id }: { id: string }) {
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          <Button size={48} kbd="E" onClick={() => setEditing(true)} className="flex-[1_1_110px]">
+          <Button size={48} kbd="E" onClick={() => nav.openEdit()} className="flex-[1_1_110px]">
             Edit
           </Button>
           <Button
@@ -225,12 +223,18 @@ export function ExpenseDetails({ id }: { id: string }) {
             variant="secondary"
             className="flex-[1_1_110px]"
             onClick={() => {
-              // Same description, amount, payer and people; dated today (docs/03).
+              // Same description, amount, payer and split (mode and weights too);
+              // dated today (docs/03).
+              const rows = (data.splits as (Split & { weight?: number | string | null })[])
+                .filter((s) => s.expense_id === id)
+                .map((s) => ({ userId: s.user_id, amountCents: s.amount_cents, weight: s.weight ?? null }));
               setComposerPrefill({
                 description: expense.description,
                 amountCents: expense.amount_cents,
                 payerId: expense.payer_id,
-                participantIds: data.splits.filter((s) => s.expense_id === id).map((s) => s.user_id)
+                participantIds: rows.map((r) => r.userId),
+                splitMode: expense.split_mode ?? null,
+                splits: rows
               });
               nav.openAdd();
             }}
@@ -248,18 +252,6 @@ export function ExpenseDetails({ id }: { id: string }) {
           </Button>
         </div>
       )}
-
-      {/* The old edit flow, until T14. It lives here so it outlives nothing else:
-          closing it just returns to the details. */}
-      <ExpenseModal
-        isOpen={editing}
-        onClose={() => setEditing(false)}
-        ledgerId={expense.ledger_id}
-        users={members as unknown as React.ComponentProps<typeof ExpenseModal>["users"]}
-        baseCurrency={currency}
-        existingExpense={expense}
-        existingSplits={data.splits.filter((s) => s.expense_id === id)}
-      />
     </>
   );
 }

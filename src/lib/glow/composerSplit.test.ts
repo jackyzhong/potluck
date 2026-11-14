@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   blankExactIds,
   blankRowFill,
+  blankRowsLabel,
   emptyForm,
   formCents,
   formatPercent,
@@ -10,10 +11,13 @@ import {
   parseHundredths,
   parseShares,
   reopenSplit,
+  restrictForm,
+  rowsShowSave,
   sanitizeDecimalInput,
   sanitizePercentInput,
   seedForMode,
   splitTotals,
+  type SaveSnapshot,
   type SplitForm
 } from "./composerSplit.ts";
 import { composerImpact } from "./ledger.ts";
@@ -184,7 +188,7 @@ test("a shares expense reopens with its share counts, and a missing member is 0"
   );
   assert.equal(f.mode, "shares");
   assert.deepEqual(f.shares, { you: 2, stephen: 1 });
-  assert.equal(f.shares.angus ?? 0, 0);
+  assert.equal((f.shares as Record<string, number>).angus ?? 0, 0);
 });
 
 test("an equal expense reopens equal, with the people it was split between", () => {
@@ -285,6 +289,69 @@ test("Shares: one each for whoever was in, or everyone when nobody was (D17)", (
 });
 
 // ---------- the blank-rows helper ----------
+
+test("the helper's label follows docs/06, with the singular for one row", () => {
+  assert.equal(blankRowsLabel("CA$20.00", 3), "Split CA$20.00 across the 3 blank rows");
+  assert.equal(blankRowsLabel("CA$20.00", 1), "Put CA$20.00 in the blank row");
+});
+
+test("restrictForm drops members who aren't rows any more", () => {
+  const f = form({
+    mode: "percent",
+    included: ["you", "gone"],
+    exact: { you: "1", gone: "2" },
+    percent: { you: "50", gone: "50" },
+    shares: { you: 1, gone: 1 }
+  });
+  assert.deepEqual(restrictForm(f, ["you", "stephen"]), {
+    mode: "percent",
+    included: ["you"],
+    exact: { you: "1" },
+    percent: { you: "50" },
+    shares: { you: 1 }
+  });
+});
+
+// ---------- waiting for the refreshed rows (T12's trap) ----------
+
+const day = (iso: string) => iso.slice(0, 10);
+const saved: SaveSnapshot = {
+  amountCents: 6450,
+  payerId: "you",
+  description: "Shawarma ",
+  splitMode: "percent",
+  day: "2026-11-13",
+  splits: [
+    { userId: "you", amountCents: 3870, weight: 60 },
+    { userId: "stephen", amountCents: 2580, weight: 40 }
+  ]
+};
+const shownExpense = {
+  amount_cents: 6450,
+  payer_id: "you",
+  description: "Shawarma",
+  split_mode: "percent",
+  created_at: "2026-11-13T12:00:00Z"
+};
+const shownSplits = [
+  { user_id: "you", amount_cents: 3870, weight: "60" },
+  { user_id: "stephen", amount_cents: 2580, weight: 40 }
+];
+
+test("rowsShowSave is true only once the refreshed rows carry the saved numbers", () => {
+  assert.equal(rowsShowSave(shownExpense, shownSplits, saved, day), true);
+  // Still the old rows: a different amount, mode, weight, day or member list.
+  assert.equal(rowsShowSave({ ...shownExpense, amount_cents: 6000 }, shownSplits, saved, day), false);
+  assert.equal(rowsShowSave({ ...shownExpense, split_mode: null }, shownSplits, saved, day), false);
+  assert.equal(rowsShowSave({ ...shownExpense, created_at: "2026-11-12T12:00:00Z" }, shownSplits, saved, day), false);
+  assert.equal(rowsShowSave({ ...shownExpense, payer_id: "stephen" }, shownSplits, saved, day), false);
+  assert.equal(
+    rowsShowSave(shownExpense, [{ ...shownSplits[0], weight: 50 }, shownSplits[1]], saved, day),
+    false
+  );
+  assert.equal(rowsShowSave(shownExpense, shownSplits.slice(0, 1), saved, day), false);
+  assert.equal(rowsShowSave(undefined, shownSplits, saved, day), false);
+});
 
 test("blank rows are the ones with nothing typed", () => {
   const f = form({ mode: "exact", exact: { you: "20", stephen: "0.00", angus: "" } });
