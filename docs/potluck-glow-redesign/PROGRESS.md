@@ -33,7 +33,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
 | T08 | Activity hero, share card | T07 | done | [PR #22](https://github.com/jackyzhong/potluck/pull/22) |
 | T09 | Ledger table and list | T07 | done | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
-| T10 | Search and filters | T08, T09 | todo | |
+| T10 | Search and filters | T08, T09 | in progress | `glow-T10-search` |
 | T11 | Right panel, drawer, sheet | T07 | todo | |
 | T12 | Expense details | T09, T11, T04 | todo | |
 | T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
