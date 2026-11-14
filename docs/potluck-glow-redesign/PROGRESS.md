@@ -41,7 +41,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T15 | Payments: add, details, edit | T11, T09 | done | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
 | T16 | Balances tab | T07, T15 | done | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | done | [PR #30](https://github.com/jackyzhong/potluck/pull/30) |
-| T18 | States and edge cases | T16 | in review | [PR #31](https://github.com/jackyzhong/potluck/pull/31) |
+| T18 | States and edge cases | T16 | done | [PR #31](https://github.com/jackyzhong/potluck/pull/31) |
 | T19 | Accessibility and motion pass | T18 | todo | |
 | T20 | Home and create-group restyle | T02 | done | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
 | T21 | Ship | all | todo | |
@@ -96,6 +96,16 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T18 · claude-opus-5-5
+**Status:** T18 ([PR #31](https://github.com/jackyzhong/potluck/pull/31)) merged into `glow`. T19 dispatched.
+**Checked:**
+- Merged `glow`: npm test ✓ · lint ✓ · tsc ✓ · build ✓.
+- The worker deleted `BalancesView.tsx`, `PaymentCard.tsx` and `PaymentModal.tsx` (dead code, a T21 job done early). Nothing references them.
+- The only `alert()`/`confirm()` left is in the dead `ExpenseModal.tsx`, which T21 deletes after moving the `Split` type `page.tsx` imports from it.
+**Next session should know:**
+- **T19:** check whether screen readers announce the toast while a modal drawer or sheet is open. The toast is a top-layer popover, and may be inert under a modal.
+- **T21:** delete `ExpenseModal.tsx`, `ExpenseCard.tsx`, `ExpenseDetailsModal.tsx` and anything else no longer imported. Move the `Expense`/`Split` types first.
 
 ### 2026-11-13 · T18 · claude-sonnet-5-5
 **Status:** in progress → in review (branch `glow-T18-states`, PR in the board row). Merged `origin/glow` (T14, T17) before pushing.
