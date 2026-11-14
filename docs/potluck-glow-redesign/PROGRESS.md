@@ -97,6 +97,36 @@ Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
 
+### 2026-11-13 · T18 · claude-sonnet-5-5
+**Status:** in progress → in review (branch `glow-T18-states`, PR in the board row). Merged `origin/glow` (T14, T17) before pushing.
+**Changed:**
+- `ToastProvider.tsx` (new, in the components barrel): `ToastProvider` and `useToast().show(message)`. One toast at a time, 5s, centred, in the browser top layer (manual popover) so the tablet drawer and phone sheet can't cover it. `useToast` is a no-op outside the provider. Mounted in `ledger/[id]/page.tsx`, around `FilterProvider`.
+- `usePanel.ts`: `dispatch({type:"saved"})` shows "Expense added" / "Payment added" / "Changes saved" (`toastFor` in `lib/glow/panel.ts`, tested). New `useDeletedToast()` (called once in `RightPanel`) shows "Expense deleted" / "Payment deleted" when the row the panel showed leaves the data. Repeats within 1.5s are dropped.
+- `loading.tsx` for `ledger/[id]`: skeleton of header, tabs, gradient hero with five chip bones, share card and six rows. Pulse is `motion-safe` only.
+- Empty states: `LedgerEmpty` takes `title` and `action`. No expenses has an Add expense button (table and phone list). No search results has "Clear search and filters". `SettleUpPlan` shows "Nothing to settle" when everyone is square. The empty panel already existed (T11).
+- `UserManagementModal`: inline error line (`role="alert"`) replaces both `alert()`s, and Remove asks inside the row (Cancel focused, Esc backs out) instead of `window.confirm`.
+- `create-group/page.tsx`: inline error replaces `alert()` (D22 scope: error text only, no layout change).
+- `LedgerTable`: payer cell truncates (max 200px, full name in `title`), description gets a `title`.
+- Deleted the dead cluster `BalancesView.tsx`, `PaymentCard.tsx`, `PaymentModal.tsx` (unreferenced since T16 and T15; they held three `alert()`s and a `confirm()`). `ExpenseCard.tsx` and `ExpenseDetailsModal.tsx` are also dead but have no alerts; left for T21.
+**Checked:** npm test ✓ (234 pass) · lint ✓ · tsc ✓ · build ✓ (all after merging T14/T17).
+`grep -rn "alert(\|confirm(" src` now returns only `ExpenseModal.tsx:253, 266, 271` (T14's file; it is out of use after T14 and T21 deletes it). `page.tsx` still imports the `Split` type from it.
+Browser (built-in, own tab, dev on 3418, stopped; dark; the pane is about 800 wide, not 1280/390; light and phone not seen), on throwaway groups that I created and deleted ("T18 tmp …", none left; Veld untouched):
+- No expenses (empty group), empty panel, hero "You're all settled": seen.
+- Add toast ("Expense added") and delete toast ("Expense deleted"): seen, centred. Checked on my code before merging T14; not re-run after the merge.
+- Everyone settled on Balances ("Nothing to settle" and "settled" rows): seen.
+- 9 members (8 others) in the chip row: the sixth chip wraps to a second row cleanly; long names truncate in chips, the which-one prompt, the header title and the table payer cell. A 100-character description truncates in the row.
+- Remove confirmation in Manage members: seen. Skeleton: seen via a temporary page (deleted).
+**Not checked:** light mode, 390 phone widths, the toast over the drawer/sheet (popover top layer, by reasoning only), the toast live region with a screen reader (popover content may be inert under a modal dialog), the inline error lines (UserManagementModal, create-group), no-search-results state, the real `loading.tsx` firing in a navigation, "Payment added"/"Payment deleted"/"Changes saved" toasts, `ExpenseModal` alerts.
+**Differs from the boards:** empty, skeleton and toast states are not drawn; they use the card, chip and button styles of the neighbouring parts.
+**Decided:**
+- Delete toasts come from the data, not from `dispatch({type:"deleted"})`: the details component unmounts before it can report (the refreshed data empties the panel first). A row deleted by someone else while open gives the same toast.
+- `create-group` and the dead-file deletions were done to make the grep clean.
+**New copy:** "No expenses yet", "Add the first one and Potluck keeps the tally.", "Nothing matches these filters.", "Try a different name, amount or word.", "Clear search and filters", "Clear filters", "Nothing to settle", "Nobody owes anybody. Add an expense and the plan updates.", "Payment added", "Expense deleted", "Payment deleted", "Couldn't reach the group. Check your connection and try again.", "Couldn't create the group. Check your connection and try again.", "Removing…".
+**Next session should know:**
+- T19: check the toast live region under a modal drawer/sheet, the reduced-motion pulse on the skeleton, and the focus order in the remove confirmation.
+- T21: delete `ExpenseModal.tsx`, `ExpenseCard.tsx`, `ExpenseDetailsModal.tsx` and move the `Split` type that `page.tsx` imports.
+- D15's `Toast` error variant stays unused.
+
 ### 2026-11-13 · review T17 · claude-opus-5-5
 **Status:** T17 ([PR #30](https://github.com/jackyzhong/potluck/pull/30)) merged into `glow`. T18 is still running.
 **Checked:**
