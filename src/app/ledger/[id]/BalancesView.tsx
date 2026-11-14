@@ -6,7 +6,6 @@ import { setSimplifyDebts } from "./actions";
 import { Expense, Split } from "./ExpenseModal";
 import { BreakdownRow, Payment, PaymentRow, getMemberBreakdown, getNetBalances, getSimplifiedDebts, getUnsimplifiedDebts } from "@/src/lib/balances";
 import { formatCurrency } from "@/src/lib/currencies";
-import ExpenseDetailsModal from "./ExpenseDetailsModal";
 import PaymentModal, { PaymentPrefill } from "./PaymentModal";
 
 type User = {
@@ -149,24 +148,10 @@ export default function BalancesView({
     [openMemberId, expenses, splits, payments, exchangeRates]
   );
 
-  // The details modal hosts the edit flow, so the selected expense outlives
-  // the modal being dismissed — clearing it here would unmount the editor the
-  // moment "Edit Expense" tries to open it.
-  const [detailExpenseId, setDetailExpenseId] = useState<string | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
-  const detailExpense = useMemo(
-    () => expenses.find((e) => e.id === detailExpenseId) ?? null,
-    [detailExpenseId, expenses]
-  );
-  const detailSplits = useMemo(
-    () => splits.filter((s) => s.expense_id === detailExpenseId),
-    [detailExpenseId, splits]
-  );
-
+  // Details live in the Activity tab's right panel now (T12). T16 rebuilds this
+  // tab; until then a click here jumps to that expense there (no ?tab= = Activity).
   const openDetails = (expenseId: string) => {
-    setDetailExpenseId(expenseId);
-    setIsDetailsOpen(true);
+    router.push(`?e=${expenseId}`);
   };
 
   // Settling a suggested transfer is the main way payments get recorded: the
@@ -454,18 +439,6 @@ export default function BalancesView({
         />
       )}
 
-      {detailExpense && (
-        <ExpenseDetailsModal
-          isOpen={isDetailsOpen}
-          onClose={() => setIsDetailsOpen(false)}
-          expense={detailExpense}
-          splits={detailSplits}
-          users={users}
-          userMap={userMap}
-          ledgerId={ledgerId}
-          baseCurrency={baseCurrency}
-        />
-      )}
     </div>
   );
 }
