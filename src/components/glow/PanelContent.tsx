@@ -3,13 +3,12 @@
 // What goes inside the right panel for each state. These are PLACEHOLDERS (T11
 // builds the shell only):
 //   details  T12 replaces DetailsPlaceholder with ExpenseDetails (boards 15/16)
-//   add/edit T13/T14 replace ComposerPlaceholder with ExpenseComposer
+//   add/edit T13/T14: ExpenseComposer (edit is for expense ids)
 //   payments T15 adds its own states
 // Whatever you put here gets the panel header from PanelHeader, marks its first
 // meaningful control `data-autofocus`, and reports unsaved input with
 // usePanelDirty() (panelStore.ts).
 
-import { useState } from "react";
 import { Button } from "./Button";
 import { ExpenseDetails } from "./ExpenseDetails";
 import { Kbd } from "./Kbd";
@@ -19,7 +18,6 @@ import { ExpenseComposer } from "./ExpenseComposer";
 import { useGlowData } from "./ViewerProvider";
 import { AddPayment, PaymentOr } from "./PaymentPanel";
 import { usePanelNav } from "./usePanel";
-import { usePanelDirty } from "./panelStore";
 import type { PanelState } from "@/src/lib/glow/panel";
 
 /**
@@ -126,31 +124,6 @@ function DetailsBody({ id }: { id: string }) {
   return <ExpenseDetails id={id} />;
 }
 
-// Edit only, until T14 replaces it. Add is the real ExpenseComposer (T13).
-function ComposerPlaceholder({ mode, id }: { mode: "add" | "edit"; id?: string }) {
-  const nav = usePanelNav();
-  const [draft, setDraft] = useState("");
-  usePanelDirty(draft !== "");
-  return (
-    <>
-      <label className="flex flex-col gap-1 text-[length:var(--text-meta)] font-semibold">
-        Placeholder field (the composer arrives in T13)
-        <input
-          data-autofocus
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          className="h-11 rounded-input border border-line-strong bg-surface-sunken px-3 font-normal text-text"
-        />
-      </label>
-      {mode === "edit" && id ? (
-        <Button size={48} onClick={() => nav.dispatch({ type: "saved", id })}>
-          Save changes
-        </Button>
-      ) : null}
-    </>
-  );
-}
-
 /** Everything below the header, for one state. */
 export function PanelBody({ state }: { state: PanelState }) {
   switch (state.kind) {
@@ -169,7 +142,8 @@ export function PanelBody({ state }: { state: PanelState }) {
     case "edit":
       return (
         <PaymentOr id={state.id} mode="edit">
-          <ComposerPlaceholder mode="edit" id={state.id} />
+          {/* Keyed by id so editing one expense never carries another's form. */}
+          <ExpenseComposer key={state.id} editId={state.id} />
         </PaymentOr>
       );
   }

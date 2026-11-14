@@ -11,3 +11,6 @@ export * from "./payment.ts";
 export * from "./details.ts";
 export * from "./composer.ts";
 export * from "./balances.ts";
+export * from "./composerSplit.ts";
+export * from "./composerValidation.ts";
+export * from "./shortcuts.ts";

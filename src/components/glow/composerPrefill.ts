@@ -9,8 +9,12 @@
 // state, because the button that sets it and the composer that reads it live in
 // different parts of the page.
 //
-// Mode is not prefilled: T13 only has Equally, and the participants are who the
-// equal split includes. T14 may add `mode` and per-mode inputs.
+// T14: a duplicate keeps the split. `splitMode` and `splits` are the stored mode
+// and rows of the expense being copied; the composer reopens them the same way
+// Edit does (a row with no stored mode opens in Exact, D13). Without `splits`
+// (the T13 shape) it is an equal split between `participantIds`.
+
+import type { StoredRow } from "@/src/lib/glow/composerSplit";
 
 export type ComposerPrefill = {
   description: string | null;
@@ -18,6 +22,10 @@ export type ComposerPrefill = {
   payerId: string;
   /** Members to include in the equal split. Ids that aren't current members are ignored. */
   participantIds: string[];
+  /** The copied expense's stored `split_mode`; null for rows saved before modes existed. */
+  splitMode?: string | null;
+  /** The copied expense's split rows, with `weight` for percent and shares. */
+  splits?: StoredRow[];
 };
 
 let pending: ComposerPrefill | null = null;

@@ -67,6 +67,7 @@ export function LedgerList() {
         <li key={item.row.id} className="border-b border-line last:border-b-0">
           <button
             type="button"
+            data-nav-row={item.row.id}
             aria-current={item.selected ? "true" : undefined}
             onClick={() => select(item.row.id)}
             className={`-mx-2 grid min-h-16 w-[calc(100%+16px)] grid-cols-[36px_1fr_auto] items-center gap-3 rounded-tile px-2 py-2 text-left text-[length:var(--text-body-phone)] ${
