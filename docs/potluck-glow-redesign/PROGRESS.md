@@ -37,7 +37,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T11 | Right panel, drawer, sheet | T07 | done | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
 | T12 | Expense details | T09, T11, T04 | done | [PR #25](https://github.com/jackyzhong/potluck/pull/25) |
 | T13 | Composer: shell, Equally | T11, T04, T05 | done | [PR #26](https://github.com/jackyzhong/potluck/pull/26) |
-| T14 | Composer: Exact, Percent, Shares, Edit | T13 | in review | [PR #29](https://github.com/jackyzhong/potluck/pull/29) |
+| T14 | Composer: Exact, Percent, Shares, Edit | T13 | done | [PR #29](https://github.com/jackyzhong/potluck/pull/29) |
 | T15 | Payments: add, details, edit | T11, T09 | done | [PR #27](https://github.com/jackyzhong/potluck/pull/27) |
 | T16 | Balances tab | T07, T15 | done | [PR #28](https://github.com/jackyzhong/potluck/pull/28) |
 | T17 | Keyboard shortcuts | T10, T12, T14, T16 | todo | |
@@ -96,6 +96,22 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · review T14 · claude-opus-5-5
+**Status:** T14 ([PR #29](https://github.com/jackyzhong/potluck/pull/29)) merged into `glow`. T17 dispatched; T18 resumed after the usage limit.
+**Checked:**
+- Merged `glow`: npm test ✓ (223 pass) · lint ✓ · tsc ✓ · build ✓.
+- Percent validation works in integer hundredths. Every docs/04 "Validation per mode" row has a test.
+- Money goes through `splitAmounts` (D5/D6).
+- KNOWN-ISSUES 1.2 is fixed per the worker's dev-DB check (a percent expense reopens as percent with its weights). T21 updates KNOWN-ISSUES.
+**Remaining `alert()`/`confirm()`:**
+- `ExpenseModal`, `PaymentModal` and `BalancesView`: no longer rendered, so T21 deletes them.
+- `UserManagementModal` and `create-group/page.tsx`: T18 replaces them.
+**Decided (accepting the worker's calls):**
+- Rows with zero shares or amount aren't saved.
+- Switching tabs fills an untouched tab from the previous one, which can be a cent off between Exact and Percent.
+- Shares are capped at 999.
+- An edit sends `createdBy` null, so "added by" stays the original adder.
 
 ### 2026-11-13 · T14 · claude-sonnet-5-5
 **Status:** in progress → in review (branch `glow-T14-modes`, PR in the board row). **KNOWN-ISSUES 1.2 is fixed** (T21 updates that file): a percent expense reopens as percent with the typed numbers.
