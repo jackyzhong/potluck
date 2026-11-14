@@ -142,6 +142,7 @@ export function EveryoneBreakdown() {
             <li key={row.memberId} className="border-t border-line first:border-t-0">
               <button
                 type="button"
+                data-nav-row={row.memberId}
                 aria-expanded={isOpen}
                 aria-controls={id}
                 onClick={() => setOpen(flip(open, row.memberId))}
@@ -219,6 +220,7 @@ export function EveryoneBreakdown() {
               <div key={row.memberId} className="border-t border-line">
                 <button
                   type="button"
+                  data-nav-row={row.memberId}
                   aria-expanded={isOpen}
                   aria-controls={id}
                   onClick={() => setOpen(flip(open, row.memberId))}

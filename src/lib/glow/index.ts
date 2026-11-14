@@ -13,3 +13,4 @@ export * from "./composer.ts";
 export * from "./balances.ts";
 export * from "./composerSplit.ts";
 export * from "./composerValidation.ts";
+export * from "./shortcuts.ts";
