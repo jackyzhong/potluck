@@ -33,7 +33,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T07 | Page frame, viewing-as switcher | T06 | done | [PR #20](https://github.com/jackyzhong/potluck/pull/20) |
 | T08 | Activity hero, share card | T07 | done | [PR #22](https://github.com/jackyzhong/potluck/pull/22) |
 | T09 | Ledger table and list | T07 | done | [PR #21](https://github.com/jackyzhong/potluck/pull/21) |
-| T10 | Search and filters | T08, T09 | todo | |
+| T10 | Search and filters | T08, T09 | in review | [PR #24](https://github.com/jackyzhong/potluck/pull/24) |
 | T11 | Right panel, drawer, sheet | T07 | in review | [PR #23](https://github.com/jackyzhong/potluck/pull/23) |
 | T12 | Expense details | T09, T11, T04 | todo | |
 | T13 | Composer: shell, Equally | T11, T04, T05 | todo | |
@@ -96,6 +96,25 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-13 · T10 · claude-sonnet-5-5
+**Status:** done → in review ([PR #24](https://github.com/jackyzhong/potluck/pull/24), branch `glow-T10-search`).
+**Changed:**
+- `src/lib/glow/filter.ts` + `filter.test.ts` (new, exported from the index): `filterLedger`, `matchesQuery`, `amountQuery`, `participantsByRow`, `resetForViewerChange`. Runs on the rows `viewerLedger` already built, so balances are untouched.
+- `src/components/glow/`: `FilterProvider` (+ `useFilters`, one small context holding kind, "with {name}" person and search text, with a 150ms debounce), `ActivityToolbar` (search, filter chips, removable "With {name}" chip), `FilteredHero` (hero with chips wired). `useLedgerView` filters its rows and re-derives the day grouping, so the date shows on the first visible row of each day. `LedgerTable`: empty state and a Balance header tooltip while filtered. `LedgerList`: calls `useLedgerView({ applyFilters: false })`.
+- `page.tsx`: `FilterProvider` wraps `GroupFrame`, `toolbar` prop filled, `<BalanceHero />` became `<FilteredHero />`.
+**Checked:** npm test ✓ (128 pass) · lint ✓ · build ✓ · seeded Veld on `npm run dev` (port 3217), own browser tab, driven by script:
+- As Jacky: `109`, `$109`, `109.74` each leave only Pizza Badiali, balance still CA$78.65 (its full-history value). `write` finds the payment by note. A search with no match shows the empty state; the Balance header gets the tooltip.
+- Pressing the Alvin chip shows 5 rows and a "With Alvin" pill (chip `aria-pressed`); the pill clears it. With "Involving me" + "pizza" + the Alvin chip on, switching to Stephen cleared search and person and left "Involving me" on.
+- Visual: Stephen with the Alvin filter, light and dark. The browser pane rendered at about 800px wide despite the 1280 emulation, so it is NOT a true 1280 shot; toolbar compared by eye with boards 03/04/23/24 only loosely. Not checked: the exact 1280 layout, a screen reader, keyboard-only use.
+**Differs from the boards:** the "With {name}" chip is not drawn on any board (suggested copy in docs/06); I styled it `positive-soft`.
+**Decided:**
+- Amount queries match from the start of the total (`109` finds 109.74 and 1090.00, `74` finds nothing), over the row total only, not the viewer's impact.
+- "With {name}" = viewer involved and the person is the payer, in the split, or the payment's other side.
+- The phone list ignores filters (D20 gives no phone controls), so a chip pressed on a phone can't leave a hidden filter on. It also means chips do nothing visible on a phone.
+- `FilterProvider` sits in `page.tsx` inside `ViewerProvider`; T11 should add its own wrapper beside it, not replace it.
+**New copy:** `Nothing matches these filters.` (empty with filters but no search text); the pill's aria-label `Clear filter: with {name}`.
+**Next session should know:** T17's `/` can focus the field through `SearchField`'s `inputRef` (the toolbar doesn't pass one yet). A selected row hidden by a filter stays in `?e=`.
 
 ### 2026-11-13 · T11 · claude-sonnet-5-5
 **Status:** in progress → in review ([PR #23](https://github.com/jackyzhong/potluck/pull/23)).
