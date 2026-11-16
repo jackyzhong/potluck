@@ -903,7 +903,7 @@ recommended option as a default (see "Decisions").
     4.3 and 5.2).
   - Do a final screenshot pass against all 24 boards.
 - **Owner:**
-  - Apply the T04 migration to production.
+  - ~~Apply the T04 migration to production.~~ Done 2026-11-15 (see the PROGRESS log).
   - Merge `glow` into `main`.
   - Check production.
 

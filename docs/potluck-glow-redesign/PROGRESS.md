@@ -44,7 +44,7 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T18 | States and edge cases | T16 | done | [PR #31](https://github.com/jackyzhong/potluck/pull/31) |
 | T19 | Accessibility and motion pass | T18 | done | [PR #32](https://github.com/jackyzhong/potluck/pull/32) |
 | T20 | Home and create-group restyle | T02 | done | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
-| T21 | Ship | all | in progress (agent part done; owner: production migration, merge `glow` → `main`) | `glow-T21-ship` → `glow` |
+| T21 | Ship | all | in progress (migration applied to production 2026-11-15; owner: merge `glow` → `main`, check production) | `glow` → `main` |
 
 ---
 
@@ -104,6 +104,22 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-15 · T21 production migration · claude-opus-5-5
+**Status:** the T04 migration is applied to production, at the owner's request. What's left for the owner: merge `glow` into `main`, then check production.
+**Changed (production database, ref `xjkvjfmdljdpynlumszz`):**
+- Applied `supabase/migrations/20261113224445_split_mode_weights_created_by.sql` unchanged. It adds `expenses.split_mode`, `expenses.created_by` and `splits.weight`, and replaces `save_expense` with the 10-argument version.
+- `apply_migration` recorded it under its own timestamp (`20261116032850`). I renumbered the history row to `20261113224445` so it matches the file, as on dev.
+**Checked:**
+- Before applying: the migration wasn't in production's history, and the only `save_expense` was the 8-argument signature the migration drops.
+- After applying:
+  - The three columns exist, and there is one `save_expense` with the new signature.
+  - Execute is granted only to `service_role` (and the owner `postgres`).
+  - Still 0 RLS policies.
+  - All 39 existing expenses are untouched (`split_mode` and `created_by` null).
+- **Compatibility with the live site:** called `save_expense` with `main`'s exact 8 named arguments inside a block that always rolls back. It saved, with mode and weight null, and nothing persisted (still 39 expenses, no probe row).
+- Production is still the `main` deploy `35cc396` (READY), with no runtime errors in the last hour.
+**Next session should know:** production's schema now matches dev. Merging `glow` into `main` is the only step left, and it needs no new environment variables.
 
 ### 2026-11-14 · T21 (agent part) · claude-opus-5-5
 **Status:** agent part done, merged into `glow`. The owner's part is left: the production migration, and merging `glow` into `main` (see PLAN T21, and the steps below).
