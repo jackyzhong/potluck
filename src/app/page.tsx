@@ -212,7 +212,7 @@ export default function Home() {
                 <div className="w-full max-w-[358px] overflow-hidden rounded-hero shadow-card">
                   <LandingScreenshot
                     name="hero"
-                    alt="Balance card reading You're owed CA$51.91, with an amount for each person in the group"
+                    alt="Balance card reading You're owed CA$73.54, with an amount for each person in the group"
                     width={716}
                     height={500}
                     className="aspect-[358/250]"
@@ -256,7 +256,7 @@ export default function Home() {
                 <div className="w-full max-w-[358px] overflow-hidden rounded-t-card shadow-card">
                   <LandingScreenshot
                     name="plan"
-                    alt="Settle-up plan listing five payments, with Mark paid buttons on the ones that involve you"
+                    alt="Settle-up plan listing five payments, with a Mark paid button on the one that involves you"
                     width={716}
                     height={840}
                     className="aspect-[358/420]"
