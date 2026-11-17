@@ -46,6 +46,28 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 | T20 | Home and create-group restyle | T02 | done | [PR #17](https://github.com/jackyzhong/potluck/pull/17) |
 | T21 | Ship | all | in progress (migration applied to production 2026-11-15; owner: merge `glow` → `main`, check production) | `glow` → `main` |
 
+### Round 2
+
+See [`round-2/PLAN.md`](./round-2/PLAN.md) and [`round-2/AUDIT.md`](./round-2/AUDIT.md).
+
+| Task | Title | Depends on | Status | Branch / PR | Size / Review | Readiness / Blockers |
+|---|---|---|---|---|---|---|
+| T22 | Create group with initial members (schema + server action) | | todo | — | M · Review | Blocked by B1 (also clarify C10) |
+| T23 | Delete undo & payment creator support (schema + server actions) | | todo | — | M · Review | Blocked by B3 (also clarify C7) |
+| T24 | Inline confirmation strip primitive (`ConfirmStrip`) | | todo | — | S | Ready now |
+| T25 | Toast pill restyle and optional action (`Toast` & `ToastProvider`) | T23 (Undo only) | todo | — | S | Restyle Ready now · Undo wiring Blocked by B3 |
+| T26 | Group not-found and error boundaries (`not-found.tsx` & `error.tsx`) | | todo | — | S | Ready now |
+| T27 | Tablet drawer, phone sheet close button & empty panel polish | | todo | — | S | Ready now (confirm B5 defaults) |
+| T28 | Viewing-as menu theme control & first-visit prompt | T27 | todo | — | M · Review | Ready now (note C8, C12) |
+| T29 | Invite popover and phone sheet (`InvitePopover`) | | todo | — | S | Ready now |
+| T30 | Manage members in right panel and phone sheet | T24, T27 | todo | — | M · Review | Ready now |
+| T31 | Payments: composer impact strip, pills, and payment details | T24 | todo | — | M | Ready now (pending C7 `"added by"`) |
+| T32 | Expense composer: Shares, Edit disabled-until-dirty, Delete & Discard | T24 | todo | — | M · Review | Shares/Edit/Delete Ready now · Discard Blocked by B4 (also clarify C9) |
+| T33 | Empty, settled, loading, and phone search states | | todo | — | M | Loading/Empty/Settled Ready now · Pending C4, C5, C6 |
+| T34 | Create group page redesign (`src/app/create-group/page.tsx`) | T22 | todo | — | M · Review | Blocked by B1 (also clarify C10, C11) |
+| T35 | Phone groups list & header back button (`/groups`, `GroupHeader`) | | todo | — | M · Review | Blocked by B2 (contradicts D19 / C3) |
+| T36 | Landing page and screenshot capture (`src/app/page.tsx`) | T27–T33 | todo | — | L · Review | Layout Ready now · Screenshots Blocked by B7 (also clarify C14) |
+
 ---
 
 ## Open questions
@@ -54,6 +76,42 @@ Statuses: `todo` · `in progress` (branch) · `in review` (PR link) · `done` ·
 > **Answer:** _(owner)_
 
 > **Q2 · T21 · 2026-11-14** Boards 17/18 draw the phone add-expense sheet as a floating, fully rounded card. The app uses an edge-to-edge sheet with a grabber and top-rounded corners (T11, docs/04's "full-height sheet"). Options: (a) keep the sheet; (b) restyle it as a floating card. I'd pick (a): docs/04 asks for the full-height sheet with swipe-down, and the board shows the composer's look, not the shell.
+> **Answer:** _(owner)_
+
+> **B1 · Round 2 (T22, T34) · 2026-11-16** Add initial members while creating a group (requires a new SQL RPC + extending `parseLedgerInput` + `writeStoredViewer`), or keep group creation as name + emoji + currency only?
+> **Answer:** _(owner)_
+
+> **B2 · Round 2 (T35) · 2026-11-16** Build the phone `"Your groups"` list (`/groups`, `12`/`20`) and restore the phone header `"Back to groups"` chevron (reversing Round 1 **D19** / **C3**)? Where, if anywhere, does the groups list appear on desktop, and should the net be fetched from the server or cached locally?
+> **Answer:** _(owner)_
+
+> **B3 · Round 2 (T23, T25, T32) · 2026-11-16** Add Undo to delete toasts (`43`/`49`) and drop `"This can't be undone"` from `"Delete this expense?"` (`41`/`47`), reversing Round 1 **D14/D15** (**C1**)? Requires soft-delete (`deleted_at`) or an undo restore RPC.
+> **Answer:** _(owner)_
+
+> **B4 · Round 2 (T32) · 2026-11-16** Switch the `"Discard changes?"` prompt from `RightPanel`'s centred `DiscardDialog` modal to the inline bottom `ConfirmStrip` (`42`/`48`, **C2**)?
+> **Answer:** _(owner)_
+
+> **B5 · Round 2 (T27) · 2026-11-16** Confirm Round 1 **Q1** and **Q2** above (Round 2 boards assume Q2(a) edge-to-edge phone sheet with grabber and `44×44` round tonal close button).
+> **Answer:** _(owner)_
+
+> **B6 · Round 2 (All tasks) · 2026-11-16** Build Round 2 onto `glow` before merging `glow` → `main` (`T21`), or merge `glow` → `main` first and cut Round 2 branches from `main`?
+> **Answer:** _(owner)_
+
+> **B7 · Round 2 (T36) · 2026-11-16** Capture landing-page screenshots (`public/screenshots/{laptop,phone,hero,composer,plan,viewer}-{light,dark}.png`) from the seeded Veld 2026 dev group in T36, or supply owner-captured screenshots?
+> **Answer:** _(owner)_
+
+> **C4 · Round 2 (T33) · 2026-11-16** Balance hero zero-value chips: boards `51`/`59` (Alvin view) show `Matthew 0.00` and `Jonah 0.00` chips, contradicting Round 1 **D11** (`visibleChips` in `src/lib/glow/ledger.ts` hides zero chips). Keep D11 or show zeros?
+> **Answer:** _(owner)_
+
+> **C5 · Round 2 (T33) · 2026-11-16** Settled hero amount: boards `51`–`53` & `59`–`61` show `CA$0.00` in display size under `"You're all settled"`, contradicting Round 1 `docs/03` & `hero.ts` (`showAmount: false`). Keep amount hidden or show `0.00`?
+> **Answer:** _(owner)_
+
+> **C6 · Round 2 (T33) · 2026-11-16** Phone search and filters (`57`/`65`): Round 2 adds search + horizontal filter chips + `"k of n match"` on phone (and hides the hero while active), contradicting Round 1 **D20** (no phone search). Enable on phone, and if so, should the search bar stay always visible or behind a toggle?
+> **Answer:** _(owner)_
+
+> **C7 · Round 2 (T23, T31) · 2026-11-16** Payment `"added by"` meta (`35`/`38` show `"Sep 17 · added by Matthew"`): `public.payments` has no `created_by` column (Round 1 **T04 / D12** only added `created_by` to `expenses`). Add `payments.created_by`, display `payer`, or omit `"added by"`?
+> **Answer:** _(owner)_
+
+> **C8–C14 · Round 2 (T22, T28, T32, T34, T36) · 2026-11-16** Remaining spec/board conflicts logged in `round-2/AUDIT.md` section 4: **C8** `"Trip so far"` vs `"So far"` (**D10**); **C9** Edit reopen of `split_mode: null` rows (`Equally` on `39`/`45` vs `Exact` in **D13**); **C10** group title limit (`50` on `05`/`06` vs `LIMITS.title = 100`); **C11** omitting `"What happens next"` on phone `06`/`14` vs `round-2/README.md`; **C12** phone `08`/`16` background rows showing Jacky's viewer numbers behind the prompt; **C13** `43`/`49` share-bar shortfall approximation; **C14** landing `"Create a group"` header/hero anchor links (`#create` vs `/create-group`) and `"Postgres database with row-level security"` copy vs `0 RLS policies`.
 > **Answer:** _(owner)_
 
 Format:
@@ -104,6 +162,16 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-16 · Round 2 audit & plan · antigravity
+**Status:** planning only (no feature code written); draft PR into `glow` from `glow-round2-plan`.
+**Changed:**
+- Verified untouched Round 2 handoff (`docs/potluck-glow-redesign/round-2/`, 66 HTML/PNG boards + `manifest.json`) in commit `e233084 ("Add Glow round 2 design handoff")` on top of `origin/glow` (`8eef590`). (Note: Git branch named `glow-round2-plan` instead of `glow/round2-plan` because Git refs cannot hold `glow/*` while `refs/heads/glow` exists.)
+- Created `docs/potluck-glow-redesign/round-2/AUDIT.md` with corrected `"code_today"` mappings across all 66 boards, component/token mappings, Next.js 16.2.4 `not-found`/`error` notes, and contradictions `C1`–`C14`.
+- Created `docs/potluck-glow-redesign/round-2/PLAN.md` sequencing tasks `T22`–`T36` across Phase 1 (Schema/Server), Phase 2 (Shared UI & Error Boundaries), Phase 3 (Group Page Panels & States), and Phase 4 (New Pages).
+- Added the Round 2 board (`T22`–`T36`, all `todo`) and open questions (`B1`–`B7`, `C4`–`C14`) to `PROGRESS.md`.
+**Checked:** Audited all HTML boards, inspected representative PNGs (`01`, `03`, `05`, `07`, `09`, `12`, `22`, `24`, `33`, `35`, `40`, `42`, `43`, `51`, `57`, `58`), `manifest.json`, `scripts/resolve-progress-conflicts.py`, `src/components/glow/*`, `src/app/**`, `src/lib/**`, and `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/{not-found,error}.md`. No edits to `src/` or `supabase/`; no DB calls.
+**Next session should know:** Owner answers for `B1`–`B7` and `C4`–`C14` unblock `T22`, `T23`, `T25` (Undo wiring), `T32` (Discard strip), `T33` (Hero zero chips / `CA$0.00` / Phone search), `T34`, `T35`, and `T36` (screenshots). `T24`, `T26`, `T27`, `T28`, `T29`, `T30`, `T31`, `T25` (restyle), and `T33` (loading/empty/settled plan) are Ready now.
 
 ### 2026-11-15 · T21 production migration · claude-opus-5-5
 **Status:** the T04 migration is applied to production, at the owner's request. What's left for the owner: merge `glow` into `main`, then check production.
