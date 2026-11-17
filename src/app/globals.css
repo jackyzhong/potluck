@@ -1,8 +1,7 @@
 @import "tailwindcss";
 @import "./tokens.css";
 
-/* Glow design tokens live in tokens.css (copied from
-   docs/potluck-glow-redesign/tokens/tokens.css). Light is the default, dark
+/* Glow design tokens live in tokens.css. Light is the default, dark
    comes from [data-theme="dark"] or the OS. Components use the Tailwind
    utilities mapped below, never raw hex. */
 

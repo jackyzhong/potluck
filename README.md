@@ -39,9 +39,34 @@ npm test
 
 Schema changes go in [`supabase/migrations/`](./supabase/migrations/).
 
+## Local setup
+
+Point `.env.local` at the **dev** Supabase project, never production:
+
+| Project | Ref | Use |
+|---|---|---|
+| `potluck-dev` | `pooogudusmmfuztxaqfg` | Local dev, seeding, migrations under test, Vercel Preview |
+| `Potluck` (production) | `xjkvjfmdljdpynlumszz` | Production only |
+
+Check it before running anything. The script confirms the file points at dev and that the key works there, without printing the key:
+
+```
+node scripts/check-dev-env.mjs
+```
+
+Load the made-up "Cabin Trip" sample group into dev (safe to re-run; it prints the group's URL):
+
+```
+node scripts/seed-dev.mjs
+```
+
+In a git worktree, copy `.env.local` from the main checkout first; worktrees don't get one.
+
 ## Project Documentation
 This project is built with a "Documentation First" approach. Explore the internal specs below:
 
 * **[Product Requirement Document (PRD)](./docs/PRD.md):** The vision, user stories, and success metrics.
 * **[Database Schema (DB Chart)](./docs/db-chart.md):** The relational data model and entity relationships.
-* **[Feature Specifications](./docs/features.md):** Deep dives into app logic and design decisions.  
+* **[Feature Specifications](./docs/features.md):** Deep dives into app logic and design decisions.
+* **[Calculations](./docs/calculations.md):** How every balance, impact and split on the group page is computed.
+* **[Known Issues](./docs/KNOWN-ISSUES.md):** The running log of what's broken or missing.  

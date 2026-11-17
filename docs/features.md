@@ -132,10 +132,62 @@ what was already recorded.
 
 **History.** Payments appear in the Activity ledger alongside expenses, in one
 chronological order, tagged "Payment" and phrased from the viewer's side
-("Theo paid you", "You paid Lena") with an "in"/"out" impact. A member's balance breakdown gains
+("Theo paid you", "You paid Priya") with an "in"/"out" impact. A member's balance breakdown gains
 "Payments made" and "Payments received" sections, so the four totals shown
 still add up to the net above them.
 
 **Editing and deleting.** Selecting a payment opens its details in the right
 panel, with Edit and Delete. Deleting asks for confirmation inline, because
-removing a settlement puts the debt back.
+removing a settlement puts the debt back, and then offers Undo in a toast.
+
+---
+
+## 4. Feature: The group page (Glow redesign)
+
+The group page was redesigned in November 2026 ("Glow"). The numbers it shows
+are defined in [calculations.md](./calculations.md); the logic lives in
+`src/lib/glow/` and the components in `src/components/glow/`.
+
+**Viewing as.** There are no accounts, so each device picks which member it is.
+The choice is stored per group in `localStorage` (`potluck:viewer:{ledgerId}`)
+and every amount and "you" on the page is worded from that member's side.
+A first visit with no saved choice asks "Which one are you?". The viewing-as
+pill (or the V key) switches member at any time, without refetching, and
+lists everyone with what they get back or owe.
+
+**Activity tab.** A hero card with the viewer's net ("You're owed CA$73.54") and
+a chip per member for what is owed between the two of them; a "So far" card
+with the group's spend, the viewer's share and what they paid; search over
+descriptions, names, notes and amounts; filters for Expenses, Payments,
+Involving me and "with {name}"; and the ledger, where every row shows its
+impact on the viewer and the viewer's running balance after it (always
+computed over the full history, so filtering never changes it).
+
+**Balances tab.** Stat tiles (paid, share, payments) that add up to the
+viewer's net; the settle-up plan, split into "Involving you" (with Mark paid)
+and "Rest of the group", following the group-wide Simplify setting; and an
+everyone breakdown that unfolds each member's expenses and shares.
+
+**Adding and editing.** One composer for add and edit, with four split modes
+(Equally, Exact, Percent, Shares), live validation, and a line saying how the
+expense changes the viewer's balance. "Save and add another" keeps the panel
+open. Duplicate opens the composer prefilled from an expense. Deleting an
+expense or a payment asks inline, then offers Undo in a toast.
+
+**Layout.** On desktop, details and the composers open in a right-hand panel
+(a drawer on narrower screens); on phone they open as bottom sheets, with Add
+payment and Add expense in a bar at the bottom.
+
+**Keyboard (desktop).** N add expense, P add payment, / search, J/K next and
+previous row (or person on Balances), Enter open, E edit, D toggle Simplify
+(Balances), 1/2 switch tab, V viewing-as menu, Esc close the panel or clear
+the search, ⌘↵ save in a composer.
+
+**Theme.** Light, dark, or follow the system (the default), chosen from the
+viewing-as menu and stored on the device.
+
+**Other pages.** `/` is the landing page (its screenshots show the made-up
+Cabin Trip group; see `scripts/landing-screenshots/README.md`).
+`/create-group` creates a group together with its first members in one step.
+`/groups` lists the groups this device has visited (kept in `localStorage`,
+up to 50).

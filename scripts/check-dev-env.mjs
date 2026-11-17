@@ -5,7 +5,7 @@
 //   node scripts/check-dev-env.mjs
 //
 // Exits 0 when it's safe to run the app, seed or test against the database,
-// and 1 otherwise. See docs/potluck-glow-redesign/PLAN.md, "Local setup".
+// and 1 otherwise. See README.md, "Local setup".
 
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
@@ -25,7 +25,7 @@ function fail(message) {
   process.exit(1);
 }
 
-if (!url || !key) fail("NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY is missing. Copy .env.local (PLAN.md, Local setup).");
+if (!url || !key) fail("NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY is missing. Copy .env.local (README.md, Local setup).");
 
 let host;
 try {

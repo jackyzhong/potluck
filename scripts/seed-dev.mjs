@@ -68,7 +68,7 @@ function uuidFor(fixtureId) {
 }
 
 // Equal split in integer cents. Leftover cents go one each to the first
-// members in ledger order (docs/potluck-glow-redesign/PLAN.md, D5).
+// members in ledger order (docs/calculations.md, "Splitting rules").
 function splitEqually(totalCents, memberIds) {
   const base = Math.floor(totalCents / memberIds.length);
   const extra = totalCents - base * memberIds.length;

@@ -110,6 +110,7 @@ being shared out.
 | `original_currency`| TEXT | NOT NULL, Default: 'CAD' | Present for symmetry with `expenses`; v1 only writes the ledger's base currency. |
 | `note` | TEXT | Optional | Free-text note. |
 | `created_at` | TIMESTAMPTZ | NOT NULL, Default: NOW() | When the payment happened. Drives ordering in the Activity list. |
+| `created_by` | UUID | FK -> users.id, Optional | The member who recorded the payment ("added by" in details). Null on older rows. |
 
 A `payer_id <> payee_id` check constraint prevents paying yourself.
 
@@ -137,6 +138,13 @@ So access control lives in those actions, not in policies:
   the expense and its splits in one transaction and re-checks ledger
   membership and that the shares sum to the total. Only the secret key can
   execute it.
+- **Groups are created by `create_ledger()`**, which inserts the ledger and
+  its initial members in one transaction (the creator first in ledger order)
+  and returns both ids. Only the secret key can execute it.
+- **Undo after deleting an expense uses `restore_expense()`**, which
+  re-inserts the expense with its original id, timestamps and splits, after
+  the same membership and total checks as `save_expense()`. Repeating it is
+  harmless. Only the secret key can execute it.
 
 ### Row Level Security
 

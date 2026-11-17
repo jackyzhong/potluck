@@ -92,7 +92,7 @@ what caught 1.5.
 `src/lib/validation.test.ts` covers the parsing every server action does on
 its input. The Glow redesign added tests for every pure piece of the UI
 logic under `src/lib/glow/`: the viewer calculations (checked against
-`docs/potluck-glow-redesign/fixtures/expected.json`), the four split modes and
+`src/lib/glow/fixtures/expected.json`), the four split modes and
 their validation, panel state, search and filters, keyboard shortcuts, and
 the hero and details wording. `npm run lint` is clean. The `save_expense()` database function was exercised against a
 local Postgres when written, but has no automated test.

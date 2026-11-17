@@ -5,7 +5,7 @@
 // three actions:
 //   Edit       opens the composer in edit mode (?e=<id>&panel=edit, T14)
 //   Duplicate  opens the add panel prefilled, split and all
-//   Delete     asks inline first (D14, no Undo), then deleteExpense
+//   Delete     asks inline first (D14), then deleteExpense, with an Undo toast (D26)
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
