@@ -19,29 +19,26 @@ This plan extends [`../PLAN.md`](../PLAN.md). Follow the same workflow, rules, a
 
 ---
 
-## Owner Decisions (`B1`–`B7`) & Newly Surfaced Conflicts (`C4`–`C14`)
+## Settled Round 2 Decisions (`D23`–`D36`)
 
-Tasks marked **Blocked by B1–B7** (or **Pending C#**) must not guess the product outcome. Once the owner answers in [`../PROGRESS.md`](../PROGRESS.md), fold the answer into this plan and flip the task status to **Ready now**.
+Accepted by owner on `2026-11-16` ("settle these with whatever you recommend, keep note so I can revisit later"). Every former blocker `B1`–`B7`, Round 1 `Q1`–`Q2`, and board/code contradiction `C1`–`C14` is resolved below:
 
-| ID | Question / Conflict | Tasks Affected |
-|---|---|---|
-| **B1** | Add initial members at group creation (requires SQL RPC + validation change) or keep name + currency only? | **T22, T34** (2) |
-| **B2** | Build phone `"Your groups"` list (`/groups`, device-local `localStorage` + light server read + phone back button) and desktop entry point (if any)? *(Conflicts with D19 / **C3**)* | **T35** (1) |
-| **B3** | Undo on delete toasts (requires soft-delete/undo window + `"Delete this expense?"` copy change) vs Round 1 **D14/D15** no-Undo? *(Conflicts with **C1**)* | **T23, T25, T32** (3) |
-| **B4** | Discard prompt: inline strip at bottom of form (`42`/`48`, per design rules) vs existing `DiscardDialog` modal in `RightPanel.tsx`? *(Conflicts with **C2**)* | **T32** (1) |
-| **B5** | Round 1 `Q1` (right-panel vertical alignment beside hero) & `Q2` (edge-to-edge phone sheet vs floating card)? Boards assume `Q2(a)` edge-to-edge sheet. | **T27** (and downstream **T28, T30–T32**) |
-| **B6** | Build Round 2 on `glow` before merging into `main`, or merge `glow` → `main` (`T21`) first? | **All (`T22`–`T36`)** (process) |
-| **B7** | Landing page screenshots: captured by agent from seeded Veld 2026 dev group, or supplied by owner? | **T36** (1) |
-| **C4** | Balance hero zero-value chips (`Matthew 0.00`, `Jonah 0.00` on `51`/`59`) vs Round 1 **D11** hiding zero chips? | **T33** |
-| **C5** | Settled hero showing `CA$0.00` (`51`–`53`, `59`–`61`) vs Round 1 `docs/03` & `hero.ts` (`showAmount: false`)? | **T33** |
-| **C6** | Phone search bar & horizontal filter chips (`57`/`65`, hiding hero when active) vs Round 1 **D20** (no phone search)? | **T33** |
-| **C7** | Payment `"added by {name}"` (`35`/`38`): add `payments.created_by` column, derive from `payer_id`, or omit `"added by"`? | **T23, T31** |
-| **C8** | Share card heading `"Trip so far"` (Round 2 boards) vs `"So far"` (Round 1 **D10**)? | **T28, T33** |
-| **C9** | Reopen `split_mode: null` expenses in `Equally` (`39`/`45` Pizza Badiali) vs `Exact` (Round 1 **D13**)? | **T32** |
-| **C10** | Group title max length `50` (`05`/`06` counter `9/50`) vs `100` (`LIMITS.title` in `validation.ts`)? | **T22, T34** |
-| **C11** | Phone create-group `"What happens next"` card: omit as drawn (`06`/`14`) or stack below form (`round-2/README.md`)? | **T34** |
-| **C12** | First-visit phone background list: blank impact/third-person names like `07`/`15` & `round-2/README.md`, vs Jacky's numbers drawn behind scrim in `08`/`16`? | **T28** |
-| **C14** | Landing header/hero `"Create a group"` links (`#create` scroll vs `/create-group` direct), plus `"Supabase"` RLS phrasing vs `0 RLS policies`? | **T36** |
+| # | Resolves | Settled Decision (Reversible Later) | Tasks |
+|---|---|---|---|
+| **D23** | **B6** | Build Round 2 into `glow` (merging PR #35 first), then run `T21` (`glow` → `main`) after Round 2 ships | All |
+| **D24** | **B1, C10, C11** | Add initial members at group creation via atomic `public.create_ledger` RPC returning `{ ledger_id, creator_user_id }` and save `potluck:viewer:{ledgerId}`; set `LIMITS.title = 50` (matches `n/50`); hide `"What happens next"` card on phone (`06`/`14`) | T22, T34 |
+| **D25** | **B2, C3** | Build phone `"Your groups"` list at `/groups` backed by device-local `localStorage` (`potluck:groups`) + server loader `getVisitedGroups`, and restore the phone `"Back to groups"` chevron in `GroupHeader` (reverses **D19**) | T35 |
+| **D26** | **B3, C1** | Enable Undo on delete toasts (`restoreExpense` RPC / `restorePayment` action restoring original id, timestamps, splits & creator) and drop `"This can't be undone"` from `"Delete this expense?"` (reverses **D14/D15**) | T23, T25, T32 |
+| **D27** | **B4, C2** | Replace `RightPanel`'s `DiscardDialog` modal with inline `<ConfirmStrip>` at the bottom of `ExpenseComposer` and `PaymentComposer` (`42`/`48`) | T32, T31 |
+| **D28** | **B5, Q1, Q2** | Accept Round 1 `Q1(a)` (keep `GroupFrame` desktop right-panel start below top row) and `Q2(a)` (keep edge-to-edge phone bottom sheet with grabber) | T27 |
+| **D29** | **C7** | Add nullable `payments.created_by` referencing `public.users(id)`, pass `viewerId` when creating payments, backfill seed script, and show `"Sep 17 · added by {name}"` in `PaymentDetails` | T23, T31 |
+| **D30** | **C4, C5** | Keep **D11** (hide `0.00` chips on hero); set `showAmount: true` on settled hero (`net === 0`) so it displays `CA$0.00` (`51`–`53`, `59`–`61`) | T33 |
+| **D31** | **C6** | Enable search, clear `×`, horizontal filter chips, and `"k of n match"` count on phone (`57`/`65`), hiding phone `BalanceHero` while filtering (reverses **D20**) | T33 |
+| **D32** | **C8** | Keep Round 1 **D10** (`"So far"` heading in `ShareOfSpendCard`) | Reference |
+| **D33** | **C9** | In `ExpenseComposer` edit mode, use `inferSplitMode` so equal legacy rows (`split_mode: null`) reopen in `Equally` mode, and display the net-impact delta relative to the original expense | T32 |
+| **D34** | **C12** | Before a viewer is chosen, keep all rows visible with neutral third-person titles and blank `Your impact` / `Balance` columns on desktop and phone | T28 |
+| **D35** | **C13** | Keep `ShareOfSpendCard`'s exact hatched shortfall calculation when paid < share | Reference |
+| **D36** | **B7, C14** | Capture the 12 theme-aware Veld 2026 screenshots locally into `public/screenshots/`; link every landing `"Create a group"` CTA directly to `/create-group`; keep landing `"Under the hood"` copy | T36 |
 
 ---
 
@@ -74,7 +71,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
 ### Phase 1 — Schema & Server Actions
 
 #### T22 · Create group with initial members (schema + server action)
-- **Status:** **Blocked by B1** (and clarify **C10**: `LIMITS.title` 50 vs 100)
+- **Status:** **Ready now** (per **D24**: atomic `create_ledger` RPC + `LIMITS.title = 50`)
 - **Size:** M · **Review**
 - **Goal:** Atomically create a group and its initial member list in a single server action/SQL RPC, returning the new ledger ID and creator's user ID so the creator skips the first-visit prompt.
 - **Boards:** [`05-create-group-light.html`](./html/05-create-group-light.html), [`06-create-group-phone-light.html`](./html/06-create-group-phone-light.html), [`13-create-group-dark.html`](./html/13-create-group-dark.html), [`14-create-group-phone-dark.html`](./html/14-create-group-phone-dark.html) (server & validation contract)
@@ -95,7 +92,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
   - [ ] Existing create-group tests/builds continue to pass; `npm test && npm run lint && npx tsc --noEmit && npm run build` pass.
 
 #### T23 · Delete undo & payment creator support (schema + server actions)
-- **Status:** **Blocked by B3** (Undo delete semantics) & **Pending C7** (`payments.created_by`)
+- **Status:** **Ready now** (per **D26**: `restoreExpense`/`restorePayment` undo + **D29**: `payments.created_by`)
 - **Size:** M · **Review**
 - **Goal:** Provide safe server-side undo for deleted expenses and payments, and optionally record `payments.created_by` if the owner chooses `"added by"` on payment details.
 - **Boards:** [`35-payment-details-light.html`](./html/35-payment-details-light.html), [`38-payment-details-dark.html`](./html/38-payment-details-dark.html), [`43-toast-board-light.html`](./html/43-toast-board-light.html), [`49-toast-board-dark.html`](./html/49-toast-board-dark.html) (server & schema support)
@@ -141,7 +138,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
   - [ ] `npm test && npm run lint && npx tsc --noEmit && npm run build` pass.
 
 #### T25 · Toast pill restyle and optional action (`Toast` & `ToastProvider`)
-- **Status:** **Visual restyle Ready now** / **Undo wiring Blocked by B3**
+- **Status:** **Ready now** (per **D26**: visual restyle + Undo wiring)
 - **Size:** S
 - **Goal:** Restyle `Toast` to match Boards `43`/`49` (52px surface pill with menu shadow, dark border token, no checkmark on success, optional 36px tonal action button) and wire `"Undo"` to delete actions once **T23**/**B3** land.
 - **Boards:** [`43-toast-board-light.html`](./html/43-toast-board-light.html) (`1280×920`), [`49-toast-board-dark.html`](./html/49-toast-board-dark.html) (`1280×920`)
@@ -187,7 +184,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
 ### Phase 3 — Group Page Panels, Menus & States
 
 #### T27 · Tablet drawer, phone sheet close button & empty panel polish (`RightPanel` & `PanelContent`)
-- **Status:** **Ready now** (boards assume Round 1 **Q2(a)** edge-to-edge sheet; confirm **B5** only if owner overrides `Q1`/`Q2`)
+- **Status:** **Ready now** (per **D28**: Round 1 `Q1(a)` + `Q2(a)`)
 - **Size:** S
 - **Goal:** Align the tablet drawer geometry, drawer/sheet round tonal close button, and empty desktop panel state with Round 2 boards (`07`, `23`–`26`, `34`, `43`–`44`, `58`, `66`).
 - **Boards:** [`58-tablet-light.html`](./html/58-tablet-light.html) (`820×1100`), [`66-tablet-dark.html`](./html/66-tablet-dark.html) (`820×1100`), [`44-details-phone-light.html`](./html/44-details-phone-light.html), [`50-details-phone-dark.html`](./html/50-details-phone-dark.html), [`07-which-one-light.html`](./html/07-which-one-light.html), [`43-toast-board-light.html`](./html/43-toast-board-light.html)
@@ -207,7 +204,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
   - [ ] `npm test && npm run lint && npx tsc --noEmit && npm run build` pass.
 
 #### T28 · Viewing-as menu theme control & first-visit prompt (`ViewerSwitcher`, `ViewerChoices`, `BalanceHero`, `ShareOfSpendCard`, `LedgerTable`, `LedgerList`)
-- **Status:** **Ready now** (flag **C8** `"Trip so far"` vs `"So far"` & **C12** phone list behind scrim; default keeps `"So far"` and blank pre-viewer list per `round-2/README.md`)
+- **Status:** **Ready now** (per **D32**: `"So far"` & **D34**: blank pre-viewer list on both desktop and phone)
 - **Size:** M · **Review**
 - **Goal:** Replace the centred `WhichOneAreYou` desktop modal with auto-opening the header's viewing-as popover/sheet in first-visit mode, show pre-viewer group totals + blank impact/balance rows behind it, and restyle the Theme segmented control in `ViewerChoices.tsx`.
 - **Boards:** [`07-which-one-light.html`](./html/07-which-one-light.html) (`1280×920`), [`08-which-one-phone-light.html`](./html/08-which-one-phone-light.html) (`390×844`), [`15-which-one-dark.html`](./html/15-which-one-dark.html), [`16-which-one-phone-dark.html`](./html/16-which-one-phone-dark.html), [`26-viewer-menu-theme-light.html`](./html/26-viewer-menu-theme-light.html) (`1280×920`), [`32-viewer-menu-theme-dark.html`](./html/32-viewer-menu-theme-dark.html)
@@ -281,7 +278,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
   - [ ] `npm test && npm run lint && npx tsc --noEmit && npm run build` pass.
 
 #### T31 · Payments: composer impact strip, pills, and payment details (`PaymentComposer` & `PaymentDetails`)
-- **Status:** **Ready now** (with **C7** open on `"added by"` column in `PaymentDetails`; display omitted or derived until **T23/C7** decides)
+- **Status:** **Ready now** (per **D27**: inline discard & **D29**: `"added by {name}"` via `payments.created_by`)
 - **Size:** M
 - **Goal:** Bring `PaymentComposer` and `PaymentDetails` up to Boards `33`–`38` (compact gradient card, custom pill pickers, live viewer balance impact strip, header `"{payer} paid {payee} [Payment]"` title, `"in/out"` strip, recessed Summary + Pairwise remaining balance card, and `ConfirmStrip` delete).
 - **Boards:** [`33-add-payment-light.html`](./html/33-add-payment-light.html) (`1280×920`), [`34-add-payment-phone-light.html`](./html/34-add-payment-phone-light.html) (`390×844`), [`35-payment-details-light.html`](./html/35-payment-details-light.html) (`440×560`), [`36-add-payment-dark.html`](./html/36-add-payment-dark.html), [`37-add-payment-phone-dark.html`](./html/37-add-payment-phone-dark.html), [`38-payment-details-dark.html`](./html/38-payment-details-dark.html)
@@ -303,7 +300,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
   - [ ] Unit tests in `payment.test.ts` + `npm test && npm run lint && npx tsc --noEmit && npm run build` pass.
 
 #### T32 · Expense composer: Shares restyle, Edit disabled-until-dirty, Delete & Discard strips (`SplitBodies`, `ExpenseComposer`, `ExpenseDetails`, `RightPanel`)
-- **Status:** **Shares / Edit disabled-state / Delete strip Ready now** · **Discard strip Blocked by B4** · **Pending C9** (legacy `split_mode: null` reopen mode)
+- **Status:** **Ready now** (per **D26**: Undo/copy, **D27**: inline discard `ConfirmStrip`, **D33**: reopen equal legacy rows via `inferSplitMode` + impact delta)
 - **Size:** M · **Review**
 - **Goal:** Update `SharesBody` layout/stepper/remainder footnote, disable Edit submit with `"No changes yet"` until dirty, migrate Delete confirmation to `ConfirmStrip` with balance-delta warning copy, and wire inline Discard `ConfirmStrip` once **B4** decides.
 - **Boards:** [`39-edit-expense-light.html`](./html/39-edit-expense-light.html) (`440×900`), [`40-shares-light.html`](./html/40-shares-light.html) (`440×920`), [`41-delete-confirm-light.html`](./html/41-delete-confirm-light.html) (`440×780`), [`42-discard-light.html`](./html/42-discard-light.html) (`440×960`), [`45`–`48` dark twins](./html/45-edit-expense-dark.html)
@@ -325,7 +322,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
   - [ ] Unit tests for share remainder text + `npm test && npm run lint && npx tsc --noEmit && npm run build` pass.
 
 #### T33 · Empty, settled, loading, and phone search states (`BalanceHero`, `SettleUpPlan`, `LedgerEmpty`, `loading.tsx`, `ActivityToolbar`, `SearchField`)
-- **Status:** **Empty, Settled Plan & Loading Ready now** · **Pending C4, C5, C6** (Hero `0.00` + zero chips + Phone search/filter)
+- **Status:** **Ready now** (per **D30**: hide zero chips, show `CA$0.00` when settled & **D31**: phone search/filters collapsing hero while active)
 - **Size:** M
 - **Goal:** Restyle `LedgerEmpty`, `SettleUpPlan` settled state, and `loading.tsx` neutral skeletons; implement hero zero/settled adjustments and phone search + horizontal filter strip pending **C4/C5/C6** owner confirmation.
 - **Boards:** [`51`–`57` light](./html/51-hero-states-light.html) (`900×760`, `1280×760`, `390×844`, `1280×920`), [`59`–`65` dark](./html/59-hero-states-dark.html)
@@ -354,7 +351,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
 ### Phase 4 — New Pages (Create Group UI, Phone Groups List, Landing Page)
 
 #### T34 · Create group page redesign (`src/app/create-group/page.tsx`)
-- **Status:** **Blocked by B1** (and clarify **C10** title max 50 vs 100, **C11** phone `"What happens next"` card)
+- **Status:** **Ready now** (per **D24**: members at creation, 50-char title limit, omit `"What happens next"` on phone)
 - **Size:** M · **Review**
 - **Goal:** Rebuild `/create-group` to match Boards `05`, `06`, `13`, `14`, letting the creator name the group, pick emoji & currency, add/remove initial members (with row 0 tagged `"You"`), store themselves as viewer, and navigate straight to the new group.
 - **Boards:** [`05-create-group-light.html`](./html/05-create-group-light.html) (`1280×820`), [`06-create-group-phone-light.html`](./html/06-create-group-phone-light.html) (`390×900`), [`13-create-group-dark.html`](./html/13-create-group-dark.html), [`14-create-group-phone-dark.html`](./html/14-create-group-phone-dark.html)
@@ -377,7 +374,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
   - [ ] `npm test && npm run lint && npx tsc --noEmit && npm run build` pass.
 
 #### T35 · Phone groups list & header back button (`src/app/groups/page.tsx`, `GroupHeader.tsx`, `viewer.ts`)
-- **Status:** **Blocked by B2** (reverses Round 1 **D19** / **C3**)
+- **Status:** **Ready now** (per **D25**: `/groups` + phone back chevron, reversing **D19**)
 - **Size:** M · **Review**
 - **Goal:** Record visited groups on this device in `localStorage`, render the phone `"Your groups"` page with member counts, viewer name, and live viewer net, and restore the `"Back to groups"` button in `GroupHeader.tsx`.
 - **Boards:** [`12-groups-phone-light.html`](./html/12-groups-phone-light.html) (`390×844`), [`20-groups-phone-dark.html`](./html/20-groups-phone-dark.html) (`390×844`), plus phone headers in `08`, `23`, `25`, `34`, `44`, `53`, `56`, `57`
@@ -397,7 +394,7 @@ T23 Undo/Payment schema  ───▶ T25 Toast Undo wiring [B3]
   - [ ] `npm test && npm run lint && npx tsc --noEmit && npm run build` pass.
 
 #### T36 · Landing page and screenshot capture (`src/app/page.tsx`, `public/screenshots/`)
-- **Status:** **Layout Ready now** / **Real screenshots Blocked by B7** (and best run after `T27`–`T33` so screenshots reflect Round 2 UI; clarify **C14** links + RLS copy)
+- **Status:** **Ready now** (per **D36**: capture 12 Veld 2026 screenshots locally, link `"Create a group"` CTAs to `/create-group`, keep `"Under the hood"` copy)
 - **Size:** L · **Review**
 - **Goal:** Replace the temporary hero in `src/app/page.tsx` with the complete Glow landing page (`01`–`04`) and generate/wire theme-aware product screenshots from the seeded Veld 2026 group.
 - **Boards:** [`01-landing-desktop-light.html`](./html/01-landing-desktop-light.html) (`1440×3682`), [`02-landing-phone-light.html`](./html/02-landing-phone-light.html) (`390×5630`), [`03-landing-desktop-dark.html`](./html/03-landing-desktop-dark.html), [`04-landing-phone-dark.html`](./html/04-landing-phone-dark.html)

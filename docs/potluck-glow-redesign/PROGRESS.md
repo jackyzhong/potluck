@@ -52,67 +52,27 @@ See [`round-2/PLAN.md`](./round-2/PLAN.md) and [`round-2/AUDIT.md`](./round-2/AU
 
 | Task | Title | Depends on | Status | Branch / PR | Size / Review | Readiness / Blockers |
 |---|---|---|---|---|---|---|
-| T22 | Create group with initial members (schema + server action) | | todo | — | M · Review | Blocked by B1 (also clarify C10) |
-| T23 | Delete undo & payment creator support (schema + server actions) | | todo | — | M · Review | Blocked by B3 (also clarify C7) |
-| T24 | Inline confirmation strip primitive (`ConfirmStrip`) | | todo | — | S | Ready now |
-| T25 | Toast pill restyle and optional action (`Toast` & `ToastProvider`) | T23 (Undo only) | todo | — | S | Restyle Ready now · Undo wiring Blocked by B3 |
-| T26 | Group not-found and error boundaries (`not-found.tsx` & `error.tsx`) | | todo | — | S | Ready now |
-| T27 | Tablet drawer, phone sheet close button & empty panel polish | | todo | — | S | Ready now (confirm B5 defaults) |
-| T28 | Viewing-as menu theme control & first-visit prompt | T27 | todo | — | M · Review | Ready now (note C8, C12) |
-| T29 | Invite popover and phone sheet (`InvitePopover`) | | todo | — | S | Ready now |
-| T30 | Manage members in right panel and phone sheet | T24, T27 | todo | — | M · Review | Ready now |
-| T31 | Payments: composer impact strip, pills, and payment details | T24 | todo | — | M | Ready now (pending C7 `"added by"`) |
-| T32 | Expense composer: Shares, Edit disabled-until-dirty, Delete & Discard | T24 | todo | — | M · Review | Shares/Edit/Delete Ready now · Discard Blocked by B4 (also clarify C9) |
-| T33 | Empty, settled, loading, and phone search states | | todo | — | M | Loading/Empty/Settled Ready now · Pending C4, C5, C6 |
-| T34 | Create group page redesign (`src/app/create-group/page.tsx`) | T22 | todo | — | M · Review | Blocked by B1 (also clarify C10, C11) |
-| T35 | Phone groups list & header back button (`/groups`, `GroupHeader`) | | todo | — | M · Review | Blocked by B2 (contradicts D19 / C3) |
-| T36 | Landing page and screenshot capture (`src/app/page.tsx`) | T27–T33 | todo | — | L · Review | Layout Ready now · Screenshots Blocked by B7 (also clarify C14) |
+| T22 | Create group with initial members (schema + server action) | | todo | — | M · Review | Ready (D24) |
+| T23 | Delete undo & payment creator support (schema + server actions) | | todo | — | M · Review | Ready (D26, D29) |
+| T24 | Inline confirmation strip primitive (`ConfirmStrip`) | | todo | — | S | Ready |
+| T25 | Toast pill restyle and optional action (`Toast` & `ToastProvider`) | T23 (Undo) | todo | — | S | Ready (D26) |
+| T26 | Group not-found and error boundaries (`not-found.tsx` & `error.tsx`) | | todo | — | S | Ready |
+| T27 | Tablet drawer, phone sheet close button & empty panel polish | | todo | — | S | Ready (D28) |
+| T28 | Viewing-as menu theme control & first-visit prompt | T27 | todo | — | M · Review | Ready (D32, D34) |
+| T29 | Invite popover and phone sheet (`InvitePopover`) | | todo | — | S | Ready |
+| T30 | Manage members in right panel and phone sheet | T24, T27 | todo | — | M · Review | Ready |
+| T31 | Payments: composer impact strip, pills, and payment details | T23, T24 | todo | — | M | Ready (D29) |
+| T32 | Expense composer: Shares, Edit disabled-until-dirty, Delete & Discard | T24 | todo | — | M · Review | Ready (D26, D27, D33) |
+| T33 | Empty, settled, loading, and phone search states | | todo | — | M | Ready (D30, D31) |
+| T34 | Create group page redesign (`src/app/create-group/page.tsx`) | T22 | todo | — | M · Review | Ready (D24) |
+| T35 | Phone groups list & header back button (`/groups`, `GroupHeader`) | | todo | — | M · Review | Ready (D25) |
+| T36 | Landing page and screenshot capture (`src/app/page.tsx`) | T27–T33 | todo | — | L · Review | Ready (D36) |
 
 ---
 
 ## Open questions
 
-> **Q1 · T21 · 2026-11-14** On boards 09/10 the add-expense panel starts at the top of the right column, beside the hero, with "So far" moved to the middle. In the app, "So far" stays top right and the panel starts at the toolbar row, so at 1280×920 and 1440×1040 the page scrolls while the composer is open. Options: (a) keep it as is; (b) restructure the frame so the panel spans from the hero row down (T07's `GroupFrame` layout, about a day's work). I'd pick (a) for shipping and (b) as a follow-up, because it's a layout refactor touching every slot.
-> **Answer:** _(owner)_
-
-> **Q2 · T21 · 2026-11-14** Boards 17/18 draw the phone add-expense sheet as a floating, fully rounded card. The app uses an edge-to-edge sheet with a grabber and top-rounded corners (T11, docs/04's "full-height sheet"). Options: (a) keep the sheet; (b) restyle it as a floating card. I'd pick (a): docs/04 asks for the full-height sheet with swipe-down, and the board shows the composer's look, not the shell.
-> **Answer:** _(owner)_
-
-> **B1 · Round 2 (T22, T34) · 2026-11-16** Add initial members while creating a group (requires a new SQL RPC + extending `parseLedgerInput` + `writeStoredViewer`), or keep group creation as name + emoji + currency only?
-> **Answer:** _(owner)_
-
-> **B2 · Round 2 (T35) · 2026-11-16** Build the phone `"Your groups"` list (`/groups`, `12`/`20`) and restore the phone header `"Back to groups"` chevron (reversing Round 1 **D19** / **C3**)? Where, if anywhere, does the groups list appear on desktop, and should the net be fetched from the server or cached locally?
-> **Answer:** _(owner)_
-
-> **B3 · Round 2 (T23, T25, T32) · 2026-11-16** Add Undo to delete toasts (`43`/`49`) and drop `"This can't be undone"` from `"Delete this expense?"` (`41`/`47`), reversing Round 1 **D14/D15** (**C1**)? Requires soft-delete (`deleted_at`) or an undo restore RPC.
-> **Answer:** _(owner)_
-
-> **B4 · Round 2 (T32) · 2026-11-16** Switch the `"Discard changes?"` prompt from `RightPanel`'s centred `DiscardDialog` modal to the inline bottom `ConfirmStrip` (`42`/`48`, **C2**)?
-> **Answer:** _(owner)_
-
-> **B5 · Round 2 (T27) · 2026-11-16** Confirm Round 1 **Q1** and **Q2** above (Round 2 boards assume Q2(a) edge-to-edge phone sheet with grabber and `44×44` round tonal close button).
-> **Answer:** _(owner)_
-
-> **B6 · Round 2 (All tasks) · 2026-11-16** Build Round 2 onto `glow` before merging `glow` → `main` (`T21`), or merge `glow` → `main` first and cut Round 2 branches from `main`?
-> **Answer:** _(owner)_
-
-> **B7 · Round 2 (T36) · 2026-11-16** Capture landing-page screenshots (`public/screenshots/{laptop,phone,hero,composer,plan,viewer}-{light,dark}.png`) from the seeded Veld 2026 dev group in T36, or supply owner-captured screenshots?
-> **Answer:** _(owner)_
-
-> **C4 · Round 2 (T33) · 2026-11-16** Balance hero zero-value chips: boards `51`/`59` (Alvin view) show `Matthew 0.00` and `Jonah 0.00` chips, contradicting Round 1 **D11** (`visibleChips` in `src/lib/glow/ledger.ts` hides zero chips). Keep D11 or show zeros?
-> **Answer:** _(owner)_
-
-> **C5 · Round 2 (T33) · 2026-11-16** Settled hero amount: boards `51`–`53` & `59`–`61` show `CA$0.00` in display size under `"You're all settled"`, contradicting Round 1 `docs/03` & `hero.ts` (`showAmount: false`). Keep amount hidden or show `0.00`?
-> **Answer:** _(owner)_
-
-> **C6 · Round 2 (T33) · 2026-11-16** Phone search and filters (`57`/`65`): Round 2 adds search + horizontal filter chips + `"k of n match"` on phone (and hides the hero while active), contradicting Round 1 **D20** (no phone search). Enable on phone, and if so, should the search bar stay always visible or behind a toggle?
-> **Answer:** _(owner)_
-
-> **C7 · Round 2 (T23, T31) · 2026-11-16** Payment `"added by"` meta (`35`/`38` show `"Sep 17 · added by Matthew"`): `public.payments` has no `created_by` column (Round 1 **T04 / D12** only added `created_by` to `expenses`). Add `payments.created_by`, display `payer`, or omit `"added by"`?
-> **Answer:** _(owner)_
-
-> **C8–C14 · Round 2 (T22, T28, T32, T34, T36) · 2026-11-16** Remaining spec/board conflicts logged in `round-2/AUDIT.md` section 4: **C8** `"Trip so far"` vs `"So far"` (**D10**); **C9** Edit reopen of `split_mode: null` rows (`Equally` on `39`/`45` vs `Exact` in **D13**); **C10** group title limit (`50` on `05`/`06` vs `LIMITS.title = 100`); **C11** omitting `"What happens next"` on phone `06`/`14` vs `round-2/README.md`; **C12** phone `08`/`16` background rows showing Jacky's viewer numbers behind the prompt; **C13** `43`/`49` share-bar shortfall approximation; **C14** landing `"Create a group"` header/hero anchor links (`#create` vs `/create-group`) and `"Postgres database with row-level security"` copy vs `0 RLS policies`.
-> **Answer:** _(owner)_
+_(None open — Round 1 Q1–Q2 and Round 2 B1–B7 / C1–C14 were settled on 2026-11-16 as D23–D36 in [`round-2/PLAN.md`](./round-2/PLAN.md) so the full Round 2 implementation can proceed cleanly.)_
 
 Format:
 
@@ -162,6 +122,23 @@ Coordinator sessions (dispatching, reviewing, merging) use this instead:
 Keep it short. Facts, not a narrative. If something wasn't checked, say so.
 
 ---
+
+### 2026-11-16 · Decisions D23–D36 settled · antigravity
+**Status:** all Round 1 (`Q1`, `Q2`) and Round 2 (`B1`–`B7`, `C1`–`C14`) decisions settled as `D23`–`D36` in [`round-2/PLAN.md`](./round-2/PLAN.md) at the owner's request.
+**Changed:**
+- Folded recommended resolutions `D23`–`D36` into `round-2/PLAN.md` and `PROGRESS.md`:
+  - `D23` (`B6`): land Round 2 on `glow`, then ship `T21` (`glow` → `main`).
+  - `D24` (`B1, C10, C11`): initial members at creation via `create_ledger` RPC returning `{ ledger_id, creator_user_id }`, `LIMITS.title = 50`, omit `"What happens next"` card on phone (`06`/`14`).
+  - `D25` (`B2, C3`): build `/groups` + `potluck:groups` `localStorage` index + server loader + restore phone header back chevron (reversing `D19`).
+  - `D26` (`B3, C1`): Undo on delete toasts (`restoreExpense` RPC / `restorePayment`) and drop `"This can't be undone"` (reversing `D14`/`D15`).
+  - `D27` (`B4, C2`): replace `DiscardDialog` modal with inline `<ConfirmStrip>` (`42`/`48`).
+  - `D28` (`B5, Q1, Q2`): accept `Q1(a)` (desktop right-panel alignment) and `Q2(a)` (edge-to-edge phone sheet).
+  - `D29` (`C7`): add `payments.created_by` column and show `"added by {name}"` in `PaymentDetails`.
+  - `D30` (`C4, C5`): keep `D11` (hide zero chips on hero); show `CA$0.00` on settled hero (`showAmount: true` when `net === 0`).
+  - `D31` (`C6`): enable phone search, clear `×`, horizontal filter chips, `"k of n match"` count, and hero collapse while filtering (reversing `D20`).
+  - `D32` (`C8`): keep `D10` (`"So far"`). `D33` (`C9`): reopen legacy equal rows in `Equally` via `inferSplitMode` + show edit impact delta. `D34` (`C12`): pre-viewer phone list stays neutral/blank. `D35` (`C13`): keep hatched shortfall bar.
+  - `D36` (`B7, C14`): capture 12 Veld 2026 screenshots into `public/screenshots/`; link every landing `"Create a group"` CTA to `/create-group`; keep `"Under the hood"` copy.
+**Next session should know:** If the owner wants to revisit any call, every item `D23`–`D36` is indexed in `round-2/PLAN.md`.
 
 ### 2026-11-16 · Round 2 audit & plan · antigravity
 **Status:** planning only (no feature code written); draft PR into `glow` from `glow-round2-plan`.
