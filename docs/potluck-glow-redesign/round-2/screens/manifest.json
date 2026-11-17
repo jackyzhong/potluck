@@ -1,0 +1,1124 @@
+[
+ {
+  "id": "01-landing-desktop-light",
+  "group": "Home page",
+  "board": "Landing page, desktop",
+  "theme": "light",
+  "viewport": {
+   "w": 1440,
+   "h": 3682
+  },
+  "fluid": true,
+  "html": "html/01-landing-desktop-light.html",
+  "png": "screens/01-landing-desktop-light.png",
+  "area": "Home page (landing)",
+  "code_today": "src/app/page.tsx (old hero, recoloured in T20)",
+  "effort": "Restructure + new content",
+  "rendered_height": 3653
+ },
+ {
+  "id": "02-landing-phone-light",
+  "group": "Home page",
+  "board": "Landing page, phone",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 5630
+  },
+  "fluid": false,
+  "html": "html/02-landing-phone-light.html",
+  "png": "screens/02-landing-phone-light.png",
+  "area": "Home page (landing)",
+  "code_today": "src/app/page.tsx (old hero, recoloured in T20)",
+  "effort": "Restructure + new content",
+  "rendered_height": 5628
+ },
+ {
+  "id": "03-landing-desktop-dark",
+  "group": "Home page",
+  "board": "Landing page, desktop",
+  "theme": "dark",
+  "viewport": {
+   "w": 1440,
+   "h": 3682
+  },
+  "fluid": true,
+  "html": "html/03-landing-desktop-dark.html",
+  "png": "screens/03-landing-desktop-dark.png",
+  "area": "Home page (landing)",
+  "code_today": "src/app/page.tsx (old hero, recoloured in T20)",
+  "effort": "Restructure + new content",
+  "rendered_height": 3653
+ },
+ {
+  "id": "04-landing-phone-dark",
+  "group": "Home page",
+  "board": "Landing page, phone",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 5630
+  },
+  "fluid": false,
+  "html": "html/04-landing-phone-dark.html",
+  "png": "screens/04-landing-phone-dark.png",
+  "area": "Home page (landing)",
+  "code_today": "src/app/page.tsx (old hero, recoloured in T20)",
+  "effort": "Restructure + new content",
+  "rendered_height": 5628
+ },
+ {
+  "id": "05-create-group-light",
+  "group": "Getting started",
+  "board": "Create group, desktop",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 820
+  },
+  "fluid": true,
+  "html": "html/05-create-group-light.html",
+  "png": "screens/05-create-group-light.png",
+  "area": "Create group",
+  "code_today": "src/app/create-group/page.tsx + actions.ts (name, emoji, currency only)",
+  "effort": "Restructure + New (members at creation)",
+  "rendered_height": 820
+ },
+ {
+  "id": "06-create-group-phone-light",
+  "group": "Getting started",
+  "board": "Create group, phone",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 900
+  },
+  "fluid": false,
+  "html": "html/06-create-group-phone-light.html",
+  "png": "screens/06-create-group-phone-light.png",
+  "area": "Create group",
+  "code_today": "same",
+  "effort": "Restructure + New",
+  "rendered_height": 900
+ },
+ {
+  "id": "07-which-one-light",
+  "group": "Getting started",
+  "board": "First visit: which one are you, desktop",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/07-which-one-light.html",
+  "png": "screens/07-which-one-light.png",
+  "area": "First-visit prompt",
+  "code_today": "src/components/glow/WhichOneAreYou.tsx (desktop card, improvised)",
+  "effort": "Restyle",
+  "rendered_height": 920
+ },
+ {
+  "id": "08-which-one-phone-light",
+  "group": "Getting started",
+  "board": "First visit: which one are you, phone",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/08-which-one-phone-light.html",
+  "png": "screens/08-which-one-phone-light.png",
+  "area": "First-visit prompt",
+  "code_today": "WhichOneAreYou.tsx + ViewerSheet.tsx",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "09-not-found-light",
+  "group": "Getting started",
+  "board": "Group not found, desktop",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 640
+  },
+  "fluid": true,
+  "html": "html/09-not-found-light.html",
+  "png": "screens/09-not-found-light.png",
+  "area": "Not found / error pages",
+  "code_today": "none: Next default 404 via notFound() in ledger/[id]/page.tsx",
+  "effort": "New",
+  "rendered_height": 640
+ },
+ {
+  "id": "10-not-found-phone-light",
+  "group": "Getting started",
+  "board": "Group not found, phone",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/10-not-found-phone-light.html",
+  "png": "screens/10-not-found-phone-light.png",
+  "area": "Not found / error pages",
+  "code_today": "none",
+  "effort": "New",
+  "rendered_height": 844
+ },
+ {
+  "id": "11-load-error-light",
+  "group": "Getting started",
+  "board": "Group failed to load, desktop",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 640
+  },
+  "fluid": true,
+  "html": "html/11-load-error-light.html",
+  "png": "screens/11-load-error-light.png",
+  "area": "Not found / error pages",
+  "code_today": "none: no error.tsx",
+  "effort": "New",
+  "rendered_height": 640
+ },
+ {
+  "id": "12-groups-phone-light",
+  "group": "Getting started",
+  "board": "Groups list, phone (new)",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/12-groups-phone-light.html",
+  "png": "screens/12-groups-phone-light.png",
+  "area": "Groups list",
+  "code_today": "none (phone back button was dropped, D19)",
+  "effort": "New (needs a decision)",
+  "rendered_height": 844
+ },
+ {
+  "id": "13-create-group-dark",
+  "group": "Getting started",
+  "board": "Create group, desktop",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 820
+  },
+  "fluid": true,
+  "html": "html/13-create-group-dark.html",
+  "png": "screens/13-create-group-dark.png",
+  "area": "Create group",
+  "code_today": "src/app/create-group/page.tsx + actions.ts (name, emoji, currency only)",
+  "effort": "Restructure + New (members at creation)",
+  "rendered_height": 820
+ },
+ {
+  "id": "14-create-group-phone-dark",
+  "group": "Getting started",
+  "board": "Create group, phone",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 900
+  },
+  "fluid": false,
+  "html": "html/14-create-group-phone-dark.html",
+  "png": "screens/14-create-group-phone-dark.png",
+  "area": "Create group",
+  "code_today": "same",
+  "effort": "Restructure + New",
+  "rendered_height": 900
+ },
+ {
+  "id": "15-which-one-dark",
+  "group": "Getting started",
+  "board": "First visit: which one are you, desktop",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/15-which-one-dark.html",
+  "png": "screens/15-which-one-dark.png",
+  "area": "First-visit prompt",
+  "code_today": "src/components/glow/WhichOneAreYou.tsx (desktop card, improvised)",
+  "effort": "Restyle",
+  "rendered_height": 920
+ },
+ {
+  "id": "16-which-one-phone-dark",
+  "group": "Getting started",
+  "board": "First visit: which one are you, phone",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/16-which-one-phone-dark.html",
+  "png": "screens/16-which-one-phone-dark.png",
+  "area": "First-visit prompt",
+  "code_today": "WhichOneAreYou.tsx + ViewerSheet.tsx",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "17-not-found-dark",
+  "group": "Getting started",
+  "board": "Group not found, desktop",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 640
+  },
+  "fluid": true,
+  "html": "html/17-not-found-dark.html",
+  "png": "screens/17-not-found-dark.png",
+  "area": "Not found / error pages",
+  "code_today": "none: Next default 404 via notFound() in ledger/[id]/page.tsx",
+  "effort": "New",
+  "rendered_height": 640
+ },
+ {
+  "id": "18-not-found-phone-dark",
+  "group": "Getting started",
+  "board": "Group not found, phone",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/18-not-found-phone-dark.html",
+  "png": "screens/18-not-found-phone-dark.png",
+  "area": "Not found / error pages",
+  "code_today": "none",
+  "effort": "New",
+  "rendered_height": 844
+ },
+ {
+  "id": "19-load-error-dark",
+  "group": "Getting started",
+  "board": "Group failed to load, desktop",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 640
+  },
+  "fluid": true,
+  "html": "html/19-load-error-dark.html",
+  "png": "screens/19-load-error-dark.png",
+  "area": "Not found / error pages",
+  "code_today": "none: no error.tsx",
+  "effort": "New",
+  "rendered_height": 640
+ },
+ {
+  "id": "20-groups-phone-dark",
+  "group": "Getting started",
+  "board": "Groups list, phone (new)",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/20-groups-phone-dark.html",
+  "png": "screens/20-groups-phone-dark.png",
+  "area": "Groups list",
+  "code_today": "none (phone back button was dropped, D19)",
+  "effort": "New (needs a decision)",
+  "rendered_height": 844
+ },
+ {
+  "id": "21-members-light",
+  "group": "Members and invite",
+  "board": "Manage members, desktop panel",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/21-members-light.html",
+  "png": "screens/21-members-light.png",
+  "area": "Manage members",
+  "code_today": "src/app/ledger/[id]/UserManagementModal.tsx (centred modal)",
+  "effort": "Restructure (modal → right panel/sheet)",
+  "rendered_height": 960
+ },
+ {
+  "id": "22-members-states-light",
+  "group": "Members and invite",
+  "board": "Manage members: rename and remove",
+  "theme": "light",
+  "viewport": {
+   "w": 440,
+   "h": 860
+  },
+  "fluid": false,
+  "html": "html/22-members-states-light.html",
+  "png": "screens/22-members-states-light.png",
+  "area": "Manage members",
+  "code_today": "UserManagementModal.tsx (inline rename, inline remove confirm, restore)",
+  "effort": "Restyle",
+  "rendered_height": 860
+ },
+ {
+  "id": "23-members-phone-light",
+  "group": "Members and invite",
+  "board": "Manage members, phone sheet",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/23-members-phone-light.html",
+  "png": "screens/23-members-phone-light.png",
+  "area": "Manage members",
+  "code_today": "UserManagementModal.tsx",
+  "effort": "Restructure",
+  "rendered_height": 844
+ },
+ {
+  "id": "24-invite-light",
+  "group": "Members and invite",
+  "board": "Invite popover, desktop",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/24-invite-light.html",
+  "png": "screens/24-invite-light.png",
+  "area": "Invite",
+  "code_today": "src/components/glow/InvitePopover.tsx",
+  "effort": "Restyle",
+  "rendered_height": 922
+ },
+ {
+  "id": "25-invite-phone-light",
+  "group": "Members and invite",
+  "board": "Invite sheet, phone (link copied)",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/25-invite-phone-light.html",
+  "png": "screens/25-invite-phone-light.png",
+  "area": "Invite",
+  "code_today": "InvitePopover.tsx",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "26-viewer-menu-theme-light",
+  "group": "Members and invite",
+  "board": "Viewing-as menu with theme setting",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/26-viewer-menu-theme-light.html",
+  "png": "screens/26-viewer-menu-theme-light.png",
+  "area": "Theme setting",
+  "code_today": "ViewerMenu.tsx / ViewerSheet.tsx theme row (menuitemradio buttons)",
+  "effort": "Restyle",
+  "rendered_height": 922
+ },
+ {
+  "id": "27-members-dark",
+  "group": "Members and invite",
+  "board": "Manage members, desktop panel",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/27-members-dark.html",
+  "png": "screens/27-members-dark.png",
+  "area": "Manage members",
+  "code_today": "src/app/ledger/[id]/UserManagementModal.tsx (centred modal)",
+  "effort": "Restructure (modal → right panel/sheet)",
+  "rendered_height": 960
+ },
+ {
+  "id": "28-members-states-dark",
+  "group": "Members and invite",
+  "board": "Manage members: rename and remove",
+  "theme": "dark",
+  "viewport": {
+   "w": 440,
+   "h": 860
+  },
+  "fluid": false,
+  "html": "html/28-members-states-dark.html",
+  "png": "screens/28-members-states-dark.png",
+  "area": "Manage members",
+  "code_today": "UserManagementModal.tsx (inline rename, inline remove confirm, restore)",
+  "effort": "Restyle",
+  "rendered_height": 860
+ },
+ {
+  "id": "29-members-phone-dark",
+  "group": "Members and invite",
+  "board": "Manage members, phone sheet",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/29-members-phone-dark.html",
+  "png": "screens/29-members-phone-dark.png",
+  "area": "Manage members",
+  "code_today": "UserManagementModal.tsx",
+  "effort": "Restructure",
+  "rendered_height": 844
+ },
+ {
+  "id": "30-invite-dark",
+  "group": "Members and invite",
+  "board": "Invite popover, desktop",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/30-invite-dark.html",
+  "png": "screens/30-invite-dark.png",
+  "area": "Invite",
+  "code_today": "src/components/glow/InvitePopover.tsx",
+  "effort": "Restyle",
+  "rendered_height": 922
+ },
+ {
+  "id": "31-invite-phone-dark",
+  "group": "Members and invite",
+  "board": "Invite sheet, phone (link copied)",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/31-invite-phone-dark.html",
+  "png": "screens/31-invite-phone-dark.png",
+  "area": "Invite",
+  "code_today": "InvitePopover.tsx",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "32-viewer-menu-theme-dark",
+  "group": "Members and invite",
+  "board": "Viewing-as menu with theme setting",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/32-viewer-menu-theme-dark.html",
+  "png": "screens/32-viewer-menu-theme-dark.png",
+  "area": "Theme setting",
+  "code_today": "ViewerMenu.tsx / ViewerSheet.tsx theme row (menuitemradio buttons)",
+  "effort": "Restyle",
+  "rendered_height": 922
+ },
+ {
+  "id": "33-add-payment-light",
+  "group": "Payments",
+  "board": "Add payment, desktop panel",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/33-add-payment-light.html",
+  "png": "screens/33-add-payment-light.png",
+  "area": "Payments",
+  "code_today": "src/components/glow/PaymentComposer.tsx",
+  "effort": "Restyle + New (impact strip)",
+  "rendered_height": 960
+ },
+ {
+  "id": "34-add-payment-phone-light",
+  "group": "Payments",
+  "board": "Add payment, phone sheet",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/34-add-payment-phone-light.html",
+  "png": "screens/34-add-payment-phone-light.png",
+  "area": "Payments",
+  "code_today": "PaymentComposer.tsx in the sheet",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "35-payment-details-light",
+  "group": "Payments",
+  "board": "Payment details panel",
+  "theme": "light",
+  "viewport": {
+   "w": 440,
+   "h": 560
+  },
+  "fluid": false,
+  "html": "html/35-payment-details-light.html",
+  "png": "screens/35-payment-details-light.png",
+  "area": "Payments",
+  "code_today": "src/components/glow/PaymentDetails.tsx",
+  "effort": "Restyle + New (pair balance line)",
+  "rendered_height": 560
+ },
+ {
+  "id": "36-add-payment-dark",
+  "group": "Payments",
+  "board": "Add payment, desktop panel",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/36-add-payment-dark.html",
+  "png": "screens/36-add-payment-dark.png",
+  "area": "Payments",
+  "code_today": "src/components/glow/PaymentComposer.tsx",
+  "effort": "Restyle + New (impact strip)",
+  "rendered_height": 960
+ },
+ {
+  "id": "37-add-payment-phone-dark",
+  "group": "Payments",
+  "board": "Add payment, phone sheet",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/37-add-payment-phone-dark.html",
+  "png": "screens/37-add-payment-phone-dark.png",
+  "area": "Payments",
+  "code_today": "PaymentComposer.tsx in the sheet",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "38-payment-details-dark",
+  "group": "Payments",
+  "board": "Payment details panel",
+  "theme": "dark",
+  "viewport": {
+   "w": 440,
+   "h": 560
+  },
+  "fluid": false,
+  "html": "html/38-payment-details-dark.html",
+  "png": "screens/38-payment-details-dark.png",
+  "area": "Payments",
+  "code_today": "src/components/glow/PaymentDetails.tsx",
+  "effort": "Restyle + New (pair balance line)",
+  "rendered_height": 560
+ },
+ {
+  "id": "39-edit-expense-light",
+  "group": "Expense form",
+  "board": "Edit expense panel",
+  "theme": "light",
+  "viewport": {
+   "w": 440,
+   "h": 900
+  },
+  "fluid": false,
+  "html": "html/39-edit-expense-light.html",
+  "png": "screens/39-edit-expense-light.png",
+  "area": "Expense form",
+  "code_today": "ExpenseComposer.tsx edit mode",
+  "effort": "Restyle (disabled-until-changed save)",
+  "rendered_height": 900
+ },
+ {
+  "id": "40-shares-light",
+  "group": "Expense form",
+  "board": "Shares split",
+  "theme": "light",
+  "viewport": {
+   "w": 440,
+   "h": 920
+  },
+  "fluid": false,
+  "html": "html/40-shares-light.html",
+  "png": "screens/40-shares-light.png",
+  "area": "Expense form",
+  "code_today": "SplitBodies.tsx shares body",
+  "effort": "Restyle",
+  "rendered_height": 920
+ },
+ {
+  "id": "41-delete-confirm-light",
+  "group": "Expense form",
+  "board": "Delete confirmation",
+  "theme": "light",
+  "viewport": {
+   "w": 440,
+   "h": 780
+  },
+  "fluid": false,
+  "html": "html/41-delete-confirm-light.html",
+  "png": "screens/41-delete-confirm-light.png",
+  "area": "Expense form",
+  "code_today": "ExpenseDetails.tsx inline confirm (D14)",
+  "effort": "Restyle",
+  "rendered_height": 780
+ },
+ {
+  "id": "42-discard-light",
+  "group": "Expense form",
+  "board": "Discard changes prompt",
+  "theme": "light",
+  "viewport": {
+   "w": 440,
+   "h": 960
+  },
+  "fluid": false,
+  "html": "html/42-discard-light.html",
+  "png": "screens/42-discard-light.png",
+  "area": "Expense form",
+  "code_today": "RightPanel.tsx DiscardDialog (a dialog)",
+  "effort": "Restructure (dialog → inline strip) — decide",
+  "rendered_height": 960
+ },
+ {
+  "id": "43-toast-board-light",
+  "group": "Expense form",
+  "board": "After delete: toast with Undo, empty panel",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/43-toast-board-light.html",
+  "png": "screens/43-toast-board-light.png",
+  "area": "Toasts",
+  "code_today": "ToastProvider.tsx / Toast.tsx (no Undo, D15)",
+  "effort": "Restyle + New (Undo) — decide",
+  "rendered_height": 920
+ },
+ {
+  "id": "44-details-phone-light",
+  "group": "Expense form",
+  "board": "Expense details, phone sheet",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/44-details-phone-light.html",
+  "png": "screens/44-details-phone-light.png",
+  "area": "Expense details",
+  "code_today": "ExpenseDetails.tsx in the sheet",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "45-edit-expense-dark",
+  "group": "Expense form",
+  "board": "Edit expense panel",
+  "theme": "dark",
+  "viewport": {
+   "w": 440,
+   "h": 900
+  },
+  "fluid": false,
+  "html": "html/45-edit-expense-dark.html",
+  "png": "screens/45-edit-expense-dark.png",
+  "area": "Expense form",
+  "code_today": "ExpenseComposer.tsx edit mode",
+  "effort": "Restyle (disabled-until-changed save)",
+  "rendered_height": 900
+ },
+ {
+  "id": "46-shares-dark",
+  "group": "Expense form",
+  "board": "Shares split",
+  "theme": "dark",
+  "viewport": {
+   "w": 440,
+   "h": 920
+  },
+  "fluid": false,
+  "html": "html/46-shares-dark.html",
+  "png": "screens/46-shares-dark.png",
+  "area": "Expense form",
+  "code_today": "SplitBodies.tsx shares body",
+  "effort": "Restyle",
+  "rendered_height": 920
+ },
+ {
+  "id": "47-delete-confirm-dark",
+  "group": "Expense form",
+  "board": "Delete confirmation",
+  "theme": "dark",
+  "viewport": {
+   "w": 440,
+   "h": 780
+  },
+  "fluid": false,
+  "html": "html/47-delete-confirm-dark.html",
+  "png": "screens/47-delete-confirm-dark.png",
+  "area": "Expense form",
+  "code_today": "ExpenseDetails.tsx inline confirm (D14)",
+  "effort": "Restyle",
+  "rendered_height": 780
+ },
+ {
+  "id": "48-discard-dark",
+  "group": "Expense form",
+  "board": "Discard changes prompt",
+  "theme": "dark",
+  "viewport": {
+   "w": 440,
+   "h": 960
+  },
+  "fluid": false,
+  "html": "html/48-discard-dark.html",
+  "png": "screens/48-discard-dark.png",
+  "area": "Expense form",
+  "code_today": "RightPanel.tsx DiscardDialog (a dialog)",
+  "effort": "Restructure (dialog → inline strip) — decide",
+  "rendered_height": 960
+ },
+ {
+  "id": "49-toast-board-dark",
+  "group": "Expense form",
+  "board": "After delete: toast with Undo, empty panel",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/49-toast-board-dark.html",
+  "png": "screens/49-toast-board-dark.png",
+  "area": "Toasts",
+  "code_today": "ToastProvider.tsx / Toast.tsx (no Undo, D15)",
+  "effort": "Restyle + New (Undo) — decide",
+  "rendered_height": 920
+ },
+ {
+  "id": "50-details-phone-dark",
+  "group": "Expense form",
+  "board": "Expense details, phone sheet",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/50-details-phone-dark.html",
+  "png": "screens/50-details-phone-dark.png",
+  "area": "Expense details",
+  "code_today": "ExpenseDetails.tsx in the sheet",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "51-hero-states-light",
+  "group": "States and sizes",
+  "board": "Balance card states",
+  "theme": "light",
+  "viewport": {
+   "w": 900,
+   "h": 760
+  },
+  "fluid": false,
+  "html": "html/51-hero-states-light.html",
+  "png": "screens/51-hero-states-light.png",
+  "area": "States",
+  "code_today": "BalanceHero.tsx / SettleUpPlan.tsx",
+  "effort": "Restyle",
+  "rendered_height": 760
+ },
+ {
+  "id": "52-empty-group-light",
+  "group": "States and sizes",
+  "board": "Empty group, desktop",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 760
+  },
+  "fluid": true,
+  "html": "html/52-empty-group-light.html",
+  "png": "screens/52-empty-group-light.png",
+  "area": "States",
+  "code_today": "LedgerEmpty.tsx",
+  "effort": "Restyle",
+  "rendered_height": 760
+ },
+ {
+  "id": "53-empty-group-phone-light",
+  "group": "States and sizes",
+  "board": "Empty group, phone",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/53-empty-group-phone-light.html",
+  "png": "screens/53-empty-group-phone-light.png",
+  "area": "States",
+  "code_today": "LedgerEmpty.tsx",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "54-no-results-light",
+  "group": "States and sizes",
+  "board": "No search results, desktop",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 760
+  },
+  "fluid": true,
+  "html": "html/54-no-results-light.html",
+  "png": "screens/54-no-results-light.png",
+  "area": "States",
+  "code_today": "LedgerEmpty.tsx (no-results variant)",
+  "effort": "Restyle",
+  "rendered_height": 760
+ },
+ {
+  "id": "55-loading-light",
+  "group": "States and sizes",
+  "board": "Loading, desktop",
+  "theme": "light",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/55-loading-light.html",
+  "png": "screens/55-loading-light.png",
+  "area": "States",
+  "code_today": "src/app/ledger/[id]/loading.tsx",
+  "effort": "Restyle",
+  "rendered_height": 920
+ },
+ {
+  "id": "56-loading-phone-light",
+  "group": "States and sizes",
+  "board": "Loading, phone",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/56-loading-phone-light.html",
+  "png": "screens/56-loading-phone-light.png",
+  "area": "States",
+  "code_today": "loading.tsx",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "57-phone-search-light",
+  "group": "States and sizes",
+  "board": "Search and filters, phone",
+  "theme": "light",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/57-phone-search-light.html",
+  "png": "screens/57-phone-search-light.png",
+  "area": "Phone search",
+  "code_today": "ActivityToolbar.tsx / SearchField.tsx (check phone behaviour)",
+  "effort": "Restructure or New",
+  "rendered_height": 844
+ },
+ {
+  "id": "58-tablet-light",
+  "group": "States and sizes",
+  "board": "Tablet: details as a drawer",
+  "theme": "light",
+  "viewport": {
+   "w": 820,
+   "h": 1100
+  },
+  "fluid": false,
+  "html": "html/58-tablet-light.html",
+  "png": "screens/58-tablet-light.png",
+  "area": "Tablet drawer",
+  "code_today": "RightPanel.tsx drawer (640–1023)",
+  "effort": "Restyle",
+  "rendered_height": 1100
+ },
+ {
+  "id": "59-hero-states-dark",
+  "group": "States and sizes",
+  "board": "Balance card states",
+  "theme": "dark",
+  "viewport": {
+   "w": 900,
+   "h": 760
+  },
+  "fluid": false,
+  "html": "html/59-hero-states-dark.html",
+  "png": "screens/59-hero-states-dark.png",
+  "area": "States",
+  "code_today": "BalanceHero.tsx / SettleUpPlan.tsx",
+  "effort": "Restyle",
+  "rendered_height": 760
+ },
+ {
+  "id": "60-empty-group-dark",
+  "group": "States and sizes",
+  "board": "Empty group, desktop",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 760
+  },
+  "fluid": true,
+  "html": "html/60-empty-group-dark.html",
+  "png": "screens/60-empty-group-dark.png",
+  "area": "States",
+  "code_today": "LedgerEmpty.tsx",
+  "effort": "Restyle",
+  "rendered_height": 760
+ },
+ {
+  "id": "61-empty-group-phone-dark",
+  "group": "States and sizes",
+  "board": "Empty group, phone",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/61-empty-group-phone-dark.html",
+  "png": "screens/61-empty-group-phone-dark.png",
+  "area": "States",
+  "code_today": "LedgerEmpty.tsx",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "62-no-results-dark",
+  "group": "States and sizes",
+  "board": "No search results, desktop",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 760
+  },
+  "fluid": true,
+  "html": "html/62-no-results-dark.html",
+  "png": "screens/62-no-results-dark.png",
+  "area": "States",
+  "code_today": "LedgerEmpty.tsx (no-results variant)",
+  "effort": "Restyle",
+  "rendered_height": 760
+ },
+ {
+  "id": "63-loading-dark",
+  "group": "States and sizes",
+  "board": "Loading, desktop",
+  "theme": "dark",
+  "viewport": {
+   "w": 1280,
+   "h": 920
+  },
+  "fluid": true,
+  "html": "html/63-loading-dark.html",
+  "png": "screens/63-loading-dark.png",
+  "area": "States",
+  "code_today": "src/app/ledger/[id]/loading.tsx",
+  "effort": "Restyle",
+  "rendered_height": 920
+ },
+ {
+  "id": "64-loading-phone-dark",
+  "group": "States and sizes",
+  "board": "Loading, phone",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/64-loading-phone-dark.html",
+  "png": "screens/64-loading-phone-dark.png",
+  "area": "States",
+  "code_today": "loading.tsx",
+  "effort": "Restyle",
+  "rendered_height": 844
+ },
+ {
+  "id": "65-phone-search-dark",
+  "group": "States and sizes",
+  "board": "Search and filters, phone",
+  "theme": "dark",
+  "viewport": {
+   "w": 390,
+   "h": 844
+  },
+  "fluid": false,
+  "html": "html/65-phone-search-dark.html",
+  "png": "screens/65-phone-search-dark.png",
+  "area": "Phone search",
+  "code_today": "ActivityToolbar.tsx / SearchField.tsx (check phone behaviour)",
+  "effort": "Restructure or New",
+  "rendered_height": 844
+ },
+ {
+  "id": "66-tablet-dark",
+  "group": "States and sizes",
+  "board": "Tablet: details as a drawer",
+  "theme": "dark",
+  "viewport": {
+   "w": 820,
+   "h": 1100
+  },
+  "fluid": false,
+  "html": "html/66-tablet-dark.html",
+  "png": "screens/66-tablet-dark.png",
+  "area": "Tablet drawer",
+  "code_today": "RightPanel.tsx drawer (640–1023)",
+  "effort": "Restyle",
+  "rendered_height": 1100
+ }
+]
