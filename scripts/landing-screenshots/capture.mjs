@@ -27,6 +27,21 @@ async function open(c, q = "") {
   return p;
 }
 const shot = (p, name, opts) => p.screenshot({ path: path.join(out, name), animations: "disabled", ...opts });
+
+// Capture one element with everything around it transparent, so rounded
+// corners don't pick up the page or the sheet's dimmed backdrop.
+const ISOLATE = `html,body{background:transparent!important}
+body *{visibility:hidden!important}
+[data-shot-target],[data-shot-target] *{visibility:visible!important}
+[data-shot-target],[data-shot-target] *{box-shadow:none!important}
+::backdrop{background:transparent!important}`;
+async function isolatedShot(p, locator, name, clip) {
+  await locator.evaluate((el) => el.setAttribute("data-shot-target", ""));
+  const style = await p.addStyleTag({ content: ISOLATE });
+  await shot(p, name, { clip, omitBackground: true });
+  await style.evaluate((el) => el.remove());
+  await locator.evaluate((el) => el.removeAttribute("data-shot-target"));
+}
 async function bottomSheetClip(p, sel, height) {
   const box = await p.locator(sel).first().boundingBox();
   return { x: 0, y: box.y, width: 390, height };
@@ -52,12 +67,13 @@ async function bottomSheetClip(p, sel, height) {
     await shot(p, `phone-${theme}.png`);
     const hero = p.locator('section[aria-labelledby="hero-label"]').first();
     const hb = await hero.boundingBox();
-    await shot(p, `hero-${theme}.png`, { clip: { x: hb.x, y: hb.y, width: 358, height: 245 } });
+    await isolatedShot(p, hero, `hero-${theme}.png`, { x: hb.x, y: hb.y, width: 358, height: 245 });
 
     // viewer sheet
     await p.getByRole("button", { name: /switch person/ }).first().click();
     await p.waitForTimeout(800);
-    await shot(p, `viewer-${theme}.png`, { clip: await bottomSheetClip(p, '[aria-labelledby="viewer-sheet-title"]', 458) });
+    const sheet = p.locator('[aria-labelledby="viewer-sheet-title"]').first();
+    await isolatedShot(p, sheet, `viewer-${theme}.png`, await bottomSheetClip(p, '[aria-labelledby="viewer-sheet-title"]', 458));
     await p.keyboard.press("Escape");
     await p.waitForTimeout(400);
 
@@ -76,7 +92,7 @@ async function bottomSheetClip(p, sel, height) {
     }
     await dlg.evaluate(() => document.activeElement && document.activeElement.blur());
     await p.waitForTimeout(400);
-    await shot(p, `composer-${theme}.png`, { clip: { x: 0, y: (await dlg.boundingBox()).y, width: 390, height: 566 } });
+    await isolatedShot(p, dlg, `composer-${theme}.png`, { x: 0, y: (await dlg.boundingBox()).y, width: 390, height: 566 });
     await c.close();
 
     // settle-up plan, phone balances tab
@@ -86,7 +102,7 @@ async function bottomSheetClip(p, sel, height) {
     await plan.scrollIntoViewIfNeeded();
     await p.waitForTimeout(300);
     const pb = await plan.boundingBox();
-    await shot(p, `plan-${theme}.png`, { clip: { x: pb.x, y: pb.y, width: 358, height: 420 } });
+    await isolatedShot(p, plan, `plan-${theme}.png`, { x: pb.x, y: pb.y, width: 358, height: 420 });
     await c.close();
   }
   await b.close();
