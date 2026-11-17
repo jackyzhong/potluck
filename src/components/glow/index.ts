@@ -1,6 +1,7 @@
 // Foundation components (T05). Import from "@/src/components/glow".
 export { Avatar, type AvatarProps, type AvatarSize } from "./Avatar";
 export { Button, type ButtonProps, type ButtonSize, type ButtonVariant } from "./Button";
+export { ConfirmStrip, type ConfirmStripProps } from "./ConfirmStrip";
 export { FilterChips, type FilterChipsProps, type FilterOption } from "./FilterChips";
 export { Kbd } from "./Kbd";
 export { Money, type MoneyProps } from "./Money";

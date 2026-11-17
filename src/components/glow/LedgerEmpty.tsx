@@ -15,14 +15,16 @@ export function LedgerEmpty({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-card bg-surface p-6 py-16 text-center text-text-muted shadow-card sm:rounded-hero">
-      {title ? (
-        <p className="m-0 max-w-full break-words text-[length:var(--text-card-title)] font-extrabold text-text">
-          {title}
-        </p>
+    <div className="flex flex-col items-center gap-3 rounded-card bg-surface px-4 py-8 text-center text-text-muted shadow-card sm:rounded-hero">
+      {title || children ? (
+        <div className="flex flex-col gap-0.5">
+          {title ? (
+            <p className="m-0 max-w-full break-words font-bold text-text">{title}</p>
+          ) : null}
+          {children ? <p className="m-0 max-w-full break-words">{children}</p> : null}
+        </div>
       ) : null}
-      {children ? <p className="m-0 max-w-full break-words">{children}</p> : null}
-      {action ? <div className="mt-4">{action}</div> : null}
+      {action ? <div>{action}</div> : null}
     </div>
   );
 }

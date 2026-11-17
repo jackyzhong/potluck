@@ -57,11 +57,11 @@ test("owing: the mirror of owed", () => {
   assert.equal(heroCopy({ netCents: -1, owesYou: [], youOwe: ["Priya"], everyoneElse: 5 }).subline, "You owe Priya");
 });
 
-test("settled shows no amount", () => {
+test("settled shows CA$0.00 (D30)", () => {
   assert.deepEqual(heroCopy({ netCents: 0, owesYou: [], youOwe: [], everyoneElse: 5 }), {
     label: "You're all settled",
     subline: "Nothing owed either way",
-    showAmount: false
+    showAmount: true
   });
 });
 

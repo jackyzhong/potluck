@@ -7,6 +7,7 @@ import {
   emptyForm,
   formCents,
   formatPercent,
+  formatPerShareAmount,
   formToSplits,
   parseHundredths,
   parseShares,
@@ -16,6 +17,8 @@ import {
   sanitizeDecimalInput,
   sanitizePercentInput,
   seedForMode,
+  sharesExtraCentMembers,
+  sharesSummary,
   splitTotals,
   type SaveSnapshot,
   type SplitForm
@@ -367,4 +370,12 @@ test("the helper shares what's left equally, extra cents to the first (board 11:
   assert.deepEqual(blankRowFill(500, ["nadia"], ORDER), { nadia: 500 });
   assert.deepEqual(blankRowFill(0, ["nadia"], ORDER), {});
   assert.deepEqual(blankRowFill(-5, ["nadia"], ORDER), {});
+});
+
+test("sharesSummary, sharesExtraCentMembers, and formatPerShareAmount match Board 40/46 (64.50 / 4)", () => {
+  const shares = { you: 2, priya: 1, marco: 0, lena: 1, theo: 0, nadia: 0 };
+  assert.deepEqual(sharesSummary(shares, ORDER), { totalShares: 4, includedCount: 3 });
+  assert.deepEqual(sharesExtraCentMembers(6450, shares, ORDER), ["priya"]);
+  assert.deepEqual(sharesExtraCentMembers(6400, shares, ORDER), []);
+  assert.equal(formatPerShareAmount(6450, 4, 2, "CAD"), "CA$16.125");
 });

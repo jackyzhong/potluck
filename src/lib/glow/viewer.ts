@@ -51,6 +51,62 @@ export function writeStoredViewer(storage: StorageLike | null, ledgerId: string,
   }
 }
 
+export const VISITED_GROUPS_KEY = "potluck:groups";
+const MAX_VISITED_GROUPS = 50;
+
+/** Ordered unique ledger ids opened on this device (most recent first). */
+export function readVisitedGroups(storage: StorageLike | null): string[] {
+  if (!storage) return [];
+  try {
+    const raw = storage.getItem(VISITED_GROUPS_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const entry of parsed) {
+      if (typeof entry !== "string") continue;
+      const id = entry.trim();
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      out.push(id);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+/** Put `ledgerId` at the front of the device's visited groups list. */
+export function recordVisitedGroup(storage: StorageLike | null, ledgerId: string): boolean {
+  if (!storage) return false;
+  const id = ledgerId.trim();
+  if (!id) return false;
+  const next = [id, ...readVisitedGroups(storage).filter((existing) => existing !== id)].slice(
+    0,
+    MAX_VISITED_GROUPS
+  );
+  try {
+    storage.setItem(VISITED_GROUPS_KEY, JSON.stringify(next));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Drop visited ids that no longer exist on the server (e.g. deleted ledgers). */
+export function pruneVisitedGroups(storage: StorageLike | null, keepIds: Iterable<string>): boolean {
+  if (!storage) return false;
+  const keep = new Set(keepIds);
+  const next = readVisitedGroups(storage).filter((id) => keep.has(id));
+  try {
+    storage.setItem(VISITED_GROUPS_KEY, JSON.stringify(next));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** The members a viewer can be, as the ledger page loads them from `users`. */
 export type GlowMember = {
   id: string;

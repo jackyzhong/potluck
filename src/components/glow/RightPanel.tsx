@@ -34,8 +34,8 @@ import {
   type PanelLayout,
   type PanelState
 } from "@/src/lib/glow/panel";
-import { PanelBody, PanelHeader, usePanelTitle } from "./PanelContent";
-import { answerDiscard, askToDiscard, getPanelSession, panelOpener, usePanelSession } from "./panelStore";
+import { PanelBody, PanelHeader, usePanelBadge, usePanelSubtitle, usePanelTitle } from "./PanelContent";
+import { askToDiscard, getPanelSession, panelOpener } from "./panelStore";
 import { useDeletedToast, usePanelNav, usePanelState, writePanelUrl } from "./usePanel";
 import { usePathname } from "next/navigation";
 
@@ -89,18 +89,8 @@ export function RightPanel() {
   }, [needsCleanup, shown, urlState, pathname]);
 
   const visible = isPanelVisible(layout, shown);
-  const { pending } = usePanelSession();
 
-  return (
-    <>
-      {visible ? (
-        <PanelShell key={layout} layout={layout} state={shown} onClose={nav.close} />
-      ) : null}
-      {pending ? (
-        <DiscardDialog title={pending.title} onAnswer={answerDiscard} />
-      ) : null}
-    </>
-  );
+  return visible ? <PanelShell key={layout} layout={layout} state={shown} onClose={nav.close} /> : null;
 }
 
 function PanelShell({
@@ -115,6 +105,8 @@ function PanelShell({
   const open = state.kind !== "empty";
   const titleId = useId();
   const title = usePanelTitle(state);
+  const subtitle = usePanelSubtitle(state);
+  const badge = usePanelBadge(state);
   // Mounted already open: a page load, or a resize across a breakpoint.
   const [restored] = useState(() => state.kind !== "empty");
 
@@ -148,7 +140,10 @@ function PanelShell({
       {state.kind === "empty" ? null : (
         <PanelHeader
           title={title}
+          subtitle={subtitle}
+          badge={badge}
           titleId={titleId}
+          layout={layout}
           focusTitle={state.kind === "details"}
           onClose={onClose}
         />
@@ -195,7 +190,7 @@ type DialogProps = {
   children: ReactNode;
 };
 
-/** 640-1023: from the right, 440px wide, scrim behind. Esc and the scrim ask via onClose. */
+/** 640-1023: from the right, 420px wide, scrim behind. Esc and the scrim ask via onClose. */
 function DrawerDialog({ dialogRef, titleId, onClose, children }: DialogProps) {
   return (
     <dialog
@@ -211,7 +206,7 @@ function DrawerDialog({ dialogRef, titleId, onClose, children }: DialogProps) {
         if (e.target === e.currentTarget) onClose();
       }}
       style={{ border: "var(--menu-border)" }}
-      className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-[440px] max-w-full overflow-y-auto rounded-l-hero bg-surface p-0 text-text shadow-menu backdrop:bg-overlay"
+      className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-[420px] max-w-full overflow-y-auto rounded-l-sheet bg-surface p-0 text-text shadow-menu backdrop:bg-overlay"
     >
       <div className="flex flex-col gap-3.5 p-5 pb-[max(20px,env(safe-area-inset-bottom))]">
         {children}
@@ -280,74 +275,5 @@ function SheetDialog({ dialogRef, titleId, onClose, children }: DialogProps) {
         {children}
       </div>
     </dialog>
-  );
-}
-
-// ---------- the "Discard…?" prompt ----------
-
-/**
- * "Discard this expense?" / "Discard changes?" with Keep editing and Discard
- * (docs/06). A native modal dialog on top of the panel: Esc or the scrim keeps
- * editing. Focus starts on Keep editing, the safe choice, and returns to where
- * it was.
- */
-function DiscardDialog({
-  title,
-  onAnswer
-}: {
-  title: string;
-  onAnswer: (discard: boolean) => void;
-}) {
-  const ref = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
-
-  useLayoutEffect(() => {
-    const before = document.activeElement as HTMLElement | null;
-    const dialog = ref.current;
-    if (dialog && !dialog.open) dialog.showModal();
-    return () => {
-      // Close first: while the modal dialog is open, everything behind it is
-      // inert and focus() on it would be ignored.
-      dialog?.close();
-      if (before?.isConnected) before.focus();
-    };
-  }, []);
-
-  return createPortal(
-    <dialog
-      ref={ref}
-      aria-labelledby={titleId}
-      onCancel={(e) => {
-        e.preventDefault();
-        onAnswer(false);
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onAnswer(false);
-      }}
-      style={{ border: "var(--menu-border)" }}
-      className="fixed inset-0 m-auto w-[min(360px,calc(100vw-32px))] rounded-card bg-surface p-5 text-text shadow-menu backdrop:bg-overlay"
-    >
-      <h2 id={titleId} className="m-0 text-[19px] font-extrabold leading-tight">
-        {title}
-      </h2>
-      <div className="mt-5 flex flex-wrap justify-end gap-2">
-        <button
-          type="button"
-          autoFocus
-          onClick={() => onAnswer(false)}
-          className="h-11 cursor-pointer rounded-pill border-0 bg-surface-muted px-5 font-bold text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          Keep editing
-        </button>
-        <button
-          type="button"
-          onClick={() => onAnswer(true)}
-          className="h-11 cursor-pointer rounded-pill border-0 bg-button-primary-bg px-5 font-bold text-button-primary-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          Discard
-        </button>
-      </div>
-    </dialog>,
-    document.body
   );
 }

@@ -18,11 +18,16 @@ const SWIPE_CLOSE_PX = 80;
  * close button, a swipe down on the header and a pick all close it.
  * The caller returns focus to the avatar button.
  */
-export function ViewerSheet({ onClose, ...choices }: ViewerSheetProps) {
+export function ViewerSheet({ onClose, promptMode, ...choices }: ViewerSheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const drag = useRef<{ startY: number; id: number } | null>(null);
   const [dy, setDy] = useState(0);
   const [dragging, setDragging] = useState(false);
+
+  const heading = promptMode ? "Which one are you?" : "View the group as";
+  const sub = promptMode
+    ? "Pick yourself so balances are shown from your side. You can change this any time."
+    : "Amounts and “you” switch to this person";
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -83,23 +88,21 @@ export function ViewerSheet({ onClose, ...choices }: ViewerSheetProps) {
           <div className="flex items-start justify-between gap-3 px-3 py-2">
             <div className="flex flex-col gap-0.5">
               <h2 id="viewer-sheet-title" className="text-[19px] font-extrabold leading-tight">
-                View the group as
+                {heading}
               </h2>
-              <p className="text-[length:var(--text-meta)] text-text-muted">
-                Amounts and “you” switch to this person
-              </p>
+              <p className="text-[length:var(--text-meta)] text-text-muted">{sub}</p>
             </div>
             <button
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-surface-muted text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-surface-muted-2 text-text transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <CloseIcon size={20} />
             </button>
           </div>
         </div>
-        <ViewerChoices mode="sheet" {...choices} />
+        <ViewerChoices mode="sheet" promptMode={promptMode} {...choices} />
       </div>
     </dialog>
   );

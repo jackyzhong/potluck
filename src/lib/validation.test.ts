@@ -49,16 +49,40 @@ test("isUuid accepts UUIDs and nothing else", () => {
   }
 });
 
-test("ledger input is trimmed and checked", () => {
-  assert.deepEqual(parseLedgerInput({ title: "  Japan 2026 ", emoji: "🗾", baseCurrency: "USD" }), {
-    ok: true,
-    value: { title: "Japan 2026", emoji: "🗾", baseCurrency: "USD" }
-  });
-  assert.equal(parseLedgerInput({ title: "   ", emoji: "🍲", baseCurrency: "CAD" }).ok, false);
-  assert.equal(parseLedgerInput({ title: "x".repeat(LIMITS.title + 1), emoji: "🍲", baseCurrency: "CAD" }).ok, false);
-  assert.equal(parseLedgerInput({ title: "Trip", emoji: "🍲", baseCurrency: "XYZ" }).ok, false);
+test("ledger input is trimmed and checked, with non-empty unique members", () => {
+  assert.deepEqual(
+    parseLedgerInput({ title: "  Japan 2026 ", emoji: "🗾", baseCurrency: "USD", members: ["  Sam ", "Alex"] }),
+    {
+      ok: true,
+      value: { title: "Japan 2026", emoji: "🗾", baseCurrency: "USD", members: ["Sam", "Alex"] }
+    }
+  );
+  assert.equal(parseLedgerInput({ title: "   ", emoji: "🍲", baseCurrency: "CAD", members: ["Sam"] }).ok, false);
+  assert.equal(
+    parseLedgerInput({ title: "x".repeat(LIMITS.title + 1), emoji: "🍲", baseCurrency: "CAD", members: ["Sam"] }).ok,
+    false
+  );
+  assert.equal(LIMITS.title, 50);
+  assert.equal(parseLedgerInput({ title: "Trip", emoji: "🍲", baseCurrency: "XYZ", members: ["Sam"] }).ok, false);
   // Inherited object keys are not currencies.
-  assert.equal(parseLedgerInput({ title: "Trip", emoji: "🍲", baseCurrency: "toString" }).ok, false);
+  assert.equal(parseLedgerInput({ title: "Trip", emoji: "🍲", baseCurrency: "toString", members: ["Sam"] }).ok, false);
+  // Members list checks: empty, missing, whitespace-only, over-length, and case-insensitive duplicates.
+  assert.equal(parseLedgerInput({ title: "Trip", emoji: "🍲", baseCurrency: "CAD" }).ok, false);
+  assert.equal(parseLedgerInput({ title: "Trip", emoji: "🍲", baseCurrency: "CAD", members: [] }).ok, false);
+  assert.equal(parseLedgerInput({ title: "Trip", emoji: "🍲", baseCurrency: "CAD", members: ["   "] }).ok, false);
+  assert.equal(
+    parseLedgerInput({
+      title: "Trip",
+      emoji: "🍲",
+      baseCurrency: "CAD",
+      members: ["x".repeat(LIMITS.memberName + 1)]
+    }).ok,
+    false
+  );
+  assert.equal(
+    parseLedgerInput({ title: "Trip", emoji: "🍲", baseCurrency: "CAD", members: ["Sam", " sam "] }).ok,
+    false
+  );
   assert.equal(parseLedgerInput(null).ok, false);
   assert.equal(parseLedgerInput("Trip").ok, false);
 });
@@ -253,10 +277,16 @@ test("createdBy must be a uuid and is normalised to lower case", () => {
   }
 });
 
-test("a valid payment parses, with a blank note becoming null", () => {
+test("a valid payment parses, with a blank note becoming null and optional createdBy normalised", () => {
   const parsed = parsePaymentInput(payment());
   assert.equal(parsed.ok, true);
-  if (parsed.ok) assert.equal(parsed.value.note, null);
+  if (parsed.ok) {
+    assert.equal(parsed.value.note, null);
+    assert.equal(parsed.value.createdBy, null);
+  }
+  const withCreator = parsePaymentInput(payment({ createdBy: A.toUpperCase() }));
+  assert.equal(withCreator.ok, true);
+  if (withCreator.ok) assert.equal(withCreator.value.createdBy, A);
 });
 
 test("payments are checked the same way, and nobody can pay themselves", () => {
@@ -268,7 +298,8 @@ test("payments are checked the same way, and nobody can pay themselves", () => {
     { amountCents: 1.5 },
     { currency: "JPY" },
     { note: "x".repeat(LIMITS.note + 1) },
-    { createdAt: "yesterday-ish" }
+    { createdAt: "yesterday-ish" },
+    { createdBy: "not-a-uuid" }
   ]) {
     assert.equal(parsePaymentInput(payment(bad)).ok, false, JSON.stringify(bad));
   }

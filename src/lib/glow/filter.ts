@@ -49,22 +49,28 @@ export function amountText(cents: number): string {
 export type MatchContext = {
   /** Member id to display name. */
   names: ReadonlyMap<string, string>;
+  /** Viewer id when known, so displayed payment titles like "paid you" are searchable. */
+  viewerId?: string | null;
 };
 
 /**
- * Case-insensitive search over the description, the payer and payee names, the
- * payment note and the total. An amount query matches from the start of the
- * total, so `109`, `$109` and `109.74` all find CA$109.74, while `74` doesn't.
+ * Case-insensitive search over the description, the payer and payee names,
+ * rendered payment wording, the payment note and the total. An amount query
+ * matches from the start of the total, so `109`, `$109` and `109.74` all find
+ * CA$109.74, while `74` doesn't.
  */
 export function matchesQuery(row: LedgerRow, query: string, ctx: MatchContext): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-  const fields = [
-    row.title,
-    row.note,
-    ctx.names.get(row.payerId),
-    row.payeeId ? ctx.names.get(row.payeeId) : null
-  ];
+  const payer = ctx.names.get(row.payerId);
+  const payee = row.payeeId ? ctx.names.get(row.payeeId) : null;
+  let paymentPhrase: string | null = null;
+  if (row.kind === "payment") {
+    if (ctx.viewerId && row.payeeId === ctx.viewerId) paymentPhrase = `${payer ?? ""} paid you`;
+    else if (ctx.viewerId && row.payerId === ctx.viewerId) paymentPhrase = `you paid ${payee ?? ""}`;
+    else paymentPhrase = `${payer ?? ""} paid ${payee ?? ""}`;
+  }
+  const fields = [row.title, row.note, payer, payee, paymentPhrase];
   if (fields.some((f) => f && f.toLowerCase().includes(q))) return true;
   const amount = amountQuery(query);
   return amount !== null && amountText(row.totalCents).startsWith(amount);

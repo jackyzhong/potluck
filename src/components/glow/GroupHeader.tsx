@@ -6,11 +6,13 @@
 //                    with the tabs on their own row below
 // There is no back button yet (D19): there is no groups list to go back to.
 
+import Link from "next/link";
 import { Button } from "./Button";
 import { GroupTabs } from "./GroupTabs";
 import { InvitePopover } from "./InvitePopover";
 import { ViewerSwitcher, type ViewerSwitcherProps } from "./ViewerSwitcher";
 import { useViewer } from "./ViewerProvider";
+import { ChevronLeftIcon } from "./icons";
 
 export type GroupHeaderProps = {
   ledgerId: string;
@@ -25,8 +27,15 @@ export function GroupHeader({ ledgerId, title, emoji, onAddPayment, onAddExpense
   const { viewer } = useViewer();
 
   return (
-    <header className="relative flex flex-wrap items-center gap-x-4 gap-y-3 px-6 py-4 max-sm:gap-x-2 max-sm:gap-y-3 max-sm:py-3 max-sm:pl-4 max-sm:pr-3">
-      <div className="flex min-w-0 flex-[1_1_200px] items-center gap-2.5 max-sm:flex-[1_1_0]">
+    <header className="relative flex flex-wrap items-center gap-x-4 gap-y-3 px-6 py-4 max-sm:gap-x-2 max-sm:gap-y-3 max-sm:py-3 max-sm:pl-1 max-sm:pr-3">
+      <div className="flex min-w-0 flex-[1_1_200px] items-center gap-2.5 max-sm:flex-[1_1_0] max-sm:gap-2">
+        <Link
+          href="/groups"
+          aria-label="Back to groups"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full text-text no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:hidden"
+        >
+          <ChevronLeftIcon size={22} />
+        </Link>
         <span aria-hidden="true" className="text-[28px] leading-none max-sm:text-2xl">
           {emoji}
         </span>

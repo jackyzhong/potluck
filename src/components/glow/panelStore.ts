@@ -56,7 +56,7 @@ export function setPanelHistory(patch: Pick<Partial<Session>, "previous" | "edit
 export function usePanelDirty(isDirty: boolean) {
   useEffect(() => {
     update({ dirty: isDirty });
-    return () => update({ dirty: false });
+    return () => update({ dirty: false, pending: null });
   }, [isDirty]);
 }
 
@@ -74,6 +74,22 @@ export function answerDiscard(discard: boolean) {
   if (!pending) return;
   update(discard ? { pending: null, dirty: false } : { pending: null });
   if (discard) pending.proceed();
+}
+
+// ---------- pending undo (D26) ----------
+
+let pendingUndo: { id: string; run: () => void | Promise<void> } | null = null;
+
+/** Remember how to restore a row just deleted by this client so Undo can bring it back. */
+export function registerUndoDelete(id: string, run: () => void | Promise<void>) {
+  pendingUndo = { id, run };
+}
+
+export function consumeUndoDelete(id: string): (() => void | Promise<void>) | null {
+  if (!pendingUndo || pendingUndo.id !== id) return null;
+  const run = pendingUndo.run;
+  pendingUndo = null;
+  return run;
 }
 
 // Leaving the page (reload, close tab) with unsaved input.

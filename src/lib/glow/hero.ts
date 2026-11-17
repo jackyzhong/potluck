@@ -16,7 +16,7 @@ export type HeroCopyInput = {
 export type HeroCopy = {
   label: string;
   subline: string;
-  /** False when settled: the card prints no amount. */
+  /** True so even settled net 0 renders CA$0.00 (D30). */
   showAmount: boolean;
 };
 
@@ -36,7 +36,7 @@ export function heroCopy({ netCents, owesYou, youOwe, everyoneElse }: HeroCopyIn
     return {
       label: "You're all settled",
       subline: none ? "Nothing owed either way" : owedFirst(owesYou, youOwe, everyoneElse),
-      showAmount: false
+      showAmount: true
     };
   }
   if (netCents > 0) {

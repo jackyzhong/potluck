@@ -5,6 +5,7 @@
 
 import { Avatar } from "./Avatar";
 import { Button } from "./Button";
+import { useFilters } from "./FilterProvider";
 import { LedgerEmpty } from "./LedgerEmpty";
 import { usePanelNav } from "./usePanel";
 import { Money } from "./Money";
@@ -43,16 +44,30 @@ function Meta({ item, currency }: { item: LedgerItem; currency: string }) {
 }
 
 export function LedgerList() {
-  const { items, currency, ready, hasViewer, select } = useLedgerView({ applyFilters: false });
+  const { items, currency, ready, hasViewer, totalCount, query, select } = useLedgerView();
   const nav = usePanelNav();
+  const { clearAll } = useFilters();
 
   if (!ready) return <LedgerEmpty />;
-  if (!hasViewer) return <LedgerEmpty>Pick who you are to see your numbers.</LedgerEmpty>;
+  if (items.length === 0 && totalCount > 0) {
+    return (
+      <LedgerEmpty
+        title={query ? `Nothing matches “${query}”` : "Nothing matches these filters."}
+        action={
+          <Button variant="soft" inPanel size={44} onClick={clearAll}>
+            {query ? "Clear search and filters" : "Clear filters"}
+          </Button>
+        }
+      >
+        Try a different name, amount or word.
+      </LedgerEmpty>
+    );
+  }
   if (items.length === 0) return (
       <LedgerEmpty
         title="No expenses yet"
         action={
-          <Button size={48} kbd="N" onClick={nav.openAdd}>
+          <Button variant="soft" inPanel size={44} onClick={nav.openAdd}>
             Add expense
           </Button>
         }
@@ -87,14 +102,16 @@ export function LedgerList() {
                 <Meta item={item} currency={currency} />
               </span>
             </span>
-            <span className="text-right">
-              <span className="block font-bold">
-                <Impact item={item} currency={currency} />
+            {hasViewer ? (
+              <span className="text-right">
+                <span className="block font-bold">
+                  <Impact item={item} currency={currency} />
+                </span>
+                <span className="block text-[length:var(--text-small)] text-text-muted">
+                  bal. <Money cents={item.row.balanceAfterCents} currency={currency} />
+                </span>
               </span>
-              <span className="block text-[length:var(--text-small)] text-text-muted">
-                bal. <Money cents={item.row.balanceAfterCents} currency={currency} />
-              </span>
-            </span>
+            ) : null}
           </button>
         </li>
       ))}

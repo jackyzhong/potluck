@@ -167,6 +167,36 @@ export async function deleteExpense(ledgerId: unknown, expenseId: unknown): Prom
   return { ok: true, data: undefined };
 }
 
+/** Re-insert a previously deleted expense with its original id, timestamps, splits, and creator (D26). */
+export async function restoreExpense(
+  ledgerId: unknown,
+  expenseId: unknown,
+  input: unknown
+): Promise<ActionResult<{ id: string }>> {
+  if (!isUuid(ledgerId) || !isUuid(expenseId)) return rejected("Invalid request.");
+  const parsed = parseExpenseInput(input);
+  if (!parsed.ok) return parsed;
+  const expense = parsed.value;
+
+  const { data, error } = await db.rpc("restore_expense", {
+    p_ledger_id: ledgerId,
+    p_expense_id: expenseId.toLowerCase(),
+    p_payer_id: expense.payerId,
+    p_description: expense.description,
+    p_amount_cents: expense.amountCents,
+    p_currency: expense.currency,
+    p_created_at: expense.createdAt,
+    p_splits: expense.splits.map((s) => ({ user_id: s.userId, amount_cents: s.amountCents, weight: s.weight })),
+    p_split_mode: expense.splitMode,
+    p_created_by: expense.createdBy
+  });
+
+  if (error?.code === "P0002") return rejected("That group no longer exists.");
+  if (error?.code === "22023") return rejected("Everyone on an expense must be in this group.");
+  if (error || typeof data !== "string") return failed("restoreExpense", error);
+  return { ok: true, data: { id: data } };
+}
+
 // --- Payments --------------------------------------------------------------
 
 /** Record a payment (`paymentId` null) or correct an existing one. */
@@ -181,9 +211,13 @@ export async function savePayment(
   if (!parsed.ok) return parsed;
   const payment = parsed.value;
 
+  const memberIds = payment.createdBy
+    ? [payment.payerId, payment.payeeId, payment.createdBy]
+    : [payment.payerId, payment.payeeId];
+
   try {
-    if (!(await allMembers(ledgerId, [payment.payerId, payment.payeeId]))) {
-      return rejected("Both people must be in this group.");
+    if (!(await allMembers(ledgerId, memberIds))) {
+      return rejected("Everyone on a payment must be in this group.");
     }
   } catch (error) {
     return failed("savePayment membership check", error);
@@ -198,9 +232,13 @@ export async function savePayment(
     created_at: payment.createdAt
   };
 
+  // Preserve original created_by on update so edits don't overwrite "added by" (D29).
   const { data, error } =
     paymentId === null
-      ? await db.from("payments").insert({ ledger_id: ledgerId, ...fields }).select("id")
+      ? await db
+          .from("payments")
+          .insert({ ledger_id: ledgerId, ...fields, created_by: payment.createdBy })
+          .select("id")
       : await db.from("payments").update(fields).eq("id", paymentId).eq("ledger_id", ledgerId).select("id");
 
   if (error) return failed("savePayment", error);
@@ -221,6 +259,55 @@ export async function deletePayment(ledgerId: unknown, paymentId: unknown): Prom
   if (error) return failed("deletePayment", error);
   if (!data?.length) return rejected("That payment no longer exists.");
   return { ok: true, data: undefined };
+}
+
+/** Re-insert a previously deleted payment with its original id, timestamp, and creator (D26). */
+export async function restorePayment(
+  ledgerId: unknown,
+  paymentId: unknown,
+  input: unknown
+): Promise<ActionResult<{ id: string }>> {
+  if (!isUuid(ledgerId) || !isUuid(paymentId)) return rejected("Invalid request.");
+  const parsed = parsePaymentInput(input);
+  if (!parsed.ok) return parsed;
+  const payment = parsed.value;
+  const normalizedId = paymentId.toLowerCase();
+
+  const memberIds = payment.createdBy
+    ? [payment.payerId, payment.payeeId, payment.createdBy]
+    : [payment.payerId, payment.payeeId];
+
+  try {
+    if (!(await allMembers(ledgerId, memberIds))) {
+      return rejected("Everyone on a payment must be in this group.");
+    }
+  } catch (error) {
+    return failed("restorePayment membership check", error);
+  }
+
+  const { data, error } = await db
+    .from("payments")
+    .insert({
+      id: normalizedId,
+      ledger_id: ledgerId,
+      payer_id: payment.payerId,
+      payee_id: payment.payeeId,
+      amount_cents: payment.amountCents,
+      original_currency: payment.currency,
+      note: payment.note,
+      created_at: payment.createdAt,
+      created_by: payment.createdBy
+    })
+    .select("id");
+
+  if (error?.code === "23505") {
+    const existing = await db.from("payments").select("id").eq("id", normalizedId).eq("ledger_id", ledgerId);
+    if (existing.data?.length) return { ok: true, data: { id: String(existing.data[0].id) } };
+  }
+
+  if (error) return failed("restorePayment", error);
+  if (!data?.length) return rejected("That group no longer exists.");
+  return { ok: true, data: { id: String(data[0].id) } };
 }
 
 // --- Ledger settings -------------------------------------------------------

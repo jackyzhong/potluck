@@ -53,7 +53,9 @@ export const ViewerPill = forwardRef<HTMLButtonElement, TriggerProps>(function V
     >
       {viewer ? <Avatar name={viewer.name} slot={avatarSlot} id={viewer.id} size={32} /> : <Placeholder size={32} />}
       <span className="flex flex-col items-start leading-[1.15]">
-        <span className="text-[length:var(--text-micro)] font-semibold text-text-muted">Viewing as</span>
+        {viewer ? (
+          <span className="text-[length:var(--text-micro)] font-semibold text-text-muted">Viewing as</span>
+        ) : null}
         <span className="text-[length:var(--text-body)] font-bold">
           {viewer ? viewer.name : loading ? " " : "Choose person"}
         </span>

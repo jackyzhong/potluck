@@ -36,6 +36,7 @@ import { useGlowData } from "./ViewerProvider";
 import {
   askToDiscard,
   clearPanelDirty,
+  consumeUndoDelete,
   getPanelSession,
   setPanelHistory,
   usePanelSession
@@ -69,19 +70,21 @@ export function writePanelUrl(pathname: string, state: PanelState) {
 // Two reports of the same finished save (the row arriving and the fallback
 // timer) must give one toast.
 let lastToast = { message: "", at: 0 };
-function announce(toast: ReturnType<typeof useToast>, message: string | null) {
+function announce(
+  toast: ReturnType<typeof useToast>,
+  message: string | null,
+  action?: { label: string; onClick: () => void }
+) {
   const now = Date.now();
-  if (!message || (message === lastToast.message && now - lastToast.at < 1500)) return;
+  if (!message || (message === lastToast.message && !action && now - lastToast.at < 1500)) return;
   lastToast = { message, at: now };
-  toast.show(message);
+  toast.show(message, action ? { action } : undefined);
 }
 
 /**
  * Toast "Expense deleted" / "Payment deleted" when the row the panel was
- * showing disappears from the data. Mount it once, in the panel. The details
- * component can't report this itself: the refreshed data drops the row, the URL
- * cleanup empties the panel, and the component is gone before its own "deleted"
- * report runs. (A row someone else deleted while it was open reads the same.)
+ * showing disappears from the data. Mount it once, in the panel. Attaches
+ * an "Undo" action when the delete originated from this client (D26).
  */
 export function useDeletedToast() {
   const { state } = usePanelState();
@@ -94,7 +97,12 @@ export function useDeletedToast() {
       data.expenses.some((e) => e.id === id) || data.payments.some((p) => p.id === id);
     const was = prev.current;
     if (was && !exists(was.id)) {
-      announce(toast, toastFor(EMPTY_PANEL, { type: "deleted" }, was.payment));
+      const undo = consumeUndoDelete(was.id);
+      announce(
+        toast,
+        toastFor(EMPTY_PANEL, { type: "deleted" }, was.payment),
+        undo ? { label: "Undo", onClick: () => void undo() } : undefined
+      );
       prev.current = null;
     }
     if (!stateId) prev.current = null; // closed normally: nothing to announce later
@@ -122,7 +130,9 @@ export function usePanelNav() {
       if (samePanelState(state, next)) return;
 
       const go = () => {
-        if (next.kind === "add" || next.kind === "pay") setPanelHistory({ previous: state });
+        if (next.kind === "add" || next.kind === "pay" || next.kind === "members") {
+          setPanelHistory({ previous: state });
+        }
         setPanelHistory({ editingId: next.kind === "edit" ? next.id : null });
         writePanelUrl(pathname, next);
       };
@@ -142,6 +152,7 @@ export function usePanelNav() {
       openDetails: (id: string) => dispatch({ type: "select", id }),
       openAdd: () => dispatch({ type: "add" }),
       openEdit: () => dispatch({ type: "edit" }),
+      openMembers: () => dispatch({ type: "members" }),
       close: () => dispatch({ type: "close" })
     }),
     [state, dispatch]

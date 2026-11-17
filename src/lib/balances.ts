@@ -17,6 +17,8 @@ export type Payment = {
   original_currency: string;
   note: string | null;
   created_at: string;
+  /** The member who recorded the payment (D29). Null on historical rows. */
+  created_by?: string | null;
 };
 
 export type BreakdownRow = {

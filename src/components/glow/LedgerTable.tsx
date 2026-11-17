@@ -29,7 +29,17 @@ function Impact({ item, currency }: { item: LedgerItem; currency: string }) {
   return <Money cents={row.impactCents} currency={currency} signed tone="auto" className="font-bold" />;
 }
 
-function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string; onSelect: () => void }) {
+function Row({
+  item,
+  currency,
+  hasViewer,
+  onSelect
+}: {
+  item: LedgerItem;
+  currency: string;
+  hasViewer: boolean;
+  onSelect: () => void;
+}) {
   const { row, selected } = item;
   const cell = "h-14 border-b border-line-table-row px-3 align-middle group-last:border-b-0";
   return (
@@ -83,10 +93,10 @@ function Row({ item, currency, onSelect }: { item: LedgerItem; currency: string;
         <Money cents={row.totalCents} currency={currency} />
       </td>
       <td className={`${cell} whitespace-nowrap text-right`}>
-        <Impact item={item} currency={currency} />
+        {hasViewer ? <Impact item={item} currency={currency} /> : null}
       </td>
       <td className={`${cell} text-right text-text-secondary ${selected ? "rounded-r-tile" : ""}`}>
-        <Money cents={row.balanceAfterCents} currency={currency} />
+        {hasViewer ? <Money cents={row.balanceAfterCents} currency={currency} /> : null}
       </td>
     </tr>
   );
@@ -98,13 +108,12 @@ export function LedgerTable() {
   const { clearAll } = useFilters();
 
   if (!ready) return <LedgerEmpty />;
-  if (!hasViewer) return <LedgerEmpty>Pick who you are to see your numbers.</LedgerEmpty>;
   if (items.length === 0 && totalCount > 0) {
     return (
       <LedgerEmpty
-        title={query ? `Nothing matches "${query}"` : "Nothing matches these filters."}
+        title={query ? `Nothing matches “${query}”` : "Nothing matches these filters."}
         action={
-          <Button variant="secondary" size={48} onClick={clearAll}>
+          <Button variant="soft" inPanel size={44} onClick={clearAll}>
             {query ? "Clear search and filters" : "Clear filters"}
           </Button>
         }
@@ -117,7 +126,7 @@ export function LedgerTable() {
       <LedgerEmpty
         title="No expenses yet"
         action={
-          <Button size={48} kbd="N" onClick={nav.openAdd}>
+          <Button variant="soft" inPanel size={44} kbd="N" onClick={nav.openAdd}>
             Add expense
           </Button>
         }
@@ -147,7 +156,13 @@ export function LedgerTable() {
         </thead>
         <tbody>
           {items.map((item) => (
-            <Row key={item.row.id} item={item} currency={currency} onSelect={() => select(item.row.id)} />
+            <Row
+              key={item.row.id}
+              item={item}
+              currency={currency}
+              hasViewer={hasViewer}
+              onSelect={() => select(item.row.id)}
+            />
           ))}
         </tbody>
       </table>

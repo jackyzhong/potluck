@@ -12,7 +12,6 @@ import { Avatar } from "./Avatar";
 import { Button } from "./Button";
 import { Money } from "./Money";
 import { Switch } from "./Switch";
-import { CheckIcon } from "./icons";
 import { useOpenPayment } from "./paymentPrefill";
 import { useGlowData, useViewer } from "./ViewerProvider";
 
@@ -50,10 +49,12 @@ export function SettleUpPlan({ plan, simplified, onSimplifiedChange, saving, err
   return (
     <section
       aria-labelledby="settle-plan-title"
-      className="flex min-w-0 flex-[1_1_360px] flex-col rounded-card bg-surface px-3.5 pb-1 pt-3.5 shadow-card sm:rounded-hero sm:px-5 sm:pb-2 sm:pt-[18px]"
+      className={`flex min-w-0 flex-[1_1_360px] flex-col rounded-card bg-surface px-3.5 pt-3.5 shadow-card sm:rounded-hero sm:px-5 sm:pt-[18px] ${
+        empty ? "gap-3.5 pb-3.5 sm:pb-5" : "pb-1 sm:pb-2"
+      }`}
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-col">
+        <div className="flex min-w-0 flex-col gap-0.5">
           <h2
             id="settle-plan-title"
             className="m-0 text-[length:var(--text-card-title)] font-extrabold sm:text-[18px]"
@@ -64,21 +65,23 @@ export function SettleUpPlan({ plan, simplified, onSimplifiedChange, saving, err
             {planSubtitle(plan.transfers.length)}
           </span>
         </div>
-        <Switch
-          checked={simplified}
-          // Not disabled while saving: that would drop keyboard focus off the switch.
-          onCheckedChange={(next) => {
-            if (!saving) onSimplifiedChange(next);
-          }}
-          aria-busy={saving || undefined}
-          className="shrink-0"
-          label={
-            <>
-              <span className="sm:hidden">Simplify</span>
-              <span className="max-sm:hidden">Simplify debts</span>
-            </>
-          }
-        />
+        {!empty ? (
+          <Switch
+            checked={simplified}
+            // Not disabled while saving: that would drop keyboard focus off the switch.
+            onCheckedChange={(next) => {
+              if (!saving) onSimplifiedChange(next);
+            }}
+            aria-busy={saving || undefined}
+            className="shrink-0"
+            label={
+              <>
+                <span className="sm:hidden">Simplify</span>
+                <span className="max-sm:hidden">Simplify debts</span>
+              </>
+            }
+          />
+        ) : null}
       </div>
       {simplified && !empty ? (
         <p className="m-0 text-[length:var(--text-small)] text-text-muted">{SIMPLIFIED_CAPTION}</p>
@@ -90,15 +93,9 @@ export function SettleUpPlan({ plan, simplified, onSimplifiedChange, saving, err
       ) : null}
 
       {empty ? (
-        <div className="flex flex-col items-center gap-1 px-2 py-10 text-center">
-          <span className="grid size-11 place-items-center rounded-full bg-positive-soft text-positive">
-            <CheckIcon />
-          </span>
-          <p className="m-0 mt-2 font-extrabold">Nothing to settle</p>
-          <p className="m-0 text-[length:var(--text-meta)] text-text-muted">
-            Nobody owes anybody. Add an expense and the plan updates.
-          </p>
-        </div>
+        <p className="m-0 py-8 text-center text-text-muted">
+          Nobody owes anybody. Add an expense and the plan updates.
+        </p>
       ) : null}
 
       {plan.involving.length > 0 ? (

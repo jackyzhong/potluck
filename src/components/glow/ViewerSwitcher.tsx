@@ -17,9 +17,11 @@ export type ViewerSwitcherProps = {
   onOpenChange: (open: boolean) => void;
   /** Opens the member management UI once the menu has closed and focus is back on the trigger. */
   onManageMembers: () => void;
+  /** Auto-opened first-visit prompt mode (Boards 07/08/15/16). */
+  promptMode?: boolean;
 };
 
-export function ViewerSwitcher({ open, onOpenChange, onManageMembers }: ViewerSwitcherProps) {
+export function ViewerSwitcher({ open, onOpenChange, onManageMembers, promptMode = false }: ViewerSwitcherProps) {
   const { status, viewer, viewerId, pickable, setViewer } = useViewer();
   const { slots, totals, currency } = useGlowData();
   const phone = useIsPhone();
@@ -74,6 +76,7 @@ export function ViewerSwitcher({ open, onOpenChange, onManageMembers }: ViewerSw
       persistTheme(t);
       setThemeState(t);
     },
+    promptMode,
     onClose: () => onOpenChange(false)
   };
 

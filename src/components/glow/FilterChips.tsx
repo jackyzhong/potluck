@@ -30,7 +30,7 @@ export function FilterChips<V extends string>({
             type="button"
             aria-pressed={selected}
             onClick={() => onChange(o.value)}
-            className={`h-11 cursor-pointer rounded-pill border-0 px-4 text-[length:var(--text-body)] transition-colors duration-[var(--dur-fast)] ease-[var(--ease-out)] motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+            className={`h-11 shrink-0 cursor-pointer rounded-pill border-0 px-4 text-[length:var(--text-body)] transition-colors duration-[var(--dur-fast)] ease-[var(--ease-out)] motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
               selected
                 ? "bg-button-primary-bg font-bold text-button-primary-fg"
                 : "bg-surface-muted font-semibold text-text"

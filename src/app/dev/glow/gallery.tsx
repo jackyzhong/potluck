@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import {
   Avatar,
   Button,
+  ConfirmStrip,
   FilterChips,
   Kbd,
   Money,
@@ -243,9 +244,25 @@ function Everything() {
         <StatusStrip tone="warning" message="CA$20.00 left to assign" detail="CA$44.50 of CA$64.50" />
       </Section>
 
-      <Section title="Toast" note="Presentational only; T18 wires it in. Not positioned here.">
+      <Section title="ConfirmStrip" note="Inline confirmation for remove, delete, and discard.">
+        <ConfirmStrip
+          title="Delete this expense?"
+          body={
+            <>
+              It&rsquo;ll be removed for everyone, and you&rsquo;ll be owed{" "}
+              <strong className="tabular-nums">CA$43.55</strong> less.
+            </>
+          }
+          confirmLabel="Delete expense"
+          onCancel={() => {}}
+          onConfirm={() => {}}
+        />
+      </Section>
+
+      <Section title="Toast" note="52px floating surface pill with optional tonal action.">
         <Row>
           <Toast message="Expense added" />
+          <Toast message="Expense deleted" action={{ label: "Undo", onClick: () => {} }} />
           <Toast variant="error" message="Couldn't save. Try again" />
         </Row>
       </Section>

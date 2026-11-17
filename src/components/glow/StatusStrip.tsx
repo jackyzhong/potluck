@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 export type StatusStripProps = {
-  /** `positive`: "Fully assigned", "lent". `warning`: "left to assign", "your share". */
-  tone: "positive" | "warning";
+  /** `positive`: "Fully assigned", "lent". `warning`: "left to assign", "your share". `neutral`: third-party event. */
+  tone: "positive" | "warning" | "neutral";
   /** The bold left message: "CA$20.00 left to assign". */
   message: ReactNode;
   /** The right-hand detail: "CA$44.50 of CA$64.50". */
@@ -18,7 +18,8 @@ export type StatusStripProps = {
 
 const tones = {
   positive: { box: "bg-positive-soft", message: "text-positive" },
-  warning: { box: "bg-negative-soft", message: "text-negative" }
+  warning: { box: "bg-negative-soft", message: "text-negative" },
+  neutral: { box: "bg-surface-sunken", message: "text-text-muted" }
 } as const;
 
 /**

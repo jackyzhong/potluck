@@ -72,3 +72,27 @@ export function PeopleIcon(props: { size?: number; className?: string }) {
     </Icon>
   );
 }
+
+export function MinusIcon(props: { size?: number; className?: string }) {
+  return (
+    <Icon {...props}>
+      <path d="M5 12h14" />
+    </Icon>
+  );
+}
+
+export function PlusIcon(props: { size?: number; className?: string }) {
+  return (
+    <Icon {...props}>
+      <path d="M12 5v14M5 12h14" />
+    </Icon>
+  );
+}
+
+export function ChevronLeftIcon(props: { size?: number; className?: string }) {
+  return (
+    <Icon {...props}>
+      <path d="M15 18l-6-6 6-6" />
+    </Icon>
+  );
+}

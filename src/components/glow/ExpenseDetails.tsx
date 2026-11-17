@@ -9,12 +9,16 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteExpense } from "@/src/app/ledger/[id]/actions";
-import { DELETE_PROMPT, detailsModel, type RowTone } from "@/src/lib/glow/details";
+import { deleteExpense, restoreExpense } from "@/src/app/ledger/[id]/actions";
+import { detailsModel, type RowTone } from "@/src/lib/glow/details";
+import { formatMoney } from "@/src/lib/glow/money";
 import type { Expense, Split } from "@/src/lib/glow/ledger";
 import { Avatar } from "./Avatar";
 import { Button } from "./Button";
+import { ConfirmStrip } from "./ConfirmStrip";
 import { Money } from "./Money";
+import { registerUndoDelete } from "./panelStore";
+import { useToast } from "./ToastProvider";
 import { useGlowData, useViewer } from "./ViewerProvider";
 import { usePanelNav } from "./usePanel";
 import { useHydrated } from "./useHydrated";
@@ -46,20 +50,19 @@ export function ExpenseDetails({ id }: { id: string }) {
   const { viewerId, members } = useViewer();
   const nav = usePanelNav();
   const router = useRouter();
+  const toast = useToast();
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleted, setDeleted] = useState(false);
-  const cancelRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
   const confirmedOnce = useRef(false);
 
-  // Focus the safe choice when the question appears, and hand focus back to
-  // Delete if it is dismissed.
+  // ConfirmStrip handles focusing its [data-autofocus] Cancel button; return focus
+  // to Delete if dismissed.
   useEffect(() => {
     if (confirming) {
       confirmedOnce.current = true;
-      cancelRef.current?.focus();
     } else if (confirmedOnce.current) {
       deleteRef.current?.focus();
     }
@@ -95,6 +98,30 @@ export function ExpenseDetails({ id }: { id: string }) {
 
   const remove = () => {
     setError(null);
+    const snapshotSplits = (data.splits as (Split & { weight?: number | string | null })[])
+      .filter((s) => s.expense_id === expense.id)
+      .map((s) => ({
+        userId: s.user_id,
+        amountCents: s.amount_cents,
+        weight: s.weight === null || s.weight === undefined ? null : Number(s.weight)
+      }));
+    const splitMode =
+      expense.split_mode === "equal" ||
+      expense.split_mode === "exact" ||
+      expense.split_mode === "percent" ||
+      expense.split_mode === "shares"
+        ? expense.split_mode
+        : null;
+    const snapshot = {
+      payerId: expense.payer_id,
+      description: expense.description,
+      amountCents: expense.amount_cents,
+      currency: expense.original_currency,
+      createdAt: expense.created_at,
+      splitMode,
+      createdBy: expense.created_by ?? null,
+      splits: snapshotSplits
+    };
     startTransition(async () => {
       try {
         const result = await deleteExpense(expense.ledger_id, expense.id);
@@ -102,6 +129,11 @@ export function ExpenseDetails({ id }: { id: string }) {
           setError(result.error);
           return;
         }
+        registerUndoDelete(expense.id, async () => {
+          const res = await restoreExpense(expense.ledger_id, expense.id, snapshot);
+          if (res.ok) router.refresh();
+          else toast.show(res.error, { variant: "error" });
+        });
         // The panel empties once the refreshed rows arrive (the effect above).
         // Rewriting the URL while the refresh is in flight made Next drop it,
         // which left the deleted row on screen.
@@ -112,6 +144,26 @@ export function ExpenseDetails({ id }: { id: string }) {
       }
     });
   };
+
+  const expenseCurrency = expense.original_currency || currency;
+  const viewerSignedNet =
+    viewerId !== null
+      ? (expense.payer_id === viewerId ? expense.amount_cents : 0) - (shares[viewerId] ?? 0)
+      : 0;
+  const deleteBody =
+    viewerSignedNet > 0 ? (
+      <>
+        It&apos;ll be removed for everyone, and you&apos;ll be owed{" "}
+        <strong className="tabular-nums">{formatMoney(viewerSignedNet, { currency: expenseCurrency })}</strong> less.
+      </>
+    ) : viewerSignedNet < 0 ? (
+      <>
+        It&apos;ll be removed for everyone, and you&apos;ll owe{" "}
+        <strong className="tabular-nums">{formatMoney(-viewerSignedNet, { currency: expenseCurrency })}</strong> less.
+      </>
+    ) : (
+      "It'll be removed for everyone."
+    );
 
   const impact = model.impact;
   return (
@@ -191,33 +243,19 @@ export function ExpenseDetails({ id }: { id: string }) {
       ) : null}
 
       {confirming ? (
-        <div role="group" aria-label="Confirm delete" className="flex flex-col gap-3">
-          <p className="m-0 font-semibold">{DELETE_PROMPT}</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              ref={cancelRef}
-              size={48}
-              variant="secondary"
-              className="flex-[1_1_110px]"
-              onClick={() => {
-                setConfirming(false);
-                setError(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              size={48}
-              variant="text"
-              tone="negative"
-              disabled={pending}
-              className="flex-[1_1_110px] font-extrabold"
-              onClick={remove}
-            >
-              {pending ? "Deleting…" : "Delete"}
-            </Button>
-          </div>
-        </div>
+        <ConfirmStrip
+          title="Delete this expense?"
+          body={deleteBody}
+          cancelLabel="Cancel"
+          confirmLabel="Delete expense"
+          confirmBusyLabel="Deleting…"
+          busy={pending}
+          onCancel={() => {
+            setConfirming(false);
+            setError(null);
+          }}
+          onConfirm={remove}
+        />
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           <Button size={48} kbd="E" onClick={() => nav.openEdit()} className="flex-[1_1_110px]">

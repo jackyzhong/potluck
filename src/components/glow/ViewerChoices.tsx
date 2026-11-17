@@ -26,6 +26,8 @@ export type ViewerChoicesProps = {
   onManage: () => void;
   theme: Theme;
   onTheme: (theme: Theme) => void;
+  /** First-visit prompt hides Manage members + Theme and shows bookmark reminder. */
+  promptMode?: boolean;
 };
 
 function Net({ cents, currency }: { cents: number; currency: string }) {
@@ -90,7 +92,8 @@ export function ViewerChoices({
   onPick,
   onManage,
   theme,
-  onTheme
+  onTheme,
+  promptMode = false
 }: ViewerChoicesProps) {
   const onKeyDown = useListKeys();
   const menu = mode === "menu";
@@ -145,54 +148,60 @@ export function ViewerChoices({
 
       <div aria-hidden="true" className="mx-3 my-1.5 h-px bg-line" />
 
-      <button
-        type="button"
-        role={menu ? "menuitem" : undefined}
-        data-nav
-        data-label="Manage members"
-        tabIndex={tab}
-        onClick={onManage}
-        className="flex min-h-12 w-full cursor-pointer items-center gap-2.5 rounded-tile border-0 bg-transparent px-3 py-1.5 text-left font-bold text-text hover:bg-surface-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent max-sm:min-h-14"
-      >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted max-sm:size-9">
-          <PeopleIcon size={18} />
+      {promptMode ? (
+        <span className="px-3 pb-2 pt-1.5 text-[length:var(--text-meta)] text-text-muted">
+          Bookmark this page. The link is the only way back to the group.
         </span>
-        Manage members
-      </button>
+      ) : (
+        <>
+          <button
+            type="button"
+            role={menu ? "menuitem" : undefined}
+            data-nav
+            data-label="Manage members"
+            tabIndex={tab}
+            onClick={onManage}
+            className="flex min-h-12 w-full cursor-pointer items-center gap-2.5 rounded-tile border-0 bg-transparent px-3 py-1.5 text-left font-bold text-text hover:bg-surface-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent max-sm:min-h-14"
+          >
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted max-sm:size-9">
+              <PeopleIcon size={18} />
+            </span>
+            Manage members
+          </button>
 
-      <div aria-hidden="true" className="mx-3 my-1.5 h-px bg-line" />
+          <div aria-hidden="true" className="mx-3 my-1.5 h-px bg-line" />
 
-      <div role={menu ? "group" : "radiogroup"} aria-label="Theme" className="flex flex-col gap-2 px-3 pb-2 pt-1">
-        <span className="text-[length:var(--text-small)] font-bold uppercase tracking-[var(--tracking-label)] text-text-muted">
-          Theme
-        </span>
-        <div className="grid grid-cols-3 gap-1 rounded-pill bg-surface-muted p-1">
-          {THEMES.map((t) => {
-            const selected = t === theme;
-            return (
-              <button
-                key={t}
-                type="button"
-                role={itemRole}
-                aria-checked={selected}
-                data-nav
-                data-label={THEME_LABELS[t]}
-                tabIndex={tab}
-                onClick={() => onTheme(t)}
-                className={[
-                  "h-10 cursor-pointer rounded-pill border-0 text-[length:var(--text-body)] max-sm:h-11",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                  selected
-                    ? "bg-segment-selected font-bold text-text shadow-[var(--segment-selected-shadow)]"
-                    : "bg-transparent font-semibold text-text-secondary"
-                ].join(" ")}
-              >
-                {THEME_LABELS[t]}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+          <div role={menu ? "group" : "radiogroup"} aria-label="Theme" className="flex flex-col gap-2 px-3 pb-2 pt-1">
+            <span className="text-[length:var(--text-meta)] font-semibold text-text">Theme</span>
+            <div className="grid grid-cols-3 gap-1 rounded-chip bg-surface-muted-2 p-1">
+              {THEMES.map((t) => {
+                const selected = t === theme;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    role={itemRole}
+                    aria-checked={selected}
+                    data-nav
+                    data-label={THEME_LABELS[t]}
+                    tabIndex={tab}
+                    onClick={() => onTheme(t)}
+                    className={[
+                      "h-10 cursor-pointer rounded-input border-0 text-[length:var(--text-body)] max-sm:h-11",
+                      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      selected
+                        ? "bg-segment-selected font-bold text-text shadow-[var(--segment-selected-shadow)]"
+                        : "bg-transparent font-semibold text-text-secondary"
+                    ].join(" ")}
+                  >
+                    {THEME_LABELS[t]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

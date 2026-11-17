@@ -28,7 +28,7 @@ const inner = "flex flex-wrap items-center gap-x-6 gap-y-4";
  */
 export function BalanceHero({ onSelectPerson, selectedPersonId }: BalanceHeroProps) {
   const { status, viewerId, members } = useViewer();
-  const { currency, totals, forViewer } = useGlowData();
+  const { currency, totals, groupSpentCents, forViewer } = useGlowData();
 
   if (status === "loading") {
     return (
@@ -44,13 +44,22 @@ export function BalanceHero({ onSelectPerson, selectedPersonId }: BalanceHeroPro
   }
 
   if (!viewerId || !forViewer) {
+    const spentScale = heroScale(formatMoney(groupSpentCents, { currency }));
     return (
-      <section aria-label="Group balance" className={shell}>
+      <section aria-labelledby="hero-label" className={shell}>
         <div className={inner}>
-          <div className="flex min-h-[110px] flex-[1_1_240px] flex-col justify-center gap-0.5 px-1 sm:px-0">
-            <span className="text-[length:var(--text-body)] font-semibold">Choose who&apos;s viewing</span>
+          <div className="flex min-w-0 flex-[1_1_240px] flex-col gap-0.5 px-1 sm:px-0">
+            <span id="hero-label" className="text-[length:var(--text-body)] font-semibold">
+              Group spent
+            </span>
+            <span
+              style={{ "--hs": spentScale } as React.CSSProperties}
+              className="block text-[length:calc(var(--text-hero-phone)*var(--hs))] font-extrabold leading-[1.05] tracking-[var(--tracking-hero)] tabular-nums sm:text-[length:calc(var(--text-hero)*var(--hs))]"
+            >
+              <Money cents={groupSpentCents} currency={currency} />
+            </span>
             <span className="text-[length:var(--text-meta)]">
-              Pick a person to see who owes whom.
+              Pick who you are to see your balance
             </span>
           </div>
         </div>

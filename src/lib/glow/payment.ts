@@ -1,5 +1,7 @@
-// Pure helpers for the payment panel (T15): reading the amount field, checking
-// the form, and the date field. No React, no router.
+// Pure helpers for the payment panel (T15, T31): amount parsing, validation,
+// timestamps, title wording, live balance impact, and pairwise remaining balance.
+
+import type { PairBalance } from "./ledger.ts";
 
 /** Digits after the point for a currency. CAD, USD and EUR are 2; JPY would be 0. */
 export function currencyDecimals(code: string): number {
@@ -63,4 +65,30 @@ export function paymentTitle(payer: { name: string; isViewer: boolean }, payee: 
   if (payee.isViewer) return `${payer.name} paid you`;
   if (payer.isViewer) return `You paid ${payee.name}`;
   return `${payer.name} paid ${payee.name}`;
+}
+
+export type PaymentImpactSummary =
+  | { kind: "paid"; cents: number }
+  | { kind: "received"; cents: number }
+  | { kind: "third_party"; cents: number };
+
+/** Viewer balance effect of a draft payment (Board 33 / 36). */
+export function paymentImpact(input: {
+  payerId: string;
+  payeeId: string;
+  amountCents: number | null;
+  viewerId: string | null;
+}): PaymentImpactSummary | null {
+  const { payerId, payeeId, amountCents, viewerId } = input;
+  if (!viewerId || !payerId || !payeeId || payerId === payeeId || amountCents === null || amountCents <= 0) {
+    return null;
+  }
+  if (payerId === viewerId) return { kind: "paid", cents: amountCents };
+  if (payeeId === viewerId) return { kind: "received", cents: amountCents };
+  return { kind: "third_party", cents: amountCents };
+}
+
+/** Remaining net balance between viewer and `counterpartyId` (+ = they owe viewer). */
+export function paymentPairRemaining(pairs: readonly PairBalance[], counterpartyId: string): number {
+  return pairs.find((p) => p.memberId === counterpartyId)?.cents ?? 0;
 }

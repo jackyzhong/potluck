@@ -45,6 +45,12 @@ test("text search is case-insensitive over description, names and note", () => {
   assert.deepEqual(run({ query: "WRITE" }), ["p-theo-jacky"]);
   assert.deepEqual(run({ query: "priya" }).sort(), ["e-candy", "e-fans"]);
   assert.deepEqual(run({ query: "lena" }), ["p-lena-jacky"]);
+  const withViewer = filterLedger(
+    rows,
+    { ...NO_FILTER, query: "paid you" },
+    { ...ctx, viewerId: "u-jacky" }
+  ).map((r) => r.id);
+  assert.deepEqual(withViewer, ["p-theo-jacky", "p-lena-jacky"]);
 });
 
 test("kind filters", () => {

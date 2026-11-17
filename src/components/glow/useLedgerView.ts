@@ -10,6 +10,7 @@ import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { AvatarSlot } from "@/src/lib/glow/avatar";
 import { filterLedger, participantsByRow } from "@/src/lib/glow/filter";
+import { events, type LedgerRow } from "@/src/lib/glow/ledger";
 import { useFilters } from "./FilterProvider";
 import { useGlowData, useViewer, type ViewerNumbers } from "./ViewerProvider";
 
@@ -65,27 +66,59 @@ export function useLedgerView({ applyFilters = true }: { applyFilters?: boolean 
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("e");
 
+  const allRows = useMemo<LedgerRow[]>(() => {
+    if (forViewer) return forViewer.ledger;
+    return events(data)
+      .reverse()
+      .map((ev): LedgerRow =>
+        ev.kind === "expense"
+          ? {
+              id: ev.expense.id,
+              kind: "expense",
+              createdAt: ev.expense.created_at,
+              title: ev.expense.description,
+              payerId: ev.expense.payer_id,
+              payeeId: null,
+              note: null,
+              totalCents: ev.expense.amount_cents,
+              involved: false,
+              impactCents: null,
+              balanceAfterCents: 0
+            }
+          : {
+              id: ev.payment.id,
+              kind: "payment",
+              createdAt: ev.payment.created_at,
+              title: null,
+              payerId: ev.payment.payer_id,
+              payeeId: ev.payment.payee_id,
+              note: ev.payment.note,
+              totalCents: ev.payment.amount_cents,
+              involved: false,
+              impactCents: null,
+              balanceAfterCents: 0
+            }
+      );
+  }, [forViewer, data]);
+
   const items = useMemo<LedgerItem[]>(() => {
-    if (!forViewer) return [];
     const byId = new Map(members.map((m) => [m.id, m]));
     const person = (id: string): LedgerPerson => ({
       id,
       name: byId.get(id)?.name ?? "Someone",
       slot: slots.get(id),
-      isViewer: id === viewerId
+      isViewer: viewerId !== null && id === viewerId
     });
     // Hide rows after viewerLedger: each keeps the balance it had in the full history.
     const names = new Map(members.map((m) => [m.id, m.name]));
     const rows = applyFilters
-      ? filterLedger(forViewer.ledger, applied, { names, participants })
-      : forViewer.ledger;
-    let prevDay = "";
-    return rows.map((row): LedgerItem => {
+      ? filterLedger(allRows, applied, { names, participants, viewerId })
+      : allRows;
+    return rows.map((row, index): LedgerItem => {
       const payer = person(row.payerId);
       const date = new Date(row.createdAt);
       const key = dayKey(date);
-      const firstOfDay = key !== prevDay;
-      prevDay = key;
+      const firstOfDay = index === 0 || key !== dayKey(new Date(rows[index - 1].createdAt));
 
       let title: string;
       let direction: LedgerItem["direction"] = null;
@@ -111,7 +144,7 @@ export function useLedgerView({ applyFilters = true }: { applyFilters?: boolean 
         direction
       };
     });
-  }, [forViewer, members, slots, viewerId, selectedId, applied, applyFilters, participants]);
+  }, [allRows, members, slots, viewerId, selectedId, applied, applyFilters, participants]);
 
   const select = useCallback(
     (id: string) => {
@@ -127,8 +160,8 @@ export function useLedgerView({ applyFilters = true }: { applyFilters?: boolean 
     currency,
     ready: status === "ready",
     hasViewer: forViewer !== null,
-    totalCount: forViewer?.ledger.length ?? 0,
-    filtered: applyFilters && items.length !== (forViewer?.ledger.length ?? 0),
+    totalCount: allRows.length,
+    filtered: applyFilters && items.length !== allRows.length,
     query: applyFilters ? applied.query.trim() : "",
     select
   };

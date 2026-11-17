@@ -5,7 +5,10 @@ import {
   browserStorage,
   buildMemberOrder,
   pickableViewers,
+  pruneVisitedGroups,
   readStoredViewer,
+  readVisitedGroups,
+  recordVisitedGroup,
   resolveViewer,
   viewerStorageKey,
   writeStoredViewer,
@@ -153,4 +156,23 @@ test("a group with no members never resolves a viewer", () => {
 test("restoring an archived member makes their stored id valid again", () => {
   const restored = [jacky, priya, member("marco", marco.created_at, null)];
   assert.deepEqual(resolveViewer("marco", restored), { viewerId: "marco", reason: "stored" });
+});
+
+// ---------- visited groups ----------
+
+test("visited groups list reads safely, deduplicates most-recent first, and prunes stale ids", () => {
+  const s = fakeStorage();
+  assert.deepEqual(readVisitedGroups(s), []);
+  assert.deepEqual(readVisitedGroups(fakeStorage({ "potluck:groups": "not json{" })), []);
+  assert.deepEqual(readVisitedGroups(throwingStorage), []);
+
+  assert.equal(recordVisitedGroup(s, "l-1"), true);
+  assert.equal(recordVisitedGroup(s, "l-2"), true);
+  assert.equal(recordVisitedGroup(s, "l-1"), true);
+  assert.deepEqual(readVisitedGroups(s), ["l-1", "l-2"]);
+
+  assert.equal(pruneVisitedGroups(s, ["l-2"]), true);
+  assert.deepEqual(readVisitedGroups(s), ["l-2"]);
+  assert.equal(recordVisitedGroup(throwingStorage, "l-1"), false);
+  assert.equal(pruneVisitedGroups(throwingStorage, []), false);
 });

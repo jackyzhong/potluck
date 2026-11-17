@@ -21,11 +21,10 @@ import {
   useMemo,
   useRef,
   useState,
-  type KeyboardEvent,
-  type ReactNode
+  type KeyboardEvent
 } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { deleteExpense, saveExpense } from "@/src/app/ledger/[id]/actions";
+import { deleteExpense, restoreExpense, saveExpense } from "@/src/app/ledger/[id]/actions";
 import { CURRENCIES, CURRENCY_LIST } from "@/src/lib/currencies";
 import {
   blankExactIds,
@@ -34,14 +33,13 @@ import {
   checkSplit,
   composerImpact,
   createdAtFor,
-  dayLabel,
   dayString,
-  DELETE_PROMPT,
   emptyForm,
   equalSplitExtraCentMembers,
   formatMoney,
   formCents,
   formToSplits,
+  inferSplitMode,
   joinNames,
   filterAmountInput,
   parseAmountCents,
@@ -60,15 +58,17 @@ import {
 import { pickableMembers } from "@/src/lib/members";
 import { Avatar } from "./Avatar";
 import { Button } from "./Button";
-import { CheckIcon, ChevronDownIcon } from "./icons";
+import { ConfirmStrip } from "./ConfirmStrip";
+import { CheckIcon } from "./icons";
 import { Money } from "./Money";
+import { DatePill, PILL_OPTION_CLASS, PillPopover } from "./PillPopover";
 import { SegmentedControl } from "./SegmentedControl";
 import { StatusStrip } from "./StatusStrip";
 import { clearComposerPrefill, peekComposerPrefill } from "./composerPrefill";
-import { usePanelDirty } from "./panelStore";
+import { answerDiscard, registerUndoDelete, usePanelDirty, usePanelSession } from "./panelStore";
 import { ExactBody, PercentBody, SharesBody, type SplitRow } from "./SplitBodies";
+import { useToast } from "./ToastProvider";
 import { usePanelNav } from "./usePanel";
-import { useDismiss } from "./useDismiss";
 import { useIsPhone } from "./useIsPhone";
 import { useGlowData, useViewer } from "./ViewerProvider";
 
@@ -82,100 +82,6 @@ const MODES = [
   { value: "percent", label: "Percent" },
   { value: "shares", label: "Shares" }
 ] as const satisfies readonly { value: Mode; label: string }[];
-
-// ---------- a small popover for the three pills ----------
-
-/**
- * A pill button that opens a menu under it. Esc, an outside press and Tab close
- * it; arrow keys move between the items marked `data-nav`; focus goes to the
- * chosen item on open and back to the pill on close.
- */
-function PillPopover({
-  trigger,
-  triggerClassName,
-  ariaLabel,
-  menuLabel,
-  menuRole,
-  align = "left",
-  children
-}: {
-  trigger: ReactNode;
-  triggerClassName: string;
-  ariaLabel: string;
-  menuLabel: string;
-  menuRole: "listbox" | "group";
-  align?: "left" | "right";
-  children: (close: () => void) => ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
-  const wrap = useRef<HTMLDivElement>(null);
-  const button = useRef<HTMLButtonElement>(null);
-  const menu = useRef<HTMLDivElement>(null);
-
-  // Focus goes back to the pill through an effect, so no ref is read in render.
-  const [refocus, setRefocus] = useState(0);
-  const close = (returnFocus = true) => {
-    setOpen(false);
-    if (returnFocus) setRefocus((n) => n + 1);
-  };
-  useEffect(() => {
-    if (refocus > 0) button.current?.focus();
-  }, [refocus]);
-  useDismiss(open, () => close(), [wrap]);
-
-  useEffect(() => {
-    if (!open) return;
-    const items = menu.current?.querySelectorAll<HTMLElement>("[data-nav]");
-    const chosen = menu.current?.querySelector<HTMLElement>('[data-nav][aria-selected="true"], [data-nav][aria-pressed="true"]');
-    (chosen ?? items?.[0])?.focus();
-  }, [open]);
-
-  function onMenuKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key === "Tab") return close(false);
-    const items = Array.from(menu.current?.querySelectorAll<HTMLElement>("[data-nav]") ?? []);
-    const i = items.indexOf(document.activeElement as HTMLElement);
-    let next = -1;
-    if (e.key === "ArrowDown") next = (i + 1) % items.length;
-    else if (e.key === "ArrowUp") next = (i - 1 + items.length) % items.length;
-    else if (e.key === "Home") next = 0;
-    else if (e.key === "End") next = items.length - 1;
-    if (next < 0) return;
-    e.preventDefault();
-    items[next]?.focus();
-  }
-
-  return (
-    <div ref={wrap} className="relative">
-      <button
-        ref={button}
-        type="button"
-        aria-label={ariaLabel}
-        aria-haspopup={menuRole === "listbox" ? "listbox" : "dialog"}
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        className={`flex cursor-pointer items-center border-0 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${triggerClassName}`}
-      >
-        {trigger}
-        <ChevronDownIcon size={16} />
-      </button>
-      {open ? (
-        <div
-          ref={menu}
-          role={menuRole === "group" ? "group" : "listbox"}
-          aria-label={menuLabel}
-          onKeyDown={onMenuKeyDown}
-          style={{ border: "var(--menu-border)" }}
-          className={`absolute top-full z-20 mt-1 box-border flex min-w-[200px] max-w-[min(300px,calc(100vw-48px))] flex-col gap-0.5 rounded-card bg-surface p-1.5 text-text shadow-menu ${align === "right" ? "right-0" : "left-0"}`}
-        >
-          {children(() => close())}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-const optionClass =
-  "flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-tile border-0 bg-transparent px-2.5 text-left font-semibold text-text hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent aria-selected:bg-surface-muted aria-pressed:bg-surface-muted";
 
 // ---------- the composer ----------
 
@@ -195,6 +101,8 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
   const ledgerId = params.id;
   const nav = usePanelNav();
   const isPhone = useIsPhone();
+  const toast = useToast();
+  const { pending } = usePanelSession();
   const { data, currency: baseCurrency, slots } = useGlowData();
   const { viewerId, pickable, members } = useViewer();
   const editing = editId !== undefined;
@@ -254,7 +162,14 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
         ? { mode: prefill.splitMode, rows: prefill.splits }
         : null;
     if (stored) {
-      const reopened = restrictForm(reopenSplit(stored.mode, stored.rows, decimals), rowIds);
+      const shareMap: Record<string, number> = {};
+      for (const r of stored.rows) shareMap[r.userId] = (shareMap[r.userId] ?? 0) + r.amountCents;
+      const inferredMode = inferSplitMode(
+        stored.mode,
+        shareMap,
+        stored.rows.reduce((sum, r) => sum + r.amountCents, 0)
+      );
+      const reopened = restrictForm(reopenSplit(inferredMode, stored.rows, decimals), rowIds);
       if (reopened.mode !== "equal" || reopened.included.length > 0) return reopened;
     }
     const fresh = emptyForm(rowIds);
@@ -284,8 +199,8 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
   const [deleted, setDeleted] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
   const saveRef = useRef<HTMLButtonElement>(null);
-  const cancelRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
+  const discardWrapRef = useRef<HTMLDivElement>(null);
   const confirmedOnce = useRef(false);
   const tabsId = useId();
 
@@ -293,20 +208,23 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
   // differs from what was opened.
   const signature = JSON.stringify([description, amountText, currency, chosenPayer, date, form]);
   const [openedSignature] = useState(signature);
-  usePanelDirty(
-    editing ? signature !== openedSignature : description.trim() !== "" || amountText.trim() !== ""
-  );
+  const dirty = editing ? signature !== openedSignature : description.trim() !== "" || amountText.trim() !== "";
+  usePanelDirty(dirty && !deleted && !saved);
 
-  // Focus the safe choice when the delete question appears, and hand focus back
-  // to Delete if it is dismissed (as in the details panel).
+  // Return focus to Delete if ConfirmStrip is dismissed.
   useEffect(() => {
     if (confirming) {
       confirmedOnce.current = true;
-      cancelRef.current?.focus();
     } else if (confirmedOnce.current) {
       deleteRef.current?.focus();
     }
   }, [confirming]);
+
+  // Move focus onto the safe "Keep editing" button when Discard appears inline.
+  useEffect(() => {
+    if (!pending) return;
+    discardWrapRef.current?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+  }, [pending]);
 
   // ----- numbers (all from T03, through composerSplit) -----
   const memberOrder = data.memberOrder;
@@ -364,6 +282,8 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
       ? "Choose who paid"
       : check.blockedLabel;
   const blocked = blockedReason !== null;
+  const cleanEdit = editing && !dirty;
+  const submitDisabled = blocked || saving || confirming || cleanEdit;
 
   // ----- changing numbers -----
   function changeMode(next: Mode) {
@@ -416,7 +336,7 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
   }
 
   async function save(addAnother: boolean) {
-    if (blocked || saving || confirming || total === null || !payerId) return;
+    if (submitDisabled || total === null || !payerId) return;
     // An edit that keeps its day keeps its exact time too, so the row doesn't
     // jump in the ledger. A new day is written per D7.
     const unchangedDay = original && date === dayString(new Date(original.expense.created_at));
@@ -501,9 +421,30 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
   }, [saved, editing, data.expenses, data.splits, nav]);
 
   async function remove() {
-    if (!editId || deleting) return;
+    if (!editId || deleting || !original) return;
     setDeleting(true);
     setError(null);
+    const snapshotMode =
+      original.expense.split_mode === "equal" ||
+      original.expense.split_mode === "exact" ||
+      original.expense.split_mode === "percent" ||
+      original.expense.split_mode === "shares"
+        ? original.expense.split_mode
+        : null;
+    const snapshot = {
+      payerId: original.expense.payer_id,
+      description: original.expense.description,
+      amountCents: original.expense.amount_cents,
+      currency: original.expense.original_currency,
+      createdAt: original.expense.created_at,
+      splitMode: snapshotMode,
+      createdBy: original.expense.created_by ?? null,
+      splits: original.splits.map((s) => ({
+        userId: s.user_id,
+        amountCents: s.amount_cents,
+        weight: s.weight === null || s.weight === undefined ? null : Number(s.weight)
+      }))
+    };
     try {
       const result = await deleteExpense(ledgerId, editId);
       if (!result.ok) {
@@ -511,6 +452,11 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
         setDeleting(false);
         return;
       }
+      registerUndoDelete(editId, async () => {
+        const res = await restoreExpense(ledgerId, editId, snapshot);
+        if (res.ok) router.refresh();
+        else toast.show(res.error, { variant: "error" });
+      });
       // The panel empties once the refreshed rows no longer have it (effect below).
       setDeleted(true);
       router.refresh();
@@ -545,25 +491,71 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
   const viewerFirst = [...payerOptions].sort(
     (a, b) => Number(b.id === viewerId) - Number(a.id === viewerId)
   );
-  const today = dayString(new Date());
-  const yesterday = (() => {
-    const d = new Date();
-    return dayString(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 12));
-  })();
   const allIncluded = rowIds.every((id) => form.included.includes(id));
-  const stripDetail =
-    check.strip?.detail?.kind === "text"
-      ? check.strip.detail.text
-      : check.strip?.detail?.kind === "impact" && impact !== null
-        ? impact.kind === "none"
-          ? "This doesn't change your balance"
-          : (
-              <>
-                You&apos;ll {impact.kind === "owed" ? "be owed" : "owe"}{" "}
-                <Money cents={Math.abs(impact.cents)} currency={currency} className="font-bold" /> more
-              </>
-            )
-        : null;
+
+  const originalSignedImpact = (() => {
+    if (!editing || !original || !viewerId) return null;
+    const origShare = original.splits.reduce(
+      (sum, s) => (s.user_id === viewerId ? sum + s.amount_cents : sum),
+      0
+    );
+    return (original.expense.payer_id === viewerId ? original.expense.amount_cents : 0) - origShare;
+  })();
+
+  const stripDetail = (() => {
+    if (check.strip?.detail?.kind === "text") return check.strip.detail.text;
+    if (check.strip?.detail?.kind !== "impact" || !viewerId) return null;
+
+    if (editing && originalSignedImpact !== null && total !== null && payerId) {
+      const draftSignedImpact = (payerId === viewerId ? total : 0) - (cents[viewerId] ?? 0);
+      const delta = draftSignedImpact - originalSignedImpact;
+      if (delta === 0) return "This doesn't change your balance";
+      if (delta > 0) {
+        return originalSignedImpact < 0 && draftSignedImpact <= 0 ? (
+          <>
+            You&apos;ll owe <Money cents={delta} currency={currency} className="font-bold" /> less
+          </>
+        ) : (
+          <>
+            You&apos;ll be owed <Money cents={delta} currency={currency} className="font-bold" /> more
+          </>
+        );
+      }
+      return originalSignedImpact > 0 && draftSignedImpact >= 0 ? (
+        <>
+          You&apos;ll be owed <Money cents={-delta} currency={currency} className="font-bold" /> less
+        </>
+      ) : (
+        <>
+          You&apos;ll owe <Money cents={-delta} currency={currency} className="font-bold" /> more
+        </>
+      );
+    }
+
+    if (impact === null) return null;
+    if (impact.kind === "none") return "This doesn't change your balance";
+    return (
+      <>
+        You&apos;ll {impact.kind === "owed" ? "be owed" : "owe"}{" "}
+        <Money cents={Math.abs(impact.cents)} currency={currency} className="font-bold" /> more
+      </>
+    );
+  })();
+
+  const deleteBody =
+    originalSignedImpact !== null && originalSignedImpact > 0 ? (
+      <>
+        It&apos;ll be removed for everyone, and you&apos;ll be owed{" "}
+        <strong className="tabular-nums">{format(originalSignedImpact)}</strong> less.
+      </>
+    ) : originalSignedImpact !== null && originalSignedImpact < 0 ? (
+      <>
+        It&apos;ll be removed for everyone, and you&apos;ll owe{" "}
+        <strong className="tabular-nums">{format(-originalSignedImpact)}</strong> less.
+      </>
+    ) : (
+      "It'll be removed for everyone."
+    );
 
   return (
     <form
@@ -627,7 +619,7 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
                     setCurrency(c.code);
                     close();
                   }}
-                  className={optionClass}
+                  className={PILL_OPTION_CLASS}
                 >
                   <span className="font-bold">{c.code}</span>
                   <span className="text-text-muted">{c.name}</span>
@@ -669,7 +661,7 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
                   setChosenPayer(m.id);
                   close();
                 }}
-                className={optionClass}
+                className={PILL_OPTION_CLASS}
               >
                 {avatarOf(m.id)}
                 {nameOf(m.id)}
@@ -678,51 +670,7 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
           }
         </PillPopover>
         <span>on</span>
-        <PillPopover
-          ariaLabel={`Date: ${dayLabel(date)}`}
-          menuLabel="Date"
-          menuRole="group"
-          triggerClassName="h-11 gap-1.5 rounded-pill bg-surface-muted-2 px-3.5 text-text"
-          trigger={dayLabel(date)}
-        >
-          {(close) => (
-            <>
-              {[
-                { label: "Today", value: today },
-                { label: "Yesterday", value: yesterday }
-              ].map((o) => (
-                <button
-                  key={o.value}
-                  type="button"
-                  data-nav
-                  aria-pressed={date === o.value}
-                  onClick={() => {
-                    setDate(o.value);
-                    close();
-                  }}
-                  className={optionClass}
-                >
-                  {o.label}
-                </button>
-              ))}
-              <label className="flex min-h-11 flex-col justify-center gap-0.5 px-2.5 text-[length:var(--text-meta)] font-semibold text-text-muted">
-                Pick a date
-                <input
-                  type="date"
-                  data-nav
-                  value={date}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setDate(e.target.value);
-                      close();
-                    }
-                  }}
-                  className="box-border h-10 rounded-input border-0 bg-surface-sunken px-2.5 font-semibold text-text"
-                />
-              </label>
-            </>
-          )}
-        </PillPopover>
+        <DatePill value={date} onChange={setDate} />
       </div>
 
       <SegmentedControl
@@ -806,7 +754,22 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
         ) : mode === "percent" ? (
           <PercentBody rows={rows} values={form.percent} cents={cents} currency={currency} onChange={setPercentText} />
         ) : (
-          <SharesBody rows={rows} values={form.shares} cents={cents} currency={currency} onChange={setShareCount} />
+          <SharesBody
+            rows={rows}
+            values={form.shares}
+            cents={cents}
+            totalCents={total}
+            decimals={decimals}
+            currency={currency}
+            memberOrder={memberOrder}
+            viewerId={viewerId}
+            nameOf={nameOf}
+            onChange={setShareCount}
+            onOneEach={() => {
+              touch("shares");
+              setForm((cur) => ({ ...cur, shares: Object.fromEntries(rowIds.map((id) => [id, 1])) }));
+            }}
+          />
         )}
       </div>
 
@@ -835,34 +798,31 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
         </p>
       ) : null}
 
-      {confirming ? (
-        <div role="group" aria-label="Confirm delete" className="flex flex-col gap-3">
-          <p className="m-0 font-semibold">{DELETE_PROMPT}</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              ref={cancelRef}
-              size={48}
-              variant="secondary"
-              className="flex-[1_1_110px]"
-              onClick={() => {
-                setConfirming(false);
-                setError(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              size={48}
-              variant="text"
-              tone="negative"
-              disabled={deleting}
-              className="flex-[1_1_110px] font-extrabold"
-              onClick={() => void remove()}
-            >
-              {deleting ? "Deleting…" : "Delete"}
-            </Button>
-          </div>
+      {pending ? (
+        <div ref={discardWrapRef}>
+          <ConfirmStrip
+            title={pending.title}
+            body={editing ? "Your changes won't be saved." : "What you've entered won't be saved."}
+            cancelLabel="Keep editing"
+            confirmLabel="Discard"
+            onCancel={() => answerDiscard(false)}
+            onConfirm={() => answerDiscard(true)}
+          />
         </div>
+      ) : confirming ? (
+        <ConfirmStrip
+          title="Delete this expense?"
+          body={deleteBody}
+          cancelLabel="Cancel"
+          confirmLabel="Delete expense"
+          confirmBusyLabel="Deleting…"
+          busy={deleting}
+          onCancel={() => {
+            setConfirming(false);
+            setError(null);
+          }}
+          onConfirm={() => void remove()}
+        />
       ) : (
         <div className="flex flex-wrap gap-2">
           {editing ? (
@@ -891,11 +851,11 @@ export function ExpenseComposer({ editId }: { editId?: string }) {
             ref={saveRef}
             type="submit"
             size={48}
-            disabled={blocked || saving}
-            kbd={isPhone || blocked || saving ? undefined : "⌘↵"}
+            disabled={submitDisabled}
+            kbd={isPhone || submitDisabled ? undefined : "⌘↵"}
             className="flex-[1_1_150px]"
           >
-            {saving ? "Saving…" : (blockedReason ?? (editing ? "Save changes" : "Save expense"))}
+            {saving ? "Saving…" : (blockedReason ?? (cleanEdit ? "No changes yet" : editing ? "Save changes" : "Save expense"))}
           </Button>
         </div>
       )}

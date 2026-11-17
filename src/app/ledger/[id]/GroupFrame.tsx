@@ -24,12 +24,13 @@
 
 import { useState, type ReactNode } from "react";
 import { GroupHeader } from "@/src/components/glow/GroupHeader";
+import { useFilters } from "@/src/components/glow/FilterProvider";
 import { PhoneActionBar } from "@/src/components/glow/PhoneActionBar";
 import { ShortcutFooter } from "@/src/components/glow/ShortcutFooter";
 import { usePanelNav } from "@/src/components/glow/usePanel";
 import { useOpenPayment } from "@/src/components/glow/paymentPrefill";
 import { useShortcuts } from "@/src/components/glow/useShortcuts";
-import UserManagementModal from "./UserManagementModal";
+import { useViewer } from "@/src/components/glow/ViewerProvider";
 
 type User = {
   id: string;
@@ -53,15 +54,10 @@ export type GroupFrameProps = {
   balances?: ReactNode;
 };
 
-type Modal = "members" | null;
-
-// `baseCurrency` is still in the props (the page passes it) but nothing here
-// uses it now that ExpenseModal is gone; the composer reads it from the data.
 export default function GroupFrame({
   ledgerId,
   title,
   emoji,
-  users,
   tab,
   summary,
   toolbar,
@@ -69,13 +65,20 @@ export default function GroupFrame({
   panel,
   balances
 }: GroupFrameProps) {
-  const [modal, setModal] = useState<Modal>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
-  const close = () => setModal(null);
-  // Add expense opens the composer in the right panel (T13), not the old modal.
-  const { openAdd } = usePanelNav();
+  const { promptOpen, dismissPrompt } = useViewer();
+  const effectiveViewerOpen = viewerOpen || promptOpen;
+  const handleViewerOpenChange = (next: boolean) => {
+    if (!next && promptOpen) dismissPrompt();
+    setViewerOpen(next);
+  };
+  // Add expense and Manage members open the right panel, not old modals.
+  const { openAdd, openMembers } = usePanelNav();
   const openPayment = useOpenPayment(); // Add payment and P open the right panel (T15)
-  useShortcuts({ tab, viewerMenuOpen: viewerOpen, setViewerMenuOpen: setViewerOpen }); // T17
+  const { filter } = useFilters();
+  const filteringPhone =
+    filter.query.trim() !== "" || filter.kind !== "all" || filter.personId !== null;
+  useShortcuts({ tab, viewerMenuOpen: effectiveViewerOpen, setViewerMenuOpen: handleViewerOpenChange }); // T17
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg pb-[calc(88px+env(safe-area-inset-bottom))] text-text sm:pb-0">
@@ -86,9 +89,10 @@ export default function GroupFrame({
         onAddPayment={() => openPayment()}
         onAddExpense={openAdd}
         viewerMenu={{
-          open: viewerOpen,
-          onOpenChange: setViewerOpen,
-          onManageMembers: () => setModal("members")
+          open: effectiveViewerOpen,
+          onOpenChange: handleViewerOpenChange,
+          promptMode: promptOpen && !viewerOpen,
+          onManageMembers: openMembers
         }}
       />
 
@@ -102,21 +106,26 @@ export default function GroupFrame({
         <main>
           <div role="tabpanel" aria-label="Activity" className="flex flex-col">
           {summary ? (
-            <div data-slot="summary" className="flex flex-wrap gap-4 px-4 pt-1 sm:px-6">
+            <div
+              data-slot="summary"
+              className={`flex flex-wrap gap-4 px-4 pt-1 sm:px-6 ${filteringPhone ? "max-sm:hidden" : ""}`}
+            >
               {summary}
             </div>
           ) : null}
           {toolbar ? (
             <div
               data-slot="toolbar"
-              className="flex flex-wrap items-center gap-3 px-6 pb-3 pt-4 max-sm:hidden"
+              className="flex flex-col gap-2 pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:px-6 sm:pb-3 sm:pt-4"
             >
               {toolbar}
             </div>
           ) : null}
           <div
             data-slot="content"
-            className={`flex flex-wrap items-start gap-4 px-4 pb-4 sm:px-6 ${summary || toolbar ? "pt-4" : "pt-1"}`}
+            className={`flex flex-wrap items-start gap-4 px-4 pb-4 sm:px-6 ${
+              filteringPhone ? "pt-2 sm:pt-4" : summary || toolbar ? "pt-4" : "pt-1"
+            }`}
           >
             <div data-slot="ledger" className="min-w-0 flex-[999_1_560px]">
               {ledger}
@@ -136,17 +145,9 @@ export default function GroupFrame({
       </div>
 
       <PhoneActionBar
-        hidden={viewerOpen || modal !== null}
+        hidden={effectiveViewerOpen}
         onAddPayment={() => openPayment()}
         onAddExpense={openAdd}
-      />
-
-      {/* The one old modal left. Expenses (T13, T14) and payments (T15) use the panel. */}
-      <UserManagementModal
-        isOpen={modal === "members"}
-        onClose={close}
-        ledgerId={ledgerId}
-        users={users}
       />
     </div>
   );

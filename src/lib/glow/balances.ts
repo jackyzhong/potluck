@@ -85,7 +85,7 @@ export function settlePlan(data: GroupData, simplified: boolean, viewerId: strin
 
 /** "5 payments clear the whole group" (docs/06). */
 export function planSubtitle(count: number): string {
-  if (count === 0) return "Everyone's square.";
+  if (count === 0) return "Nothing to settle";
   if (count === 1) return "One payment clears the whole group";
   return `${count} payments clear the whole group`;
 }

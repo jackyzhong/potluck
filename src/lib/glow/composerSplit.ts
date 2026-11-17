@@ -392,3 +392,66 @@ export function rowsShowSave(
     return weight === want.weight;
   });
 }
+
+// ---------- shares header & remainder note (T32, Boards 40/46) ----------
+
+export function sharesSummary(
+  shares: Readonly<Record<string, number>>,
+  rowIds: readonly string[]
+): { totalShares: number; includedCount: number } {
+  let totalShares = 0;
+  let includedCount = 0;
+  for (const id of rowIds) {
+    const n = shares[id] ?? 0;
+    if (n > 0) {
+      totalShares += n;
+      includedCount += 1;
+    }
+  }
+  return { totalShares, includedCount };
+}
+
+/** Members who receive an extra cent under largest-remainder Shares rounding. */
+export function sharesExtraCentMembers(
+  totalCents: number,
+  shares: Readonly<Record<string, number>>,
+  memberOrder: readonly string[]
+): string[] {
+  if (totalCents <= 0) return [];
+  const wanted = Object.entries(shares)
+    .filter(([, w]) => Number.isFinite(w) && w > 0)
+    .map(([id]) => id);
+  const ordered = memberOrder.filter((id) => wanted.includes(id));
+  for (const id of wanted) if (!ordered.includes(id)) ordered.push(id);
+  const sum = ordered.reduce((acc, id) => acc + shares[id], 0);
+  if (sum <= 0 || totalCents % sum === 0) return [];
+
+  const rows = ordered.map((id, index) => {
+    const numerator = totalCents * shares[id];
+    const floor = Math.floor(numerator / sum);
+    return { id, index, floor, remainder: numerator - floor * sum };
+  });
+  const assigned = rows.reduce((acc, r) => acc + r.floor, 0);
+  const rest = totalCents - assigned;
+  if (rest <= 0) return [];
+  return [...rows]
+    .sort((a, b) => b.remainder - a.remainder || a.index - b.index)
+    .slice(0, rest)
+    .map((r) => r.id);
+}
+
+/** Exact per-share amount text (e.g. "CA$16.125" for 64.50 across 4 shares). */
+export function formatPerShareAmount(
+  totalCents: number,
+  totalShares: number,
+  decimals: number,
+  currency: string
+): string {
+  const value = totalCents / totalShares / 10 ** decimals;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals + 2
+  }).format(value);
+}

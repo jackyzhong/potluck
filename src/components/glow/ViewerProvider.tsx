@@ -17,6 +17,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   useSyncExternalStore,
@@ -45,11 +46,11 @@ import {
   buildMemberOrder,
   pickableViewers,
   readStoredViewer,
+  recordVisitedGroup,
   resolveViewer,
   writeStoredViewer,
   type GlowMember
 } from "@/src/lib/glow/viewer";
-import { WhichOneAreYou } from "./WhichOneAreYou";
 
 // ---------- the saved viewer, as an external store ----------
 //
@@ -105,6 +106,9 @@ export type ViewerState = {
   pickable: GlowMember[];
   /** Switch viewer. Recomputes every number from the rows already loaded: no refetch. */
   setViewer: (memberId: string) => void;
+  /** True on a first visit with no stored viewer until picked or dismissed (T28). */
+  promptOpen: boolean;
+  dismissPrompt: () => void;
 };
 
 /** The numbers that exist only once there is a viewer. */
@@ -120,6 +124,8 @@ export type ViewerNumbers = {
 };
 
 export type GlowDataState = {
+  /** Current ledger id. */
+  ledgerId: string;
   /** The rows in the shape the calculation layer takes. `memberOrder` includes archived members. */
   data: GroupData;
   currency: string;
@@ -127,6 +133,8 @@ export type GlowDataState = {
   slots: Map<string, AvatarSlot>;
   /** paid / share / sent / received / net per member. Doesn't depend on the viewer. */
   totals: Record<string, MemberTotals>;
+  /** Total spent across all expenses in this ledger (in cents). */
+  groupSpentCents: number;
   /** Viewer-relative numbers, or null while there is no viewer. */
   forViewer: ViewerNumbers | null;
 };
@@ -175,6 +183,10 @@ export function ViewerProvider({
     () => undefined
   );
 
+  useEffect(() => {
+    recordVisitedGroup(browserStorage(), ledgerId);
+  }, [ledgerId]);
+
   // Rows → calculation input. These depend only on the rows, so switching
   // viewer reuses them.
   const members = useMemo(() => {
@@ -189,6 +201,10 @@ export function ViewerProvider({
     [members, expenses, splits, payments]
   );
   const totals = useMemo(() => memberTotals(data), [data]);
+  const groupSpentCents = useMemo(
+    () => expenses.reduce((sum, e) => sum + e.amount_cents, 0),
+    [expenses]
+  );
 
   const loading = saved === undefined;
   const viewerId = loading ? null : resolveViewer(saved, users).viewerId;
@@ -211,6 +227,8 @@ export function ViewerProvider({
   const [announcement, setAnnouncement] = useState("");
   // The first-visit prompt can be dismissed; the page then stays neutral.
   const [promptDismissed, setPromptDismissed] = useState(false);
+  const showPrompt = !loading && !viewerId && pickable.length > 0 && !promptDismissed;
+  const dismissPrompt = useCallback(() => setPromptDismissed(true), []);
 
   const setViewer = useCallback(
     (memberId: string) => {
@@ -229,33 +247,22 @@ export function ViewerProvider({
       viewer,
       members,
       pickable,
-      setViewer
+      setViewer,
+      promptOpen: showPrompt,
+      dismissPrompt
     }),
-    [loading, viewerId, viewer, members, pickable, setViewer]
+    [loading, viewerId, viewer, members, pickable, setViewer, showPrompt, dismissPrompt]
   );
 
   const glowData = useMemo<GlowDataState>(
-    () => ({ data, currency, slots, totals, forViewer }),
-    [data, currency, slots, totals, forViewer]
+    () => ({ ledgerId, data, currency, slots, totals, groupSpentCents, forViewer }),
+    [ledgerId, data, currency, slots, totals, groupSpentCents, forViewer]
   );
-
-  // Only when nothing usable is saved, and only once storage has been read.
-  const showPrompt = !loading && !viewerId && pickable.length > 0 && !promptDismissed;
 
   return (
     <ViewerContext.Provider value={viewerState}>
       <GlowDataContext.Provider value={glowData}>
         {children}
-        {showPrompt && (
-          <WhichOneAreYou
-            members={pickable}
-            slots={slots}
-            nets={Object.fromEntries(Object.entries(totals).map(([id, t]) => [id, t.net]))}
-            currency={currency}
-            onPick={setViewer}
-            onClose={() => setPromptDismissed(true)}
-          />
-        )}
         <div role="status" aria-live="polite" className="sr-only">
           {announcement}
         </div>

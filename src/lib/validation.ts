@@ -13,7 +13,7 @@ export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const LIMITS = {
-  title: 100,
+  title: 50,
   memberName: 50,
   description: 50,
   note: 50,
@@ -71,7 +71,7 @@ function timestamp(value: unknown): string | null {
 
 // ---------------------------------------------------------------------------
 
-export type LedgerInput = { title: string; emoji: string; baseCurrency: string };
+export type LedgerInput = { title: string; emoji: string; baseCurrency: string; members: string[] };
 
 export function parseLedgerInput(input: unknown): Parsed<LedgerInput> {
   const raw = record(input);
@@ -86,7 +86,25 @@ export function parseLedgerInput(input: unknown): Parsed<LedgerInput> {
   const baseCurrency = currency(raw.baseCurrency);
   if (!baseCurrency) return fail("Pick a supported currency.");
 
-  return { ok: true, value: { title, emoji, baseCurrency } };
+  if (!Array.isArray(raw.members) || raw.members.length === 0) {
+    return fail("Add at least one person to the group.");
+  }
+  if (raw.members.length > LIMITS.splits) {
+    return fail(`Groups can start with up to ${LIMITS.splits} people.`);
+  }
+
+  const members: string[] = [];
+  const seen = new Set<string>();
+  for (const entry of raw.members) {
+    const parsed = parseMemberName(entry);
+    if (!parsed.ok) return parsed;
+    const key = parsed.value.toLowerCase();
+    if (seen.has(key)) return fail(`${parsed.value} is already in the list.`);
+    seen.add(key);
+    members.push(parsed.value);
+  }
+
+  return { ok: true, value: { title, emoji, baseCurrency, members } };
 }
 
 export function parseMemberName(input: unknown): Parsed<string> {
@@ -219,6 +237,7 @@ export type PaymentInput = {
   currency: string;
   note: string | null;
   createdAt: string;
+  createdBy: string | null;
 };
 
 export function parsePaymentInput(input: unknown): Parsed<PaymentInput> {
@@ -242,7 +261,13 @@ export function parsePaymentInput(input: unknown): Parsed<PaymentInput> {
   const createdAt = timestamp(raw.createdAt);
   if (!createdAt) return fail("Enter a valid date.");
 
-  return { ok: true, value: { payerId, payeeId, amountCents, currency: code, note: note.value, createdAt } };
+  let createdBy: string | null = null;
+  if (raw.createdBy !== null && raw.createdBy !== undefined) {
+    if (!isUuid(raw.createdBy)) return fail("Invalid request.");
+    createdBy = raw.createdBy.toLowerCase();
+  }
+
+  return { ok: true, value: { payerId, payeeId, amountCents, currency: code, note: note.value, createdAt, createdBy } };
 }
 
 /**

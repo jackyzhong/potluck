@@ -215,3 +215,17 @@ test("toastFor: saves and deletes get one polite message, anything else none", (
   assert.equal(toastFor(empty, { type: "deleted" }, false), "Expense deleted");
   assert.equal(toastFor(details("x"), { type: "close" }, false), null);
 });
+
+const members: PanelState = { kind: "members" };
+
+test("?panel=members round-trips, yields to row click, and closes back to previous", () => {
+  assert.deepEqual(parsePanel(p(null, "members")).state, members);
+  assert.deepEqual(panelToParams(members), p(null, "members"));
+  assert.equal(withPanelState("tab=activity&e=a", members), "tab=activity&panel=members");
+  const rowClick = parsePanel(p("x2", "members"));
+  assert.deepEqual(rowClick.state, details("x2"));
+  assert.equal(rowClick.needsCleanup, true);
+  assert.deepEqual(transition(details("x1"), { type: "members" }), members);
+  assert.deepEqual(transition(members, { type: "close" }, details("x1")), details("x1"));
+  assert.deepEqual(transition(members, { type: "close" }), empty);
+});

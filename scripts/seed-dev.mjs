@@ -103,7 +103,9 @@ for (const e of fixture.expenses) {
     description: e.description,
     amount_cents: e.amount_cents,
     original_currency: e.original_currency,
-    created_at: e.created_at
+    created_at: e.created_at,
+    split_mode: e.split.mode,
+    created_by: uuidFor(e.payer_id)
   });
   const participants = [...e.split.participants].sort((a, b) => memberIndex.get(a) - memberIndex.get(b));
   const shares = splitEqually(e.amount_cents, participants);
@@ -125,7 +127,8 @@ const paymentRows = fixture.payments.map((p) => {
     amount_cents: p.amount_cents,
     original_currency: p.original_currency,
     note: p.note,
-    created_at: p.created_at
+    created_at: p.created_at,
+    created_by: uuidFor(p.payer_id)
   };
 });
 

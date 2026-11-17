@@ -5,6 +5,7 @@
 //   ?e=<id>                    details(id)
 //   ?panel=add                 add
 //   ?panel=pay                 pay (add a payment, T15)
+//   ?panel=members             members (manage members, T30)
 //   ?e=<id>&panel=edit         edit(id)
 //
 // Other params (?tab=, anything a later task adds) pass through untouched.
@@ -14,6 +15,7 @@ export type PanelState =
   | { kind: "details"; id: string }
   | { kind: "add" }
   | { kind: "pay" }
+  | { kind: "members" }
   | { kind: "edit"; id: string };
 
 /** The two params the panel owns. */
@@ -58,6 +60,10 @@ export function parsePanel(
     if (e) return { state: { kind: "details", id: e }, needsCleanup: true };
     return { state: { kind: "pay" }, needsCleanup: staleE };
   }
+  if (params.panel === "members") {
+    if (e) return { state: { kind: "details", id: e }, needsCleanup: true };
+    return { state: { kind: "members" }, needsCleanup: staleE };
+  }
   if (params.panel === "edit") {
     if (!e) return { state: EMPTY_PANEL, needsCleanup: true };
     if (opts.editingId && opts.editingId !== e) {
@@ -80,6 +86,8 @@ export function panelToParams(state: PanelState): PanelParams {
       return { e: null, panel: "add" };
     case "pay":
       return { e: null, panel: "pay" };
+    case "members":
+      return { e: null, panel: "members" };
     case "edit":
       return { e: state.id, panel: "edit" };
   }
@@ -107,6 +115,7 @@ export type PanelAction =
   | { type: "select"; id: string } // click a row, Enter on a row
   | { type: "add" } // Add expense, N, Duplicate
   | { type: "pay" } // Add payment, P, Mark paid
+  | { type: "members" } // Manage members (T30)
   | { type: "edit" } // Edit, E (only from details)
   | { type: "close" } // Esc, close button, scrim, swipe down
   | { type: "saved"; id: string; another?: boolean } // a save finished
@@ -129,6 +138,8 @@ export function transition(
       return { kind: "add" };
     case "pay":
       return { kind: "pay" };
+    case "members":
+      return { kind: "members" };
     case "edit":
       if (state.kind === "details" || state.kind === "edit") return { kind: "edit", id: state.id };
       return state;
@@ -136,6 +147,7 @@ export function transition(
       switch (state.kind) {
         case "add":
         case "pay":
+        case "members":
           return previous.kind === "details" ? previous : EMPTY_PANEL;
         case "edit":
           return { kind: "details", id: state.id };

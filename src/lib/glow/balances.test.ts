@@ -99,7 +99,7 @@ test("transfer wording", () => {
 test("plan subtitle", () => {
   assert.equal(planSubtitle(5), "5 payments clear the whole group");
   assert.equal(planSubtitle(1), "One payment clears the whole group");
-  assert.equal(planSubtitle(0), "Everyone's square.");
+  assert.equal(planSubtitle(0), "Nothing to settle");
 });
 
 test("desktop hero line", () => {

@@ -7,6 +7,8 @@ import {
   currencyDecimals,
   dateInputValue,
   parsePaymentAmountCents,
+  paymentImpact,
+  paymentPairRemaining,
   paymentProblem,
   paymentTitle
 } from "./payment.ts";
@@ -82,4 +84,31 @@ test("paymentTitle follows docs/06", () => {
   assert.equal(paymentTitle(m, you), "Theo paid you");
   assert.equal(paymentTitle(you, a), "You paid Lena");
   assert.equal(paymentTitle(m, a), "Theo paid Lena");
+});
+
+test("paymentImpact distinguishes viewer paying, viewer receiving, and third-party", () => {
+  assert.deepEqual(
+    paymentImpact({ payerId: "j", payeeId: "s", amountCents: 1638, viewerId: "j" }),
+    { kind: "paid", cents: 1638 }
+  );
+  assert.deepEqual(
+    paymentImpact({ payerId: "m", payeeId: "j", amountCents: 375, viewerId: "j" }),
+    { kind: "received", cents: 375 }
+  );
+  assert.deepEqual(
+    paymentImpact({ payerId: "a", payeeId: "s", amountCents: 500, viewerId: "j" }),
+    { kind: "third_party", cents: 500 }
+  );
+  assert.equal(paymentImpact({ payerId: "j", payeeId: "j", amountCents: 500, viewerId: "j" }), null);
+  assert.equal(paymentImpact({ payerId: "j", payeeId: "s", amountCents: 0, viewerId: "j" }), null);
+});
+
+test("paymentPairRemaining finds counterparty cents or defaults to 0", () => {
+  const pairs = [
+    { memberId: "m", cents: 2504 },
+    { memberId: "s", cents: -1638 }
+  ];
+  assert.equal(paymentPairRemaining(pairs, "m"), 2504);
+  assert.equal(paymentPairRemaining(pairs, "s"), -1638);
+  assert.equal(paymentPairRemaining(pairs, "other"), 0);
 });

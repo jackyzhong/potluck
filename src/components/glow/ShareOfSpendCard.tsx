@@ -16,18 +16,33 @@ const card =
  */
 export function ShareOfSpendCard() {
   const { status, viewerId } = useViewer();
-  const { currency, forViewer } = useGlowData();
+  const { currency, groupSpentCents: totalGroupSpent, forViewer } = useGlowData();
 
-  if (status === "loading" || !viewerId || !forViewer) {
+  if (status === "loading") {
     return (
-      <section aria-label="Spending so far" aria-busy={status === "loading"} className={card}>
+      <section aria-label="Spending so far" aria-busy="true" className={card}>
         <h2 className="m-0 text-[length:var(--text-card-title)] font-extrabold">So far</h2>
         <div className="h-2.5 rounded-[5px] bg-bar-track sm:h-3 sm:rounded-md" />
-        {status === "loading" ? null : (
-          <span className="text-[length:var(--text-meta)] text-text-muted">
-            Choose who&apos;s viewing to see your share.
+      </section>
+    );
+  }
+
+  if (!viewerId || !forViewer) {
+    return (
+      <section aria-labelledby="share-title" className={card}>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 sm:flex-col sm:items-start sm:justify-start sm:gap-0.5">
+          <h2 id="share-title" className="m-0 text-[length:var(--text-card-title)] font-extrabold">
+            So far
+          </h2>
+          <span className="text-[length:var(--text-meta)] tabular-nums text-text-muted">
+            Group spent <Money cents={totalGroupSpent} currency={currency} />
           </span>
-        )}
+        </div>
+        <div
+          role="img"
+          aria-label={`Group spent ${formatMoney(totalGroupSpent, { currency })}`}
+          className="flex h-2.5 overflow-hidden rounded-[5px] bg-bar-track sm:h-3 sm:rounded-md"
+        />
       </section>
     );
   }

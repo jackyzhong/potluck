@@ -16,7 +16,7 @@ export type ViewerMenuProps = Omit<ViewerChoicesProps, "mode"> & {
  * pick all close it; arrow keys, Home/End and type-ahead move between items.
  * The caller returns focus to the pill.
  */
-export function ViewerMenu({ onClose, triggerRef, ...choices }: ViewerMenuProps) {
+export function ViewerMenu({ onClose, triggerRef, promptMode, ...choices }: ViewerMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(true, onClose, [ref, triggerRef]);
 
@@ -27,11 +27,16 @@ export function ViewerMenu({ onClose, triggerRef, ...choices }: ViewerMenuProps)
     (selected ?? items?.[0])?.focus();
   }, []);
 
+  const heading = promptMode ? "Which one are you?" : "View the group as";
+  const sub = promptMode
+    ? "Pick yourself so balances are shown from your side. You can change this any time."
+    : "Amounts and “you” switch to this person";
+
   return (
     <div
       ref={ref}
       role="menu"
-      aria-label="View the group as"
+      aria-label={heading}
       style={{ border: "var(--menu-border)" }}
       onKeyDown={(e) => {
         // Tab leaves a menu: close it and let focus go back to the pill.
@@ -40,12 +45,10 @@ export function ViewerMenu({ onClose, triggerRef, ...choices }: ViewerMenuProps)
       className="absolute right-0 top-[52px] z-20 box-border w-[340px] rounded-card bg-surface p-2 text-text shadow-menu"
     >
       <div className="flex flex-col gap-0.5 px-3 py-2">
-        <span className="text-[15px] font-extrabold">View the group as</span>
-        <span className="text-[length:var(--text-meta)] text-text-muted">
-          Amounts and “you” switch to this person
-        </span>
+        <span className="text-[15px] font-extrabold">{heading}</span>
+        <span className="text-[length:var(--text-meta)] text-text-muted">{sub}</span>
       </div>
-      <ViewerChoices mode="menu" {...choices} />
+      <ViewerChoices mode="menu" promptMode={promptMode} {...choices} />
     </div>
   );
 }
