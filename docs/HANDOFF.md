@@ -1,6 +1,6 @@
 # Handoff: Docs/Code Reconciliation Pass
 
-> **The Glow UI redesign shipped in November 2026** (built on the `glow` branch, then merged to `main`). Its spec, mockups, decisions and build log were removed afterwards; they're at commit `fdaa410` under `docs/potluck-glow-redesign/`. What it built is in [features.md](./features.md) §4. This file is the history of the earlier reconciliation pass and the priorities it set.
+> **The Glow UI redesign shipped in November 2026** (built on the `glow` branch, then merged to `main`). Its spec, mockups, decisions and build log were removed afterwards, history included. What it built is in [features.md](./features.md) §4. This file is the history of the earlier reconciliation pass and the priorities it set.
 
 **Context for the next thread:** This project (`docs/PRD.md`, `docs/db-chart.md`, `docs/features.md`) drifted from the actual `src/` implementation over time. We ran a reconciliation pass: audited the drift, then went through it decision-by-decision. This file is the state of that pass — read it first, then the three docs above, before picking up new work.
 
