@@ -34,7 +34,7 @@ export type SplitRow = {
   /** "You" for the viewer. */
   name: string;
   isViewer: boolean;
-  /** Text before the amount: "owes you", "paid, share", "owe Jacky". */
+  /** Text before the amount: "owes you", "paid, share", "owe Sam". */
   prefix: string;
   /** The amount shown after the prefix. Null when there is none ("paid"). */
   cents: number | null;

@@ -4,16 +4,16 @@ import assert from "node:assert/strict";
 import { detailsModel, detailsMeta, impactStrip, splitSentence, type DetailsInput } from "./details.ts";
 
 const order = ["j", "s", "an", "al", "m", "jo"];
-const names: Record<string, string> = { j: "Jacky", s: "Priya", an: "Marco", al: "Lena", m: "Theo", jo: "Nadia" };
+const names: Record<string, string> = { j: "Sam", s: "Priya", an: "Marco", al: "Lena", m: "Theo", jo: "Nadia" };
 const nameOf = (id: string) => names[id] ?? "Unknown";
-// Boathouse Dinner: CA$109.74 paid by Jacky, 6 ways.
-const pizza = { j: 1830, s: 1829, an: 1829, al: 1829, m: 1829, jo: 1828 };
+// Dinner Boathouse: CA$109.74 paid by Sam, 6 ways.
+const dinner = { j: 1830, s: 1829, an: 1829, al: 1829, m: 1829, jo: 1828 };
 const base: DetailsInput = {
   splitMode: "equal",
   totalCents: 10974,
   payerId: "j",
   createdBy: "j",
-  shares: pizza,
+  shares: dinner,
   memberOrder: order,
   nameOf,
   viewerId: "j",
@@ -43,14 +43,14 @@ test("viewer paid: lent strip, owes-you rows, You first", () => {
 test("viewer in split, not payer: share strip, You owe the payer, others owe the payer", () => {
   const m = detailsModel({ ...base, viewerId: "s" });
   assert.deepEqual(m.impact, { kind: "share", label: "Your share", cents: -1829 });
-  assert.equal(m.meta, "Sep 8 · added by Jacky");
-  assert.equal(m.payerName, "Jacky");
+  assert.equal(m.meta, "Sep 8 · added by Sam");
+  assert.equal(m.payerName, "Sam");
   assert.deepEqual(
     m.rows.slice(0, 3).map((r) => [r.name, r.prefix, r.cents, r.tone]),
     [
-      ["You", "owe Jacky", 1829, "negative"],
-      ["Jacky", "paid, share", 1830, "muted"],
-      ["Marco", "owes Jacky", 1829, "default"]
+      ["You", "owe Sam", 1829, "negative"],
+      ["Sam", "paid, share", 1830, "muted"],
+      ["Marco", "owes Sam", 1829, "default"]
     ]
   );
 });
@@ -72,8 +72,8 @@ test("viewer paid but is not in the split lends the whole total", () => {
 test("no viewer yet: neutral, no strip, no 'you'", () => {
   const m = detailsModel({ ...base, viewerId: null });
   assert.equal(m.impact, null);
-  assert.equal(m.meta, "Sep 8 · added by Jacky");
-  assert.equal(m.payerName, "Jacky");
+  assert.equal(m.meta, "Sep 8 · added by Sam");
+  assert.equal(m.payerName, "Sam");
   assert.ok(m.rows.every((r) => r.name !== "You"));
   assert.equal(m.rows[0].prefix, "paid, share");
 });

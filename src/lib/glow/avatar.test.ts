@@ -5,7 +5,7 @@ import { fallbackSlot, initialOf, memberSlots } from "./avatar.ts";
 
 const m = (id: string, created_at: string) => ({ id, created_at });
 const group = [
-  m("jacky", "2026-09-01T10:00:00Z"),
+  m("sam", "2026-09-01T10:00:00Z"),
   m("priya", "2026-09-01T10:00:01Z"),
   m("marco", "2026-09-01T10:00:02Z"),
   m("lena", "2026-09-01T10:00:03Z"),
@@ -52,8 +52,8 @@ test("fallbackSlot is stable and in range", () => {
 });
 
 test("initialOf takes the first character, upper-cased", () => {
-  assert.equal(initialOf("jacky"), "J");
-  assert.equal(initialOf("  priya"), "S");
+  assert.equal(initialOf("sam"), "S");
+  assert.equal(initialOf("  priya"), "P");
   assert.equal(initialOf("Émilie"), "É");
   assert.equal(initialOf("🍲 pot"), "🍲");
   assert.equal(initialOf(""), "?");

@@ -78,7 +78,7 @@ test("a changed date keeps the time of day, a new payment uses now", () => {
 });
 
 test("paymentTitle follows docs/06", () => {
-  const you = { name: "Jacky", isViewer: true };
+  const you = { name: "Sam", isViewer: true };
   const m = { name: "Theo", isViewer: false };
   const a = { name: "Lena", isViewer: false };
   assert.equal(paymentTitle(m, you), "Theo paid you");

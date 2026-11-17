@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { heroCopy, heroScale } from "./hero.ts";
 
-test("owed, with one person the viewer owes (Jacky, board 03)", () => {
+test("owed, with one person the viewer owes (Sam, board 03)", () => {
   const c = heroCopy({
     netCents: 5191,
     owesYou: ["Nadia", "Theo", "Lena", "Marco"],
@@ -16,7 +16,7 @@ test("owed, with one person the viewer owes (Jacky, board 03)", () => {
 test("owed by everyone (Priya, board 23)", () => {
   const c = heroCopy({
     netCents: 18541,
-    owesYou: ["Lena", "Theo", "Nadia", "Marco", "Jacky"],
+    owesYou: ["Lena", "Theo", "Nadia", "Marco", "Sam"],
     youOwe: [],
     everyoneElse: 5
   });
@@ -46,9 +46,9 @@ test("you owe several people", () => {
 });
 
 test("owing: the mirror of owed", () => {
-  const c = heroCopy({ netCents: -6460, owesYou: ["Jacky"], youOwe: ["Priya", "Zed", "Ann"], everyoneElse: 5 });
+  const c = heroCopy({ netCents: -6460, owesYou: ["Sam"], youOwe: ["Priya", "Zed", "Ann"], everyoneElse: 5 });
   assert.equal(c.label, "You owe");
-  assert.equal(c.subline, "You owe 3 people · Jacky owes you");
+  assert.equal(c.subline, "You owe 3 people · Sam owes you");
   assert.equal(c.showAmount, true);
   assert.equal(
     heroCopy({ netCents: -1, owesYou: [], youOwe: ["A", "B", "C"], everyoneElse: 3 }).subline,

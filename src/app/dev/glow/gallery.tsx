@@ -21,14 +21,14 @@ import { memberSlots } from "@/src/lib/glow/avatar";
 // show at once whatever the page theme is).
 
 const MEMBERS = [
-  { id: "jacky", name: "Jacky", created_at: "2026-09-01T10:00:00Z", archived: false },
+  { id: "sam", name: "Sam", created_at: "2026-09-01T10:00:00Z", archived: false },
   { id: "priya", name: "Priya", created_at: "2026-09-01T10:00:01Z", archived: false },
   { id: "marco", name: "Marco", created_at: "2026-09-01T10:00:02Z", archived: true },
   { id: "lena", name: "Lena", created_at: "2026-09-01T10:00:03Z", archived: false },
   { id: "theo", name: "Theo", created_at: "2026-09-01T10:00:04Z", archived: false },
   { id: "nadia", name: "Nadia", created_at: "2026-09-01T10:00:05Z", archived: false }
 ];
-// Slots count Marco even though he is archived, so Lena stays yellow.
+// Slots count Marco even though Marco is archived, so Lena stays yellow.
 const SLOTS = memberSlots(MEMBERS);
 
 const FILTERS = [
@@ -74,7 +74,7 @@ function Everything() {
       <Section title="Avatar" note="Slot = position in ledger order, archived members counted. Marco is archived; Lena keeps slot 4.">
         <Row label="member, by slot (28 / 32 / 36 / 38)">
           {([28, 32, 36, 38] as const).map((s) => (
-            <Avatar key={s} name="Jacky" slot={1} size={s} />
+            <Avatar key={s} name="Sam" slot={1} size={s} />
           ))}
         </Row>
         <Row label="member, from ledger order (Marco archived)">
@@ -88,7 +88,7 @@ function Everything() {
         </Row>
         <Row label="you">
           {([28, 32, 36, 38] as const).map((s) => (
-            <Avatar key={s} name="Jacky" variant="you" size={s} />
+            <Avatar key={s} name="Sam" variant="you" size={s} />
           ))}
         </Row>
         <Row label="onGlow (on the gradient)">

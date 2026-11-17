@@ -37,7 +37,7 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-/** One itemised line: "Boathouse Dinner · Sep 8" and an amount. Opens the expense in the right panel. */
+/** One itemised line: "Dinner Boathouse · Sep 8" and an amount. Opens the expense in the right panel. */
 function Line({ line, currency, onOpen }: { line: BreakdownLine; currency: string; onOpen: (id: string) => void }) {
   return (
     <button

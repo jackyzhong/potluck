@@ -26,7 +26,7 @@ import {
 import { composerImpact } from "./ledger.ts";
 import { splitByWeight } from "./split.ts";
 
-// Cabin's six, in ledger order, as the boards use them.
+// The sample group's six, in ledger order.
 const ORDER = ["you", "priya", "marco", "lena", "theo", "nadia"];
 const D = 2;
 

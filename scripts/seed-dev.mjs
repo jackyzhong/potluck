@@ -3,7 +3,7 @@
 //   node scripts/seed-dev.mjs
 //
 // Reads NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY from .env.local (or
-// the environment), replaces the Cabin group, and prints its URL. Safe to
+// the environment), replaces the sample group, and prints its URL. Safe to
 // re-run: the group has a fixed id, so each run deletes it and loads it fresh.
 //
 // It writes only the columns that exist in supabase/migrations today, straight
@@ -21,7 +21,7 @@ import { createClient } from "@supabase/supabase-js";
 const DEV_PROJECT_REF = "pooogudusmmfuztxaqfg";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const fixturePath = resolve(root, "docs/potluck-glow-redesign/fixtures/cabin-trip.json");
+const fixturePath = resolve(root, "src/lib/glow/fixtures/cabin-trip.json");
 
 function fail(message) {
   console.error(`seed-dev: ${message}`);
@@ -58,7 +58,7 @@ const db = createClient(url, secretKey, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 
-// The fixture's ids ("u-jacky") are not uuids, so derive stable uuids from
+// The fixture's ids ("u-sam") are not uuids, so derive stable uuids from
 // them. The same fixture id always maps to the same uuid, which gives the
 // group a fixed URL and lets a re-run find and replace what it loaded before.
 function uuidFor(fixtureId) {
@@ -132,7 +132,7 @@ const paymentRows = fixture.payments.map((p) => {
   };
 });
 
-// Replace: remove the Cabin group (this run's fixed id, plus any other ledger
+// Replace: remove the sample group (this run's fixed id, plus any other ledger
 // with the same title from an earlier version of the script), children first
 // so no foreign key, present or added later, can block it.
 async function deleteLedgers(ids) {
@@ -152,7 +152,7 @@ const { data: sameTitle, error: lookupError } = await db
   .from("ledgers")
   .select("id")
   .eq("title", fixture.ledger.title);
-check({ error: lookupError }, "looking for an existing Cabin group");
+check({ error: lookupError }, "looking for an existing sample group");
 const oldIds = [...new Set([ledgerId, ...sameTitle.map((l) => l.id)])];
 await deleteLedgers(oldIds);
 

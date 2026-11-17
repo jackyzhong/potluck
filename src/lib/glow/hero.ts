@@ -61,7 +61,7 @@ function owedFirst(owesYou: readonly string[], youOwe: readonly string[], everyo
   return [owesYou.length ? theyOweYou(owesYou) : "", youOweThem(youOwe, false)].filter(Boolean).join(" · ");
 }
 
-/** The mirror, for a negative balance: "You owe 3 people · Jacky owes you". */
+/** The mirror, for a negative balance: "You owe 3 people · Sam owes you". */
 function oweFirst(owesYou: readonly string[], youOwe: readonly string[], everyoneElse: number): string {
   if (owesYou.length === 0 && everyoneElse >= 2 && youOwe.length >= everyoneElse) {
     return "You owe everyone else";

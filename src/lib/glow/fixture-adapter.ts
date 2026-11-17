@@ -1,4 +1,4 @@
-// Test helper: turns docs/potluck-glow-redesign/fixtures/cabin-trip.json (the
+// Test helper: turns ./fixtures/cabin-trip.json (the
 // fixture's own shape, with splits written as a mode spec) into the app's row
 // types, so the tests exercise the real functions on real-shaped data.
 //
@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import type { Expense, GroupData, Payment, Split } from "./ledger.ts";
 import { splitAmounts, type SplitSpec } from "./split.ts";
 
-const FIXTURES = new URL("../../../docs/potluck-glow-redesign/fixtures/", import.meta.url);
+const FIXTURES = new URL("./fixtures/", import.meta.url);
 
 type FixtureSplit =
   | { mode: "equal"; participants: string[] }
@@ -37,7 +37,7 @@ export function loadFixture(): Fixture {
 
 /** Expand the fixture's split specs into `splits` rows and rebuild the row types. */
 export function toGroupData(fixture: Fixture): GroupData {
-  const ledger_id = "ledger-cabin-trip";
+  const ledger_id = "ledger-demo";
   // Ledger order = users.created_at ascending, which is the fixture's order.
   const memberOrder = [...fixture.users]
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -57,7 +57,7 @@ export function toGroupData(fixture: Fixture): GroupData {
 }
 
 // "CA$1,175.90"; negatives use a true minus before the currency ("−CA$12.50").
-// Same formatting as fixtures/reference.mjs, so expected.json compares as text.
+// Same formatting as ./fixtures/reference.mjs, so expected.json compares as text.
 const cad = new Intl.NumberFormat("en-US", { style: "currency", currency: "CAD" });
 export function money(cents: number, { signed = false } = {}): string {
   const s = cad.format(Math.abs(cents) / 100);

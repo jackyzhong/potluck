@@ -57,11 +57,11 @@ test("joinNames", () => {
 });
 
 test("the 6450 / 4 example on board 09, through T03's functions", () => {
-  const order = ["jacky", "priya", "marco", "lena", "theo", "nadia"];
-  const included = ["jacky", "priya", "lena", "nadia"];
+  const order = ["sam", "priya", "marco", "lena", "theo", "nadia"];
+  const included = ["sam", "priya", "lena", "nadia"];
   const shares = splitEqually(6450, included, order);
-  assert.deepEqual(shares, { jacky: 1613, priya: 1613, lena: 1612, nadia: 1612 });
-  assert.deepEqual(equalSplitExtraCentMembers(6450, included, order), ["jacky", "priya"]);
-  const impact = composerImpact({ viewerId: "jacky", payerId: "jacky", amountCents: 6450, shares });
+  assert.deepEqual(shares, { sam: 1613, priya: 1613, lena: 1612, nadia: 1612 });
+  assert.deepEqual(equalSplitExtraCentMembers(6450, included, order), ["sam", "priya"]);
+  const impact = composerImpact({ viewerId: "sam", payerId: "sam", amountCents: 6450, shares });
   assert.deepEqual(impact, { cents: 4837, kind: "owed", involved: true });
 });

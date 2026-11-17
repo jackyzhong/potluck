@@ -46,7 +46,7 @@ const name = Object.fromEntries(fixture.users.map((u) => [u.id, u.name]));
 const idOf = Object.fromEntries(fixture.users.map((u) => [u.name, u.id]));
 
 test("the adapter produces the app's row shapes", () => {
-  assert.equal(data.expenses.length, 5);
+  assert.equal(data.expenses.length, 10);
   assert.equal(data.payments.length, 2);
   // Every expense's split rows add up to its total.
   for (const e of data.expenses) {
@@ -72,7 +72,7 @@ test("per-member totals match expected.json", () => {
   assert.deepEqual(actual, expected.members);
 });
 
-for (const viewer of ["Jacky", "Priya"]) {
+for (const viewer of ["Sam", "Priya"]) {
   const viewerId = idOf[viewer];
   const want = expected.viewers[viewer];
 
@@ -138,7 +138,7 @@ test("composer examples match expected.json", () => {
 
 test("composer impact line: the 6450 / 4 and 40/30/20/10 examples", () => {
   const { equal, percent } = fixture._composer_examples;
-  const jacky = idOf.Jacky;
+  const sam = idOf.Sam;
 
   const equalShares = splitAmounts(
     equal.amount_cents,
@@ -146,7 +146,7 @@ test("composer impact line: the 6450 / 4 and 40/30/20/10 examples", () => {
     data.memberOrder
   );
   const a = composerImpact({
-    viewerId: jacky,
+    viewerId: sam,
     payerId: equal.payer_id,
     amountCents: equal.amount_cents,
     shares: equalShares
@@ -160,8 +160,8 @@ test("composer impact line: the 6450 / 4 and 40/30/20/10 examples", () => {
     data.memberOrder
   );
   const b = composerImpact({
-    viewerId: jacky,
-    payerId: jacky,
+    viewerId: sam,
+    payerId: sam,
     amountCents: percent.amount_cents,
     shares: percentShares
   });
@@ -194,9 +194,9 @@ test("hero counts and chips: zero chips are hidden (D11)", () => {
   assert.equal(heroCounts(priyaPairs).owesYou.length, 5);
   assert.equal(heroCounts(priyaPairs).youOwe.length, 0);
 
-  const jackyPairs = pairwise(data, idOf.Jacky);
-  assert.deepEqual(heroCounts(jackyPairs).owesYou.map((id) => name[id]), ["Nadia", "Theo", "Lena", "Marco"]);
-  assert.deepEqual(heroCounts(jackyPairs).youOwe.map((id) => name[id]), ["Priya"]);
+  const samPairs = pairwise(data, idOf.Sam);
+  assert.deepEqual(heroCounts(samPairs).owesYou.map((id) => name[id]), ["Nadia", "Lena", "Theo", "Marco"]);
+  assert.deepEqual(heroCounts(samPairs).youOwe.map((id) => name[id]), ["Priya"]);
 
   const withSquare = [
     { memberId: "x", cents: 500 },

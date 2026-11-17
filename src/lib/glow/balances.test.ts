@@ -22,7 +22,7 @@ import { loadFixture, toGroupData } from "./fixture-adapter.ts";
 const fixture = loadFixture();
 const data: GroupData = toGroupData(fixture);
 const nameOf = (id: string) => fixture.users.find((u) => u.id === id)?.name ?? id;
-const jacky = "u-jacky";
+const sam = "u-sam";
 const priya = "u-priya";
 
 test("the three tiles add up to the net, for every member", () => {
@@ -32,34 +32,34 @@ test("the three tiles add up to the net, for every member", () => {
   }
 });
 
-test("tiles for Jacky and Priya match the boards", () => {
+test("tiles for Sam and Priya", () => {
   const totals = memberTotals(data);
-  assert.deepEqual(statTiles(totals[jacky]), {
-    paidCents: 15174,
-    shareCents: -8559,
-    paymentsCents: -1424,
+  assert.deepEqual(statTiles(totals[sam]), {
+    paidCents: 30075,
+    shareCents: -21421,
+    paymentsCents: -1300,
     paymentsKind: "paidBack"
   });
   assert.deepEqual(statTiles(totals[priya]), {
-    paidCents: 27100,
-    shareCents: -8559,
-    paymentsCents: 0,
+    paidCents: 56286,
+    shareCents: -19710,
+    paymentsCents: -1200,
     paymentsKind: "paidBack"
   });
 });
 
 test("a member who only sent payments gets 'You've paid back' with a positive amount", () => {
-  const lena = fixture.users.find((u) => u.name === "Lena")!.id;
-  const tiles = statTiles(memberTotals(data)[lena]);
-  assert.equal(tiles.paymentsCents, 1049);
+  const theo = fixture.users.find((u) => u.name === "Theo")!.id;
+  const tiles = statTiles(memberTotals(data)[theo]);
+  assert.equal(tiles.paymentsCents, 2500);
   assert.equal(tiles.paymentsKind, "youPaidBack");
-  assert.equal(statTilesTotal(tiles), -6460);
+  assert.equal(statTilesTotal(tiles), -14719);
 });
 
 test("both plans clear every balance, and Simplify never needs more payments", () => {
   const totals = memberTotals(data);
   for (const simplified of [true, false]) {
-    const plan = settlePlan(data, simplified, jacky);
+    const plan = settlePlan(data, simplified, sam);
     const moved: Record<string, number> = {};
     for (const t of plan.transfers) {
       moved[t.fromId] = (moved[t.fromId] ?? 0) + t.amountCents;
@@ -70,17 +70,17 @@ test("both plans clear every balance, and Simplify never needs more payments", (
       assert.equal(moved[id] ?? 0, -totals[id].net, `${simplified} ${nameOf(id)}`);
     }
   }
-  const on = settlePlan(data, true, jacky).transfers.length;
-  const off = settlePlan(data, false, jacky).transfers.length;
+  const on = settlePlan(data, true, sam).transfers.length;
+  const off = settlePlan(data, false, sam).transfers.length;
   assert.ok(on <= off);
   assert.equal(on, 5);
 });
 
 test("sections: involving you, the rest, largest first", () => {
-  const plan = settlePlan(data, true, jacky);
+  const plan = settlePlan(data, true, sam);
   assert.equal(plan.involving.length + plan.rest.length, plan.transfers.length);
-  assert.ok(plan.involving.every((t) => t.fromId === jacky || t.toId === jacky));
-  assert.ok(plan.rest.every((t) => t.fromId !== jacky && t.toId !== jacky));
+  assert.ok(plan.involving.every((t) => t.fromId === sam || t.toId === sam));
+  assert.ok(plan.rest.every((t) => t.fromId !== sam && t.toId !== sam));
   const sorted = (xs: { amountCents: number }[]) =>
     xs.every((t, i) => i === 0 || xs[i - 1].amountCents >= t.amountCents);
   assert.ok(sorted(plan.involving) && sorted(plan.rest));
@@ -90,9 +90,9 @@ test("sections: involving you, the rest, largest first", () => {
 });
 
 test("transfer wording", () => {
-  assert.equal(transferText({ fromId: "u-lena", toId: jacky, amountCents: 1 }, jacky, nameOf), "Lena pays you");
-  assert.equal(transferText({ fromId: jacky, toId: priya, amountCents: 1 }, jacky, nameOf), "You pay Priya");
-  assert.equal(transferText({ fromId: "u-nadia", toId: priya, amountCents: 1 }, jacky, nameOf), "Nadia pays Priya");
+  assert.equal(transferText({ fromId: "u-lena", toId: sam, amountCents: 1 }, sam, nameOf), "Lena pays you");
+  assert.equal(transferText({ fromId: sam, toId: priya, amountCents: 1 }, sam, nameOf), "You pay Priya");
+  assert.equal(transferText({ fromId: "u-nadia", toId: priya, amountCents: 1 }, sam, nameOf), "Nadia pays Priya");
   assert.equal(transferText({ fromId: "u-nadia", toId: priya, amountCents: 1 }, null, nameOf), "Nadia pays Priya");
 });
 
@@ -103,19 +103,19 @@ test("plan subtitle", () => {
 });
 
 test("desktop hero line", () => {
-  const plan = settlePlan(data, true, jacky);
-  const line = planHeroLine(plan, jacky, nameOf, true);
-  assert.match(line, /pay you once debts are simplified$/);
-  assert.equal(planHeroLine(plan, jacky, nameOf, false).endsWith("once debts are simplified"), false);
+  const plan = settlePlan(data, true, sam);
+  const line = planHeroLine(plan, sam, nameOf, true);
+  assert.equal(line, "Lena pays you once debts are simplified");
+  assert.equal(planHeroLine(plan, sam, nameOf, false).endsWith("once debts are simplified"), false);
   const single = {
     transfers: [],
-    involving: [{ fromId: "u-lena", toId: jacky, amountCents: 5 }],
+    involving: [{ fromId: "u-lena", toId: sam, amountCents: 5 }],
     rest: []
   };
-  assert.equal(planHeroLine(single, jacky, nameOf, true), "Lena pays you once debts are simplified");
-  const owe = { transfers: [], involving: [{ fromId: jacky, toId: priya, amountCents: 5 }], rest: [] };
-  assert.equal(planHeroLine(owe, jacky, nameOf, true), "You pay Priya once debts are simplified");
-  assert.equal(planHeroLine({ transfers: [], involving: [], rest: [] }, jacky, nameOf, true), "");
+  assert.equal(planHeroLine(single, sam, nameOf, true), "Lena pays you once debts are simplified");
+  const owe = { transfers: [], involving: [{ fromId: sam, toId: priya, amountCents: 5 }], rest: [] };
+  assert.equal(planHeroLine(owe, sam, nameOf, true), "You pay Priya once debts are simplified");
+  assert.equal(planHeroLine({ transfers: [], involving: [], rest: [] }, sam, nameOf, true), "");
 });
 
 test("everyone: sorted by net, nets sum to zero, archived and square members hidden", () => {
@@ -123,14 +123,15 @@ test("everyone: sorted by net, nets sum to zero, archived and square members hid
   assert.equal(rows.length, data.memberOrder.length);
   assert.deepEqual(
     rows.map((r) => nameOf(r.memberId)),
-    ["Priya", "Jacky", "Marco", "Lena", "Theo", "Nadia"]
+    ["Priya", "Sam", "Marco", "Lena", "Theo", "Nadia"]
   );
   assert.equal(rows.reduce((s, r) => s + r.netCents, 0), 0);
   assert.equal(rows[0].netKind, "back");
-  assert.equal(rows[2].netKind, "owes");
+  assert.equal(rows[2].netKind, "back");
+  assert.equal(rows[3].netKind, "owes");
   const fresh: GroupData = { ...data, expenses: [], splits: [], payments: [] };
-  assert.equal(everyoneRows(fresh, new Set([jacky])).length, data.memberOrder.length - 1);
-  assert.equal(everyoneRows(data, new Set([jacky])).length, data.memberOrder.length);
+  assert.equal(everyoneRows(fresh, new Set([sam])).length, data.memberOrder.length - 1);
+  assert.equal(everyoneRows(data, new Set([sam])).length, data.memberOrder.length);
 });
 
 test("net labels and payments cells", () => {
@@ -154,8 +155,8 @@ test("a member's lines add up to their paid and share totals", () => {
   }
   const s = memberLines(data, priya);
   assert.equal(s.paid.length, 2);
-  assert.equal(s.share.length, 5);
-  assert.equal(s.expenseCount, 5);
+  assert.equal(s.share.length, 9);
+  assert.equal(s.expenseCount, 9);
 });
 
 test("expense toggle label and line dates", () => {

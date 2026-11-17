@@ -18,7 +18,7 @@ export type LedgerPerson = { id: string; name: string; slot: AvatarSlot | undefi
 
 export type LedgerItem = {
   row: ViewerNumbers["ledger"][number];
-  /** "Fans", "Theo paid you", "You paid Lena". */
+  /** "Firewood", "Theo paid you", "You paid Lena". */
   title: string;
   payer: LedgerPerson;
   /** "Sep 18". */

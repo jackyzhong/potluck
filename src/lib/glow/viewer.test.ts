@@ -24,10 +24,10 @@ const member = (id: string, created_at: string, archived_at: string | null = nul
   archived_at
 });
 
-const jacky = member("jacky", "2026-09-01T10:00:00Z");
+const sam = member("sam", "2026-09-01T10:00:00Z");
 const priya = member("priya", "2026-09-01T10:00:01Z");
 const marco = member("marco", "2026-09-01T10:00:02Z", "2026-10-01T09:00:00Z"); // archived
-const group = [jacky, priya, marco];
+const group = [sam, priya, marco];
 
 // ---------- storage ----------
 
@@ -59,10 +59,10 @@ test("the storage key is potluck:viewer:{ledgerId}", () => {
 
 test("a saved viewer reads back, per group", () => {
   const s = fakeStorage();
-  assert.equal(writeStoredViewer(s, "ledger-1", "jacky"), true);
-  assert.equal(readStoredViewer(s, "ledger-1"), "jacky");
+  assert.equal(writeStoredViewer(s, "ledger-1", "sam"), true);
+  assert.equal(readStoredViewer(s, "ledger-1"), "sam");
   assert.equal(readStoredViewer(s, "ledger-2"), null);
-  assert.equal(s.data.get("potluck:viewer:ledger-1"), "jacky");
+  assert.equal(s.data.get("potluck:viewer:ledger-1"), "sam");
 });
 
 test("nothing saved, an empty value, or no storage all read as null", () => {
@@ -73,8 +73,8 @@ test("nothing saved, an empty value, or no storage all read as null", () => {
 
 test("storage that throws never throws out: reads give null, writes give false", () => {
   assert.equal(readStoredViewer(throwingStorage, "l"), null);
-  assert.equal(writeStoredViewer(throwingStorage, "l", "jacky"), false);
-  assert.equal(writeStoredViewer(null, "l", "jacky"), false);
+  assert.equal(writeStoredViewer(throwingStorage, "l", "sam"), false);
+  assert.equal(writeStoredViewer(null, "l", "sam"), false);
 });
 
 test("browserStorage is null with no window (server) and when the getter throws", () => {
@@ -95,11 +95,11 @@ test("browserStorage is null with no window (server) and when the getter throws"
 // ---------- memberOrder ----------
 
 test("memberOrder is ledger order and includes archived members", () => {
-  assert.deepEqual(buildMemberOrder(group), ["jacky", "priya", "marco"]);
+  assert.deepEqual(buildMemberOrder(group), ["sam", "priya", "marco"]);
 });
 
 test("memberOrder doesn't depend on the order rows arrive in", () => {
-  assert.deepEqual(buildMemberOrder([marco, jacky, priya]), ["jacky", "priya", "marco"]);
+  assert.deepEqual(buildMemberOrder([marco, sam, priya]), ["sam", "priya", "marco"]);
 });
 
 test("memberOrder breaks a created_at tie on id", () => {
@@ -118,15 +118,15 @@ test("memberOrder agrees with the avatar slots, and an empty group gives []", ()
 });
 
 test("archiving a member doesn't move anyone in memberOrder", () => {
-  const before = buildMemberOrder([jacky, priya, member("marco", marco.created_at)]);
+  const before = buildMemberOrder([sam, priya, member("marco", marco.created_at)]);
   const after = buildMemberOrder(group);
   assert.deepEqual(before, after);
 });
 
 test("pickableViewers drops archived members and keeps ledger order", () => {
   assert.deepEqual(
-    pickableViewers([priya, marco, jacky]).map((m) => m.id),
-    ["jacky", "priya"]
+    pickableViewers([priya, marco, sam]).map((m) => m.id),
+    ["sam", "priya"]
   );
 });
 
@@ -150,11 +150,11 @@ test("a stored id that isn't in the group (deleted, or another group's) falls ba
 });
 
 test("a group with no members never resolves a viewer", () => {
-  assert.deepEqual(resolveViewer("jacky", []), { viewerId: null, reason: "unknown" });
+  assert.deepEqual(resolveViewer("sam", []), { viewerId: null, reason: "unknown" });
 });
 
 test("restoring an archived member makes their stored id valid again", () => {
-  const restored = [jacky, priya, member("marco", marco.created_at, null)];
+  const restored = [sam, priya, member("marco", marco.created_at, null)];
   assert.deepEqual(resolveViewer("marco", restored), { viewerId: "marco", reason: "stored" });
 });
 

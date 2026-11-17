@@ -1,5 +1,6 @@
 // Read-only stand-in for Supabase's PostgREST, serving one fictional group.
-// node mock-postgrest.mjs <demo-group.json> <port>
+// node mock-postgrest.mjs <fixture.json> <port>   (src/lib/glow/fixtures/cabin-trip.json)
+// Only equal splits are supported, which is all the fixture uses.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import http from "node:http";
@@ -27,7 +28,8 @@ for (const e of fx.expenses) {
   const id = uuidFor(e.id);
   t.expenses.push({ id, ledger_id: L, payer_id: uuidFor(e.payer_id), description: e.description, amount_cents: e.amount_cents,
     original_currency: "CAD", created_at: e.created_at, split_mode: "equal", created_by: uuidFor(e.payer_id) });
-  const ps = (e.participants === "all" ? order : order.filter((u) => e.participants.includes(u)));
+  if (e.split.mode !== "equal") throw new Error(`${e.id}: only equal splits are supported`);
+  const ps = order.filter((u) => e.split.participants.includes(u));
   const base = Math.floor(e.amount_cents / ps.length), extra = e.amount_cents - base * ps.length;
   ps.forEach((u, i) => t.splits.push({ id: uuidFor(`${e.id}:${u}`), expense_id: id, user_id: uuidFor(u), amount_cents: base + (i < extra ? 1 : 0), weight: null }));
 }
