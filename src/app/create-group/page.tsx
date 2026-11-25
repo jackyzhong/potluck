@@ -1,210 +1,449 @@
-// src/app/create-group/page.tsx
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createLedger } from "./actions";
-import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import EmojiPicker, { Theme, type EmojiClickData } from "emoji-picker-react";
+import { Avatar } from "@/src/components/glow/Avatar";
+import { Button } from "@/src/components/glow/Button";
+import { PILL_OPTION_CLASS, PillPopover } from "@/src/components/glow/PillPopover";
+import { CheckIcon, ChevronLeftIcon } from "@/src/components/glow/icons";
+import { useDismiss } from "@/src/components/glow/useDismiss";
+import { CURRENCIES, CURRENCY_LIST } from "@/src/lib/currencies";
+import type { AvatarSlot } from "@/src/lib/glow/avatar";
+import { browserStorage, recordVisitedGroup, writeStoredViewer } from "@/src/lib/glow/viewer";
+import { LIMITS } from "@/src/lib/validation";
+import { createLedger } from "./actions";
 
-import { CURRENCY_LIST } from "@/src/lib/currencies";
+function currentPickerTheme(): Theme {
+  const attr = document.documentElement.getAttribute("data-theme");
+  if (attr === "dark") return Theme.DARK;
+  if (attr === "light") return Theme.LIGHT;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? Theme.DARK : Theme.LIGHT;
+}
 
-export default function CreateGroup() {
+const WHAT_HAPPENS_NEXT = [
+  {
+    step: 1,
+    title: "You get a link",
+    body: "The group opens straight away at its own address."
+  },
+  {
+    step: 2,
+    title: "Share it with the group",
+    body: "Anyone with the link can see the group and add expenses."
+  },
+  {
+    step: 3,
+    title: "Keep the link",
+    body: "There are no accounts, so the link is the only way back in. Bookmark it."
+  }
+] as const;
+
+export default function CreateGroupPage() {
+  const router = useRouter();
   const [groupName, setGroupName] = useState("");
   const [emoji, setEmoji] = useState("🍲");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  
-  // Currency States
+  const [pickerTheme, setPickerTheme] = useState<Theme>(Theme.LIGHT);
   const [currency, setCurrency] = useState("CAD");
-  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
-  const [currencySearch, setCurrencySearch] = useState("");
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [members, setMembers] = useState<string[]>([]);
+  const [draftMember, setDraftMember] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [memberError, setMemberError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsCurrencyOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const emojiWrapRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const memberInputRef = useRef<HTMLInputElement>(null);
 
-  // Escape closes whichever popover is open.
-  useEffect(() => {
-    if (!isCurrencyOpen && !showEmojiPicker) return;
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      setIsCurrencyOpen(false);
+  useDismiss(
+    showEmojiPicker,
+    () => {
       setShowEmojiPicker(false);
-    }
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isCurrencyOpen, showEmojiPicker]);
-
-  const filteredCurrencies = CURRENCY_LIST.filter(c => 
-    c.code.toLowerCase().includes(currencySearch.toLowerCase()) || 
-    c.name.toLowerCase().includes(currencySearch.toLowerCase())
+      emojiButtonRef.current?.focus();
+    },
+    [emojiWrapRef]
   );
 
-  const handleCreateGroup = async () => {
-    if (!groupName.trim()) return;
-    setIsLoading(true);
+  // Sync focus when redirected back cleanly via keyboard shortcut
+  useEffect(() => {
+    nameInputRef.current?.focus();
+  }, []);
 
-    const result = await createLedger({ title: groupName, emoji, baseCurrency: currency });
+  const selectedCurrency = CURRENCIES[currency] ?? CURRENCIES.CAD;
 
-    if (!result.ok) {
-      alert(result.error);
-      setIsLoading(false);
+  function addMemberName(raw: string): string[] | null {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    if (trimmed.length > LIMITS.memberName) {
+      setMemberError(`Names can be up to ${LIMITS.memberName} characters.`);
+      return null;
+    }
+    if (members.some((m) => m.toLowerCase() === trimmed.toLowerCase())) {
+      setMemberError(`${trimmed} is already in this group.`);
+      return null;
+    }
+    const next = [...members, trimmed];
+    setMembers(next);
+    setDraftMember("");
+    setMemberError(null);
+    setError(null);
+    return next;
+  }
+
+  function handleAddMember() {
+    if (!draftMember.trim()) {
+      setMemberError("Enter a person's name to add them.");
+      memberInputRef.current?.focus();
+      return;
+    }
+    addMemberName(draftMember);
+    memberInputRef.current?.focus();
+  }
+
+  function removeMemberAt(index: number) {
+    setMembers((prev) => prev.filter((_, i) => i !== index));
+    setMemberError(null);
+    setError(null);
+  }
+
+  async function submitForm() {
+    if (isSubmitting) return;
+    const title = groupName.trim();
+    if (!title) {
+      setError("Give your group a name first.");
+      nameInputRef.current?.focus();
       return;
     }
 
-    router.push(`/ledger/${result.data.id}`);
-  };
+    let finalMembers = members;
+    if (draftMember.trim()) {
+      const added = addMemberName(draftMember);
+      if (!added) {
+        memberInputRef.current?.focus();
+        return;
+      }
+      finalMembers = added;
+    }
+
+    if (finalMembers.length === 0) {
+      setError("Add at least one person to the group.");
+      memberInputRef.current?.focus();
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const result = await createLedger({
+        title,
+        emoji,
+        baseCurrency: currency,
+        members: finalMembers
+      });
+      if (!result.ok) {
+        setError(result.error);
+        setIsSubmitting(false);
+        return;
+      }
+      const storage = browserStorage();
+      writeStoredViewer(storage, result.data.id, result.data.creatorUserId);
+      recordVisitedGroup(storage, result.data.id);
+      router.push(`/ledger/${result.data.id}`);
+    } catch {
+      setError("Something went wrong creating your group. Please try again.");
+      setIsSubmitting(false);
+    }
+  }
+
+  function onFormKeyDown(e: KeyboardEvent<HTMLFormElement>) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      void submitForm();
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col p-6 relative selection:bg-zinc-900 selection:text-white overflow-y-auto">
-      {/* Top Navigation */}
-      <nav className="max-w-2xl mx-auto w-full py-2 mb-4 shrink-0">
-        <Link 
-          href="/" 
-          className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-2 w-fit"
+    <div className="flex min-h-dvh flex-col bg-bg text-[length:var(--text-body)] leading-[1.4] text-text">
+      <header className="flex items-center justify-between gap-4 px-6 py-4 max-sm:justify-start max-sm:gap-1 max-sm:py-3 max-sm:pl-1 max-sm:pr-3">
+        <Link
+          href="/"
+          aria-label="Back to home"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full text-text no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:hidden"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back
+          <ChevronLeftIcon size={22} />
         </Link>
-      </nav>
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 text-text no-underline focus-visible:rounded-pill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          <span aria-hidden="true" className="text-[28px] leading-none">
+            🍲
+          </span>
+          <span className="text-[20px] font-extrabold tracking-[-0.01em]">Potluck</span>
+        </Link>
+        <Link
+          href="/"
+          className="inline-flex h-11 items-center justify-center rounded-pill bg-button-secondary-bg px-4 font-bold text-text no-underline shadow-button focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent max-sm:hidden"
+        >
+          Back to home
+        </Link>
+      </header>
 
-      <main className="max-w-md mx-auto w-full flex-1 flex flex-col pt-8 pb-20">
-        {/* Main UI Card */}
+      <div className="mx-auto flex w-full max-w-[1040px] flex-wrap items-start gap-4 px-4 pb-4 pt-1 sm:px-6 sm:pb-8 sm:pt-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleCreateGroup();
+            void submitForm();
           }}
-          className="bg-white rounded-3xl shadow-sm p-8 flex flex-col items-center relative border border-zinc-100"
+          onKeyDown={onFormKeyDown}
+          className="flex min-w-0 flex-[2_1_480px] flex-col gap-3.5 rounded-card bg-surface px-4 py-3.5 shadow-card sm:rounded-hero sm:p-5"
         >
-
-          {/* Emoji Picker Button */}
-          <button
-            type="button"
-            aria-label="Choose an emoji for this group"
-            aria-expanded={showEmojiPicker}
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="text-6xl mb-6 hover:scale-105 transition-transform bg-zinc-50 p-6 rounded-full border border-zinc-100 shadow-sm"
-          >
-            {emoji}
-          </button>
-          
-          {showEmojiPicker && (
-            <div className="absolute top-0 z-20 mt-32 shadow-2xl rounded-xl overflow-hidden">
-              <EmojiPicker 
-                onEmojiClick={(data: EmojiClickData) => {
-                  setEmoji(data.emoji);
-                  setShowEmojiPicker(false);
-                }}
-                theme={Theme.LIGHT}
-              />
-            </div>
-          )}
-
-          <h1 className="text-2xl font-bold text-zinc-900 mb-2 text-center">Name your Potluck</h1>
-          <p className="text-zinc-500 mb-8 text-center">What are we splitting today?</p>
-
-          <input
-            type="text"
-            placeholder="e.g. Toronto Trip 2026"
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            className="text-black w-full text-xl p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 outline-none transition-all text-center mb-6"
-            autoFocus
-          />
-
-          {/* Group Settings Section */}
-          <div className="w-full mb-8">
-            <h2 className="text-sm font-semibold text-zinc-900 mb-3 uppercase tracking-wider">Group Settings</h2>
-            
-            {/* Currency Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <label className="block text-sm text-zinc-500 mb-1">Base Currency</label>
-              <button
-                type="button"
-                aria-haspopup="listbox"
-                aria-expanded={isCurrencyOpen}
-                onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
-                className="w-full flex items-center justify-between p-4 bg-zinc-50 border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors"
-              >
-                <span className="font-medium text-zinc-900">{currency}</span>
-                <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {isCurrencyOpen && (
-                <div className="absolute top-full left-0 w-full mt-2 bg-white border border-zinc-200 rounded-xl shadow-xl z-10 overflow-hidden">
-                  <div className="p-2 border-b border-zinc-100">
-                    <input
-                      type="text"
-                      placeholder="Search currency..."
-                      value={currencySearch}
-                      onChange={(e) => setCurrencySearch(e.target.value)}
-                      className="w-full p-2 bg-zinc-50 rounded-lg outline-none text-sm"
-                    />
-                  </div>
-                  <div className="max-h-48 overflow-y-auto">
-                    {filteredCurrencies.map((c) => (
-                      <button
-                        key={c.code}
-                        type="button"
-                        onClick={() => {
-                          setCurrency(c.code);
-                          setIsCurrencyOpen(false);
-                          setCurrencySearch("");
-                        }}
-                        className="w-full flex items-center justify-between p-3 hover:bg-zinc-50 text-left transition-colors"
-                      >
-                        <span className="font-medium text-zinc-900">{c.code}</span>
-                        <span className="text-sm text-zinc-500">{c.name}</span>
-                      </button>
-                    ))}
-                    {filteredCurrencies.length === 0 && (
-                      <div className="p-3 text-sm text-zinc-500 text-center">No currencies found</div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Future settings can be added here, and the container will scroll */}
+          <div className="flex flex-col gap-0.5">
+            <h1 className="m-0 text-[length:var(--text-page-title-phone)] font-extrabold tracking-[-0.01em] sm:text-[length:var(--text-page-title)] sm:tracking-[-0.02em]">
+              Create a group
+            </h1>
+            <span className="text-[length:var(--text-meta)] text-text-muted">
+              It takes a few seconds and needs no account.
+            </span>
           </div>
 
-          <button
-            type="submit"
-            disabled={!groupName.trim() || isLoading}
-            className={`w-full py-4 rounded-full font-medium text-lg transition-all flex items-center justify-center gap-2
-              ${groupName.trim() 
-                ? "bg-zinc-900 text-white shadow-xl shadow-zinc-200 hover:bg-zinc-800 active:scale-95" 
-                : "bg-zinc-100 text-zinc-400 cursor-not-allowed"}
-            `}
+          <div
+            ref={emojiWrapRef}
+            className="relative flex items-end gap-3 rounded-card p-4 text-on-glow [background:var(--gradient-glow-compact)] sm:[background:var(--gradient-glow)]"
           >
-            {isLoading ? "Creating..." : "Continue"}
-            {!isLoading && (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            )}
-          </button>
+            <button
+              ref={emojiButtonRef}
+              type="button"
+              aria-label={`Group emoji: ${emoji}. Change`}
+              aria-expanded={showEmojiPicker}
+              onClick={() => {
+                if (!showEmojiPicker) setPickerTheme(currentPickerTheme());
+                setShowEmojiPicker((open) => !open);
+              }}
+              className="flex size-16 shrink-0 cursor-pointer items-center justify-center rounded-chip border-0 bg-on-glow-tile text-[32px] leading-none transition-transform duration-[var(--dur-fast)] hover:scale-[1.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-glow"
+            >
+              {emoji}
+            </button>
 
+            {showEmojiPicker ? (
+              <div className="absolute left-4 top-[84px] z-30 overflow-hidden rounded-card shadow-menu">
+                <EmojiPicker
+                  onEmojiClick={(data: EmojiClickData) => {
+                    setEmoji(data.emoji);
+                    setShowEmojiPicker(false);
+                    emojiButtonRef.current?.focus();
+                  }}
+                  theme={pickerTheme}
+                />
+              </div>
+            ) : null}
+
+            <label className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="flex justify-between text-[length:var(--text-meta)] font-semibold">
+                <span>Group name</span>
+                <span className="tabular-nums">{groupName.length}/{LIMITS.title}</span>
+              </span>
+              <input
+                ref={nameInputRef}
+                type="text"
+                maxLength={LIMITS.title}
+                placeholder="Cabin Trip"
+                value={groupName}
+                onChange={(e) => {
+                  setGroupName(e.target.value);
+                  if (error) setError(null);
+                }}
+                className="h-11 w-full rounded-md border-0 bg-transparent p-0 text-[32px] font-extrabold tracking-[-0.02em] text-on-glow outline-0 placeholder:text-on-glow/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-glow"
+              />
+            </label>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 font-semibold">
+            <span>Track balances in</span>
+            <PillPopover
+              trigger={currency}
+              triggerClassName="h-11 gap-1.5 rounded-pill bg-surface-muted-2 px-3.5 text-text"
+              ariaLabel={`Base currency: ${selectedCurrency.name}`}
+              menuLabel="Choose currency"
+              menuRole="listbox"
+            >
+              {(close) =>
+                CURRENCY_LIST.map((c) => {
+                  const selected = c.code === currency;
+                  return (
+                    <button
+                      key={c.code}
+                      type="button"
+                      role="option"
+                      data-nav="1"
+                      aria-selected={selected}
+                      onClick={() => {
+                        setCurrency(c.code);
+                        close();
+                      }}
+                      className={PILL_OPTION_CLASS}
+                    >
+                      <span className="w-10 font-extrabold">{c.code}</span>
+                      <span className="grow text-[length:var(--text-meta)] font-normal text-text-muted">
+                        {c.name}
+                      </span>
+                      {selected ? <CheckIcon size={16} className="shrink-0 text-positive" /> : null}
+                    </button>
+                  );
+                })
+              }
+            </PillPopover>
+            <span className="text-[length:var(--text-meta)] font-normal text-text-muted">
+              {selectedCurrency.name}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-[length:var(--text-small)] font-bold uppercase tracking-[var(--tracking-label)] text-text-muted">
+                Who&apos;s in it
+              </span>
+              <span className="text-[length:var(--text-meta)] text-text-muted tabular-nums">
+                {members.length} {members.length === 1 ? "person" : "people"}
+              </span>
+            </div>
+
+            {members.length > 0 ? (
+              <div className="flex flex-col">
+                {members.map((memberName, index) => (
+                  <div
+                    key={`${memberName}-${index}`}
+                    className="flex min-h-12 items-center gap-2.5 border-t border-line first:border-t-0"
+                  >
+                    <Avatar name={memberName} slot={((index % 6) + 1) as AvatarSlot} size={32} />
+                    <span className="min-w-0 grow truncate font-semibold">
+                      {memberName}
+                      {index === 0 ? (
+                        <span className="ml-1.5 rounded-[10px] bg-positive-tag-bg px-2 py-0.5 text-[length:var(--text-small)] font-semibold text-positive-tag-fg">
+                          You
+                        </span>
+                      ) : null}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${memberName}`}
+                      onClick={() => removeMemberAt(index)}
+                      className="inline-flex h-11 cursor-pointer items-center justify-center rounded-pill border-0 bg-transparent px-1 text-[length:var(--text-meta)] font-bold text-negative focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="flex gap-2">
+              <input
+                ref={memberInputRef}
+                type="text"
+                aria-label="Add a person by name"
+                maxLength={LIMITS.memberName}
+                value={draftMember}
+                placeholder="Add a name"
+                onChange={(e) => {
+                  setDraftMember(e.target.value);
+                  if (memberError) setMemberError(null);
+                  if (error) setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddMember();
+                  }
+                }}
+                className="h-11 min-w-0 flex-1 rounded-input border-0 bg-surface-sunken px-3 font-bold text-text outline-0 placeholder:font-normal placeholder:text-text-muted focus-visible:outline-2 focus-visible:outline-accent"
+              />
+              <Button type="button" variant="soft" inPanel size={44} onClick={handleAddMember}>
+                Add
+              </Button>
+            </div>
+
+            {memberError ? (
+              <p role="alert" className="m-0 text-[length:var(--text-meta)] font-semibold text-negative">
+                {memberError}
+              </p>
+            ) : null}
+
+            <span className="text-[length:var(--text-meta)] text-text-muted">
+              Names are enough. Nobody needs an account, and you can add or rename people later.
+            </span>
+          </div>
+
+          {error ? (
+            <p role="alert" className="m-0 text-[length:var(--text-meta)] font-semibold text-negative">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="hidden flex-wrap gap-2 sm:flex">
+            <Button
+              type="button"
+              variant="soft"
+              inPanel
+              size={48}
+              className="flex-[1_1_150px]"
+              onClick={() => router.push("/")}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size={48}
+              kbd="⌘↵"
+              disabled={isSubmitting}
+              className="flex-[1_1_150px]"
+            >
+              {isSubmitting ? "Creating…" : "Create group"}
+            </Button>
+          </div>
         </form>
-      </main>
+
+        <aside className="hidden min-w-0 flex-[1_1_300px] flex-col gap-1.5 rounded-hero bg-surface p-5 shadow-card sm:flex">
+          <div className="flex flex-col gap-0.5">
+            <h2 className="m-0 text-[17px] font-extrabold">What happens next</h2>
+            <span className="text-[length:var(--text-meta)] text-text-muted">Three things to know</span>
+          </div>
+          <div className="flex flex-col">
+            {WHAT_HAPPENS_NEXT.map((item) => (
+              <div
+                key={item.step}
+                className="grid grid-cols-[24px_minmax(0,1fr)] gap-3 border-t border-line py-3 first:border-t-0"
+              >
+                <span
+                  aria-hidden="true"
+                  className="text-[17px] font-extrabold tabular-nums text-positive"
+                >
+                  {item.step}
+                </span>
+                <span className="flex flex-col gap-0.5">
+                  <span className="font-bold">{item.title}</span>
+                  <span className="text-[length:var(--text-meta)] text-text-muted">{item.body}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </aside>
+      </div>
+
+      <div className="mt-auto flex px-4 pb-5 pt-3 sm:hidden">
+        <Button
+          type="button"
+          size={52}
+          disabled={isSubmitting}
+          onClick={() => void submitForm()}
+          className="flex-1 text-[16px]"
+        >
+          {isSubmitting ? "Creating…" : "Create group"}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import type { Expense, Split } from "@/src/app/ledger/[id]/ExpenseModal";
+import type { Expense, Split } from "@/src/lib/types";
 
 export type Debt = {
   debtorId: string;
@@ -17,6 +17,8 @@ export type Payment = {
   original_currency: string;
   note: string | null;
   created_at: string;
+  /** The member who recorded the payment (D29). Null on historical rows. */
+  created_by?: string | null;
 };
 
 export type BreakdownRow = {

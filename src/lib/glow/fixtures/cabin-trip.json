@@ -1,0 +1,285 @@
+{
+  "_about": "Made-up sample group (Cabin Trip) used by the unit tests, the dev seed script and the landing-page screenshots. Shaped like the Supabase tables. Money is integer cents in CAD. Members are listed in ledger order (users.created_at ascending), which decides who absorbs leftover cents. expected.json is generated from this file by reference.mjs.",
+  "ledger": {
+    "id": "ledger-demo",
+    "title": "Cabin Trip",
+    "emoji": "🏕️",
+    "base_currency": "CAD",
+    "simplify_debts": true
+  },
+  "users": [
+    {
+      "id": "u-sam",
+      "name": "Sam",
+      "created_at": "2026-10-01T10:00:00Z"
+    },
+    {
+      "id": "u-priya",
+      "name": "Priya",
+      "created_at": "2026-10-01T10:00:01Z"
+    },
+    {
+      "id": "u-marco",
+      "name": "Marco",
+      "created_at": "2026-10-01T10:00:02Z"
+    },
+    {
+      "id": "u-lena",
+      "name": "Lena",
+      "created_at": "2026-10-01T10:00:03Z"
+    },
+    {
+      "id": "u-theo",
+      "name": "Theo",
+      "created_at": "2026-10-01T10:00:04Z"
+    },
+    {
+      "id": "u-nadia",
+      "name": "Nadia",
+      "created_at": "2026-10-01T10:00:05Z"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "e-cabin",
+      "description": "Cabin deposit",
+      "payer_id": "u-priya",
+      "amount_cents": 42000,
+      "original_currency": "CAD",
+      "created_at": "2026-10-02T12:00:00Z",
+      "split": {
+        "mode": "equal",
+        "participants": [
+          "u-sam",
+          "u-priya",
+          "u-marco",
+          "u-lena",
+          "u-theo",
+          "u-nadia"
+        ]
+      }
+    },
+    {
+      "id": "e-gas",
+      "description": "Gas for the drive up",
+      "payer_id": "u-sam",
+      "amount_cents": 6840,
+      "original_currency": "CAD",
+      "created_at": "2026-10-02T16:00:00Z",
+      "split": {
+        "mode": "equal",
+        "participants": [
+          "u-sam",
+          "u-marco",
+          "u-lena",
+          "u-theo"
+        ]
+      }
+    },
+    {
+      "id": "e-groceries",
+      "description": "Groceries",
+      "payer_id": "u-priya",
+      "amount_cents": 14286,
+      "original_currency": "CAD",
+      "created_at": "2026-10-02T19:00:00Z",
+      "split": {
+        "mode": "equal",
+        "participants": [
+          "u-sam",
+          "u-priya",
+          "u-marco",
+          "u-lena",
+          "u-theo",
+          "u-nadia"
+        ]
+      }
+    },
+    {
+      "id": "e-firewood",
+      "description": "Firewood and ice",
+      "payer_id": "u-theo",
+      "amount_cents": 3600,
+      "original_currency": "CAD",
+      "created_at": "2026-10-02T21:00:00Z",
+      "split": {
+        "mode": "equal",
+        "participants": [
+          "u-sam",
+          "u-priya",
+          "u-marco",
+          "u-lena",
+          "u-theo",
+          "u-nadia"
+        ]
+      }
+    },
+    {
+      "id": "e-kayaks",
+      "description": "Kayak rentals",
+      "payer_id": "u-marco",
+      "amount_cents": 18000,
+      "original_currency": "CAD",
+      "created_at": "2026-10-03T15:00:00Z",
+      "split": {
+        "mode": "equal",
+        "participants": [
+          "u-sam",
+          "u-priya",
+          "u-marco",
+          "u-lena",
+          "u-theo",
+          "u-nadia"
+        ]
+      }
+    },
+    {
+      "id": "e-dinner",
+      "description": "Dinner at the Boathouse",
+      "payer_id": "u-sam",
+      "amount_cents": 21435,
+      "original_currency": "CAD",
+      "created_at": "2026-10-03T22:00:00Z",
+      "split": {
+        "mode": "equal",
+        "participants": [
+          "u-sam",
+          "u-priya",
+          "u-marco",
+          "u-lena",
+          "u-theo",
+          "u-nadia"
+        ]
+      }
+    },
+    {
+      "id": "e-sunscreen",
+      "description": "Sunscreen and bug spray",
+      "payer_id": "u-nadia",
+      "amount_cents": 2497,
+      "original_currency": "CAD",
+      "created_at": "2026-10-04T14:00:00Z",
+      "split": {
+        "mode": "equal",
+        "participants": [
+          "u-sam",
+          "u-priya",
+          "u-marco",
+          "u-lena",
+          "u-theo",
+          "u-nadia"
+        ]
+      }
+    },
+    {
+      "id": "e-brunch",
+      "description": "Brunch on the dock",
+      "payer_id": "u-lena",
+      "amount_cents": 9660,
+      "original_currency": "CAD",
+      "created_at": "2026-10-04T17:00:00Z",
+      "split": {
+        "mode": "equal",
+        "participants": [
+          "u-sam",
+          "u-priya",
+          "u-marco",
+          "u-lena",
+          "u-theo",
+          "u-nadia"
+        ]
+      }
+    },
+    {
+      "id": "e-parking",
+      "description": "Trailhead parking",
+      "payer_id": "u-sam",
+      "amount_cents": 1800,
+      "original_currency": "CAD",
+      "created_at": "2026-10-04T19:00:00Z",
+      "split": {
+        "mode": "equal",
+        "participants": [
+          "u-sam",
+          "u-priya",
+          "u-nadia"
+        ]
+      }
+    },
+    {
+      "id": "e-coffee",
+      "description": "Coffee for the road",
+      "payer_id": "u-marco",
+      "amount_cents": 3180,
+      "original_currency": "CAD",
+      "created_at": "2026-10-05T15:00:00Z",
+      "split": {
+        "mode": "equal",
+        "participants": [
+          "u-sam",
+          "u-priya",
+          "u-marco",
+          "u-lena",
+          "u-theo",
+          "u-nadia"
+        ]
+      }
+    }
+  ],
+  "payments": [
+    {
+      "id": "p-theo-sam",
+      "payer_id": "u-theo",
+      "payee_id": "u-sam",
+      "amount_cents": 2500,
+      "original_currency": "CAD",
+      "note": "e-transfer",
+      "created_at": "2026-10-04T20:00:00Z"
+    },
+    {
+      "id": "p-sam-priya",
+      "payer_id": "u-sam",
+      "payee_id": "u-priya",
+      "amount_cents": 1200,
+      "original_currency": "CAD",
+      "note": null,
+      "created_at": "2026-10-04T21:00:00Z"
+    }
+  ],
+  "_composer_examples": {
+    "_about": "Inputs behind the add-expense examples. Not saved expenses.",
+    "equal": {
+      "description": "Late-night poutine",
+      "payer_id": "u-sam",
+      "amount_cents": 6450,
+      "participants": [
+        "u-sam",
+        "u-priya",
+        "u-lena",
+        "u-nadia"
+      ]
+    },
+    "exact_in_progress": {
+      "amount_cents": 6450,
+      "entered": {
+        "u-sam": 2000,
+        "u-priya": 1450,
+        "u-lena": 1000
+      },
+      "blank": [
+        "u-marco",
+        "u-theo",
+        "u-nadia"
+      ]
+    },
+    "percent": {
+      "amount_cents": 6450,
+      "percent": {
+        "u-sam": 40,
+        "u-priya": 30,
+        "u-lena": 20,
+        "u-nadia": 10
+      }
+    }
+  }
+}

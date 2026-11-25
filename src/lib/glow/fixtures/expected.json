@@ -1,0 +1,329 @@
+{
+  "members": {
+    "Sam": {
+      "paid": "CA$300.75",
+      "share": "CA$214.21",
+      "sent": "CA$12.00",
+      "received": "CA$25.00",
+      "net": "+CA$73.54"
+    },
+    "Priya": {
+      "paid": "CA$562.86",
+      "share": "CA$197.10",
+      "sent": "CA$0.00",
+      "received": "CA$12.00",
+      "net": "+CA$353.76"
+    },
+    "Marco": {
+      "paid": "CA$211.80",
+      "share": "CA$208.20",
+      "sent": "CA$0.00",
+      "received": "CA$0.00",
+      "net": "+CA$3.60"
+    },
+    "Lena": {
+      "paid": "CA$96.60",
+      "share": "CA$208.19",
+      "sent": "CA$0.00",
+      "received": "CA$0.00",
+      "net": "−CA$111.59"
+    },
+    "Theo": {
+      "paid": "CA$36.00",
+      "share": "CA$208.19",
+      "sent": "CA$25.00",
+      "received": "CA$0.00",
+      "net": "−CA$147.19"
+    },
+    "Nadia": {
+      "paid": "CA$24.97",
+      "share": "CA$197.09",
+      "sent": "CA$0.00",
+      "received": "CA$0.00",
+      "net": "−CA$172.12"
+    }
+  },
+  "viewers": {
+    "Sam": {
+      "net": "CA$73.54",
+      "ledger": [
+        {
+          "when": "2026-10-05",
+          "row": "Coffee for the road",
+          "paid_by": "Marco",
+          "total": "CA$31.80",
+          "impact": "−CA$5.30",
+          "balance": "CA$73.54"
+        },
+        {
+          "when": "2026-10-04",
+          "row": "Sam paid Priya",
+          "paid_by": "Sam",
+          "total": "CA$12.00",
+          "impact": "+CA$12.00",
+          "balance": "CA$78.84"
+        },
+        {
+          "when": "2026-10-04",
+          "row": "Theo paid Sam",
+          "paid_by": "Theo",
+          "total": "CA$25.00",
+          "impact": "−CA$25.00",
+          "balance": "CA$66.84"
+        },
+        {
+          "when": "2026-10-04",
+          "row": "Trailhead parking",
+          "paid_by": "Sam",
+          "total": "CA$18.00",
+          "impact": "+CA$12.00",
+          "balance": "CA$91.84"
+        },
+        {
+          "when": "2026-10-04",
+          "row": "Brunch on the dock",
+          "paid_by": "Lena",
+          "total": "CA$96.60",
+          "impact": "−CA$16.10",
+          "balance": "CA$79.84"
+        },
+        {
+          "when": "2026-10-04",
+          "row": "Sunscreen and bug spray",
+          "paid_by": "Nadia",
+          "total": "CA$24.97",
+          "impact": "−CA$4.17",
+          "balance": "CA$95.94"
+        },
+        {
+          "when": "2026-10-03",
+          "row": "Dinner at the Boathouse",
+          "paid_by": "Sam",
+          "total": "CA$214.35",
+          "impact": "+CA$178.62",
+          "balance": "CA$100.11"
+        },
+        {
+          "when": "2026-10-03",
+          "row": "Kayak rentals",
+          "paid_by": "Marco",
+          "total": "CA$180.00",
+          "impact": "−CA$30.00",
+          "balance": "−CA$78.51"
+        },
+        {
+          "when": "2026-10-02",
+          "row": "Firewood and ice",
+          "paid_by": "Theo",
+          "total": "CA$36.00",
+          "impact": "−CA$6.00",
+          "balance": "−CA$48.51"
+        },
+        {
+          "when": "2026-10-02",
+          "row": "Groceries",
+          "paid_by": "Priya",
+          "total": "CA$142.86",
+          "impact": "−CA$23.81",
+          "balance": "−CA$42.51"
+        },
+        {
+          "when": "2026-10-02",
+          "row": "Gas for the drive up",
+          "paid_by": "Sam",
+          "total": "CA$68.40",
+          "impact": "+CA$51.30",
+          "balance": "−CA$18.70"
+        },
+        {
+          "when": "2026-10-02",
+          "row": "Cabin deposit",
+          "paid_by": "Priya",
+          "total": "CA$420.00",
+          "impact": "−CA$70.00",
+          "balance": "−CA$70.00"
+        }
+      ],
+      "chips": [
+        {
+          "member": "Nadia",
+          "amount": "+37.55"
+        },
+        {
+          "member": "Lena",
+          "amount": "+36.72"
+        },
+        {
+          "member": "Theo",
+          "amount": "+21.82"
+        },
+        {
+          "member": "Marco",
+          "amount": "+17.53"
+        },
+        {
+          "member": "Priya",
+          "amount": "−40.08"
+        }
+      ],
+      "share_of_spend": {
+        "group_spent_cents": 123298,
+        "your_share_cents": 21421,
+        "you_paid_cents": 30075,
+        "bar": {
+          "share_pct": 17.4,
+          "extra_pct": 7,
+          "shortfall_pct": 0
+        }
+      }
+    },
+    "Priya": {
+      "net": "CA$353.76",
+      "ledger": [
+        {
+          "when": "2026-10-05",
+          "row": "Coffee for the road",
+          "paid_by": "Marco",
+          "total": "CA$31.80",
+          "impact": "−CA$5.30",
+          "balance": "CA$353.76"
+        },
+        {
+          "when": "2026-10-04",
+          "row": "Sam paid Priya",
+          "paid_by": "Sam",
+          "total": "CA$12.00",
+          "impact": "−CA$12.00",
+          "balance": "CA$359.06"
+        },
+        {
+          "when": "2026-10-04",
+          "row": "Theo paid Sam",
+          "paid_by": "Theo",
+          "total": "CA$25.00",
+          "impact": "not involved",
+          "balance": "CA$371.06"
+        },
+        {
+          "when": "2026-10-04",
+          "row": "Trailhead parking",
+          "paid_by": "Sam",
+          "total": "CA$18.00",
+          "impact": "−CA$6.00",
+          "balance": "CA$371.06"
+        },
+        {
+          "when": "2026-10-04",
+          "row": "Brunch on the dock",
+          "paid_by": "Lena",
+          "total": "CA$96.60",
+          "impact": "−CA$16.10",
+          "balance": "CA$377.06"
+        },
+        {
+          "when": "2026-10-04",
+          "row": "Sunscreen and bug spray",
+          "paid_by": "Nadia",
+          "total": "CA$24.97",
+          "impact": "−CA$4.16",
+          "balance": "CA$393.16"
+        },
+        {
+          "when": "2026-10-03",
+          "row": "Dinner at the Boathouse",
+          "paid_by": "Sam",
+          "total": "CA$214.35",
+          "impact": "−CA$35.73",
+          "balance": "CA$397.32"
+        },
+        {
+          "when": "2026-10-03",
+          "row": "Kayak rentals",
+          "paid_by": "Marco",
+          "total": "CA$180.00",
+          "impact": "−CA$30.00",
+          "balance": "CA$433.05"
+        },
+        {
+          "when": "2026-10-02",
+          "row": "Firewood and ice",
+          "paid_by": "Theo",
+          "total": "CA$36.00",
+          "impact": "−CA$6.00",
+          "balance": "CA$463.05"
+        },
+        {
+          "when": "2026-10-02",
+          "row": "Groceries",
+          "paid_by": "Priya",
+          "total": "CA$142.86",
+          "impact": "+CA$119.05",
+          "balance": "CA$469.05"
+        },
+        {
+          "when": "2026-10-02",
+          "row": "Gas for the drive up",
+          "paid_by": "Sam",
+          "total": "CA$68.40",
+          "impact": "not involved",
+          "balance": "CA$350.00"
+        },
+        {
+          "when": "2026-10-02",
+          "row": "Cabin deposit",
+          "paid_by": "Priya",
+          "total": "CA$420.00",
+          "impact": "+CA$350.00",
+          "balance": "CA$350.00"
+        }
+      ],
+      "chips": [
+        {
+          "member": "Nadia",
+          "amount": "+89.65"
+        },
+        {
+          "member": "Theo",
+          "amount": "+87.81"
+        },
+        {
+          "member": "Lena",
+          "amount": "+77.71"
+        },
+        {
+          "member": "Marco",
+          "amount": "+58.51"
+        },
+        {
+          "member": "Sam",
+          "amount": "+40.08"
+        }
+      ],
+      "share_of_spend": {
+        "group_spent_cents": 123298,
+        "your_share_cents": 19710,
+        "you_paid_cents": 56286,
+        "bar": {
+          "share_pct": 16,
+          "extra_pct": 29.7,
+          "shortfall_pct": 0
+        }
+      }
+    }
+  },
+  "composer": {
+    "equal": {
+      "Sam": "CA$16.13",
+      "Priya": "CA$16.13",
+      "Lena": "CA$16.12",
+      "Nadia": "CA$16.12"
+    },
+    "percent": {
+      "Sam": "CA$25.80",
+      "Priya": "CA$19.35",
+      "Lena": "CA$12.90",
+      "Nadia": "CA$6.45"
+    },
+    "exact_left_to_assign": "CA$20.00"
+  }
+}

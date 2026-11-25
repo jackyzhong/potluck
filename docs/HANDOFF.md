@@ -1,6 +1,6 @@
 # Handoff: Docs/Code Reconciliation Pass
 
-> **Current work (from 2026-11-13): the Glow UI redesign**, built on the `glow` branch. Check out `glow` and start at its `AGENTS.md`; the plan and progress log on that branch are current, the copies on `main` are not. This file is the history of the earlier reconciliation pass.
+> **The Glow UI redesign shipped in November 2026** (built on the `glow` branch, then merged to `main`). Its spec, mockups, decisions and build log were removed afterwards, history included. What it built is in [features.md](./features.md) §4. This file is the history of the earlier reconciliation pass and the priorities it set.
 
 **Context for the next thread:** This project (`docs/PRD.md`, `docs/db-chart.md`, `docs/features.md`) drifted from the actual `src/` implementation over time. We ran a reconciliation pass: audited the drift, then went through it decision-by-decision. This file is the state of that pass — read it first, then the three docs above, before picking up new work.
 

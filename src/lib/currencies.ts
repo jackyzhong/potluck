@@ -8,8 +8,8 @@ export type Currency = {
 };
 
 export const CURRENCIES: Record<string, Currency> = {
-  CAD: { code: "CAD", name: "Canadian Dollar", symbol: "$", decimals: 2 },
-  USD: { code: "USD", name: "US Dollar", symbol: "$", decimals: 2 },
+  CAD: { code: "CAD", name: "Canadian dollar", symbol: "$", decimals: 2 },
+  USD: { code: "USD", name: "US dollar", symbol: "$", decimals: 2 },
   EUR: { code: "EUR", name: "Euro", symbol: "€", decimals: 2 },
 //   GBP: { code: "GBP", name: "British Pound", symbol: "£", decimals: 2 },
 //   JPY: { code: "JPY", name: "Japanese Yen", symbol: "¥", decimals: 0 },

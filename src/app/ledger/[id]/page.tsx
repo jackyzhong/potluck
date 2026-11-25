@@ -2,15 +2,18 @@
 import { db } from "@/src/lib/server/supabase";
 import { isUuid } from "@/src/lib/validation";
 import { notFound } from "next/navigation";
-import ActionMenu from "./ActionMenu";
-
-import ExpenseCard from "./ExpenseCard";
-import PaymentCard from "./PaymentCard";
-import { Expense, Split } from "./ExpenseModal";
-import { Payment } from "@/src/lib/balances";
-import LedgerTabs from "./LedgerTabs";
-import BalancesView from "./BalancesView";
-import { getExchangeRates } from "@/src/lib/balances";
+import type { Split } from "@/src/lib/types";
+import GroupFrame from "./GroupFrame";
+import { ViewerProvider } from "@/src/components/glow/ViewerProvider";
+import { LedgerList } from "@/src/components/glow/LedgerList";
+import { LedgerTable } from "@/src/components/glow/LedgerTable";
+import { FilteredHero } from "@/src/components/glow/FilteredHero";
+import { FilterProvider } from "@/src/components/glow/FilterProvider";
+import { ActivityToolbar } from "@/src/components/glow/ActivityToolbar";
+import { ShareOfSpendCard } from "@/src/components/glow/ShareOfSpendCard";
+import { RightPanel } from "@/src/components/glow/RightPanel";
+import { BalancesTab } from "@/src/components/glow/BalancesTab";
+import { ToastProvider } from "@/src/components/glow/ToastProvider";
 
 export default async function LedgerPage({
   params,
@@ -76,109 +79,62 @@ export default async function LedgerPage({
     }
   }
 
-  // Create a quick lookup map for user names
-  const userMap = new Map(initialUsers.map(u => [u.id, u.name]));
-
-  // Index the splits once rather than rescanning them for every expense card.
-  const splitsByExpense = new Map<string, Split[]>();
-  for (const split of allSplits) {
-    const bucket = splitsByExpense.get(split.expense_id);
-    if (bucket) bucket.push(split);
-    else splitsByExpense.set(split.expense_id, [split]);
-  }
   const baseCurrency = ledger.base_currency || "CAD";
 
-  // Get unique currencies used
-  // Expenses and settlements share one chronological history: a payment only
-  // makes sense next to the expenses it is paying off.
-  type ActivityItem =
-    | { kind: "expense"; id: string; createdAt: string; expense: Expense; splits: Split[] }
-    | { kind: "payment"; id: string; createdAt: string; payment: Payment };
-
-  const activity: ActivityItem[] = [
-    ...ledgerExpenses.map((expense): ActivityItem => ({
-      kind: "expense",
-      id: expense.id,
-      createdAt: expense.created_at,
-      expense,
-      splits: splitsByExpense.get(expense.id) ?? []
-    })),
-    ...ledgerPayments.map((payment): ActivityItem => ({
-      kind: "payment",
-      id: payment.id,
-      createdAt: payment.created_at,
-      payment
-    }))
-  ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-  const currenciesUsed = Array.from(new Set([
-    ...ledgerExpenses.map(e => e.original_currency),
-    ...ledgerPayments.map(p => p.original_currency)
-  ]));
-  const exchangeRates = await getExchangeRates(baseCurrency, currenciesUsed);
-
   return (
-    <div className="min-h-screen bg-zinc-50 p-6 relative pb-32">
-      <header className="max-w-2xl mx-auto py-8">
-        <div className="text-4xl mb-2">{ledger.emoji || "🍲"}</div>
-        <h1 className="text-3xl font-bold text-zinc-900">{ledger.title}</h1>
-        <p className="text-zinc-500">Don&apos;t lose the link to this page! Share the link to invite others.</p>
-      </header>
-
-      <main className="max-w-2xl mx-auto flex flex-col gap-4">
-        <LedgerTabs />
-
-        {tab === "balances" ? (
-          <BalancesView 
-            ledgerId={ledger.id}
-            expenses={ledgerExpenses}
-            splits={allSplits}
-            payments={ledgerPayments}
-            users={initialUsers}
-            userMap={userMap}
-            baseCurrency={baseCurrency}
-            exchangeRates={exchangeRates}
-            isSimplified={ledger.simplify_debts ?? true}
-          />
-        ) : (
-          <>
-            {activity.length === 0 ? (
-              <div className="bg-white rounded-3xl shadow-sm p-6 text-center py-20 text-zinc-400">
-                Nothing here yet. Start by adding an expense!
+    <ViewerProvider
+      ledgerId={ledger.id}
+      currency={baseCurrency}
+      users={initialUsers}
+      expenses={ledgerExpenses}
+      splits={allSplits}
+      payments={ledgerPayments}
+    >
+      {/* T07 built the frame. Each slot below is filled by a later task; until
+          then it holds today's content, narrowed so it stays readable. */}
+      <ToastProvider>
+      <FilterProvider>
+      <GroupFrame
+        ledgerId={ledger.id}
+        title={ledger.title}
+        emoji={ledger.emoji || "🍲"}
+        baseCurrency={baseCurrency}
+        users={initialUsers}
+        tab={tab === "balances" ? "balances" : "activity"}
+        // toolbar: T10 · panel: T11 · summary: T08 · ledger: T09
+        summary={
+          tab === "balances" ? undefined : (
+            <>
+              <FilteredHero />
+              <ShareOfSpendCard />
+            </>
+          )
+        }
+        panel={tab === "balances" ? undefined : <RightPanel />}
+        // ledger: T09. Both layouts are in the DOM; CSS shows one (phone below 640px).
+        ledger={
+          tab === "balances" ? undefined : (
+            <>
+              <div className="max-sm:hidden">
+                <LedgerTable />
               </div>
-            ) : (
-              activity.map((item) =>
-                item.kind === "expense" ? (
-                  <ExpenseCard
-                    key={item.id}
-                    expense={item.expense}
-                    splits={item.splits}
-                    users={initialUsers}
-                    userMap={userMap}
-                    ledgerId={ledger.id}
-                    baseCurrency={baseCurrency}
-                  />
-                ) : (
-                  <PaymentCard
-                    key={item.id}
-                    payment={item.payment}
-                    users={initialUsers}
-                    userMap={userMap}
-                    ledgerId={ledger.id}
-                    baseCurrency={baseCurrency}
-                  />
-                )
-              )
-            )}
-          </>
-        )}
-      </main>
-
-      <ActionMenu 
-        ledgerId={ledger.id} 
-        initialUsers={initialUsers} 
-        baseCurrency={baseCurrency} 
+              <div className="sm:hidden">
+                <LedgerList />
+              </div>
+            </>
+          )
+        }
+        // toolbar: T10. Hidden below 640px by the frame (D20).
+        toolbar={tab === "balances" ? undefined : <ActivityToolbar />}
+        // balances: T16. The tab mounts its own right panel (Mark paid, expense details).
+        balances={
+          tab === "balances" ? (
+            <BalancesTab ledgerId={ledger.id} simplified={ledger.simplify_debts ?? true} />
+          ) : undefined
+        }
       />
-    </div>
+      </FilterProvider>
+      </ToastProvider>
+    </ViewerProvider>
   );
 }

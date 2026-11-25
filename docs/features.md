@@ -68,13 +68,30 @@ graph TD
 
 **Split Modes**
 
-The split step offers three mutually-exclusive modes, chosen via a segmented control. Switching modes does not carry values over from another mode. All modes compute their splits once, at save time (there is no live per-field locking/auto-recalculation engine).
+The composer (the right-hand panel, or a full-height sheet on a phone) offers
+four modes. The chosen mode is saved on the expense (`expenses.split_mode`),
+and percentages and share counts are saved per person (`splits.weight`), so
+editing reopens exactly what was entered. Rows saved before the Glow redesign
+have no mode and reopen as Exact.
 
-* **Equally:** The organizer checks/unchecks which members are included. The total is divided evenly across checked members using `Math.floor(amountCents / count)` per person, with the leftover remainder (from integer division) distributed one cent at a time to the first N members in the list, so the split always sums exactly to the total.
-* **Exact Amount:** The organizer types a specific dollar amount per member. Only members with a value greater than 0 are included in the resulting split.
-* **Percentage:** The organizer types a percentage per member. Each member's cents are computed as `round(total * pct / 100)`, except the last entered member, who instead absorbs whatever is left over (`total - sum of the others`) so the split sums exactly to the total.
+* **Equally:** pick who is included. The total is divided with integer
+  division; leftover cents go one each to the first members in ledger order,
+  and the composer says who takes them.
+* **Exact:** type each person's amount. A helper splits whatever is left
+  across the blank rows.
+* **Percent:** type a percentage per person; they must total exactly 100.
+* **Shares:** whole-number steppers (default 1 each); the total is divided in
+  proportion.
 
-**Allocation Validation:** Exact Amount and Percentage modes show a running allocated/remaining total (in dollars for Exact Amount, in percent for Percentage) that turns red when the entries don't add up to the expense total. The "Confirm & Save" button is disabled until Exact Amount entries sum exactly to the expense total, or Percentage entries sum to 100% (within a small rounding tolerance) — this also rules out Percentage mode's last-entry logic ever producing a negative amount, since entries can no longer overshoot 100% at save time.
+Percent and Shares use the largest-remainder method, so every split sums
+exactly to the total and the cents go to the largest fractional parts (ties in
+ledger order). The arithmetic lives in `src/lib/glow/split.ts` and is shared
+by every screen.
+
+**Validation:** each mode shows a status strip ("Fully assigned", "CA$4.00
+left to assign", "100% assigned") and the Save button states why it is
+blocked until the split adds up. The server re-checks the total, membership
+and weights in `save_expense()`.
 
 ## 3. Feature: Payments / Settlements
 
@@ -95,10 +112,10 @@ existing mutual-cancellation step nets it off with no special casing:
 
 **Recording a payment.** Two entry points:
 
-* **Settle up**, on each row of the Transfers list. The debt on screen already
+* **Mark paid**, on each row of the Balances tab's settle-up plan. The debt on screen already
   names the payer, the payee and the amount, so the form opens filled in and
   the user only confirms. This is the intended path.
-* **Add Payment**, in the floating action menu, for payments that do not match
+* **Add payment**, in the group header (or the phone action bar, or the P key), for payments that do not match
   a suggested transfer — someone rounded up, paid early, or paid a person they
   did not owe. No amount is validated against what is currently owed, because
   all three of those are legitimate.
@@ -113,12 +130,64 @@ Editing an existing payment writes back that payment's own currency rather than
 the ledger's current base, so changing the base later cannot silently relabel
 what was already recorded.
 
-**History.** Payments appear in the Activity list alongside expenses, in one
-chronological order, labelled "Settlement" and phrased "Alice paid Carol"
-rather than naming a single payer. A member's balance breakdown gains
+**History.** Payments appear in the Activity ledger alongside expenses, in one
+chronological order, tagged "Payment" and phrased from the viewer's side
+("Theo paid you", "You paid Priya") with an "in"/"out" impact. A member's balance breakdown gains
 "Payments made" and "Payments received" sections, so the four totals shown
 still add up to the net above them.
 
-**Editing and deleting.** A payment is edited in place — the card already shows
-every field it has, so there is no separate details step. Deleting asks for
-confirmation, because removing a settlement puts the debt back.
+**Editing and deleting.** Selecting a payment opens its details in the right
+panel, with Edit and Delete. Deleting asks for confirmation inline, because
+removing a settlement puts the debt back, and then offers Undo in a toast.
+
+---
+
+## 4. Feature: The group page (Glow redesign)
+
+The group page was redesigned in November 2026 ("Glow"). The numbers it shows
+are defined in [calculations.md](./calculations.md); the logic lives in
+`src/lib/glow/` and the components in `src/components/glow/`.
+
+**Viewing as.** There are no accounts, so each device picks which member it is.
+The choice is stored per group in `localStorage` (`potluck:viewer:{ledgerId}`)
+and every amount and "you" on the page is worded from that member's side.
+A first visit with no saved choice asks "Which one are you?". The viewing-as
+pill (or the V key) switches member at any time, without refetching, and
+lists everyone with what they get back or owe.
+
+**Activity tab.** A hero card with the viewer's net ("You're owed CA$73.54") and
+a chip per member for what is owed between the two of them; a "So far" card
+with the group's spend, the viewer's share and what they paid; search over
+descriptions, names, notes and amounts; filters for Expenses, Payments,
+Involving me and "with {name}"; and the ledger, where every row shows its
+impact on the viewer and the viewer's running balance after it (always
+computed over the full history, so filtering never changes it).
+
+**Balances tab.** Stat tiles (paid, share, payments) that add up to the
+viewer's net; the settle-up plan, split into "Involving you" (with Mark paid)
+and "Rest of the group", following the group-wide Simplify setting; and an
+everyone breakdown that unfolds each member's expenses and shares.
+
+**Adding and editing.** One composer for add and edit, with four split modes
+(Equally, Exact, Percent, Shares), live validation, and a line saying how the
+expense changes the viewer's balance. "Save and add another" keeps the panel
+open. Duplicate opens the composer prefilled from an expense. Deleting an
+expense or a payment asks inline, then offers Undo in a toast.
+
+**Layout.** On desktop, details and the composers open in a right-hand panel
+(a drawer on narrower screens); on phone they open as bottom sheets, with Add
+payment and Add expense in a bar at the bottom.
+
+**Keyboard (desktop).** N add expense, P add payment, / search, J/K next and
+previous row (or person on Balances), Enter open, E edit, D toggle Simplify
+(Balances), 1/2 switch tab, V viewing-as menu, Esc close the panel or clear
+the search, ⌘↵ save in a composer.
+
+**Theme.** Light, dark, or follow the system (the default), chosen from the
+viewing-as menu and stored on the device.
+
+**Other pages.** `/` is the landing page (its screenshots show the made-up
+Cabin Trip group; see `scripts/landing-screenshots/README.md`).
+`/create-group` creates a group together with its first members in one step.
+`/groups` lists the groups this device has visited (kept in `localStorage`,
+up to 50).
