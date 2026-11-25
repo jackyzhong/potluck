@@ -3,15 +3,17 @@
 // What LedgerTable (desktop) and LedgerList (phone) share: the viewer's rows from
 // useGlowData(), who is who, the day grouping, and the selected row in the URL.
 //
-// Selecting a row only sets `?e=<id>` (decision D18). Opening the panel or sheet
-// is T11's job; it reads the same param. Other params (?tab=, ?panel=) are kept.
+// Selecting a row goes through the panel's openDetails, which writes `?e=<id>`
+// (decision D18) with history.replaceState: no server round trip, so the details
+// open at once, and unsaved input in the panel still gets the "Discard…?" prompt.
 
 import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type { AvatarSlot } from "@/src/lib/glow/avatar";
 import { filterLedger, participantsByRow } from "@/src/lib/glow/filter";
 import { events, type LedgerRow } from "@/src/lib/glow/ledger";
 import { useFilters } from "./FilterProvider";
+import { usePanelNav } from "./usePanel";
 import { useGlowData, useViewer, type ViewerNumbers } from "./ViewerProvider";
 
 export type LedgerPerson = { id: string; name: string; slot: AvatarSlot | undefined; isViewer: boolean };
@@ -61,8 +63,7 @@ export function useLedgerView({ applyFilters = true }: { applyFilters?: boolean 
   const { applied } = useFilters();
   const participants = useMemo(() => participantsByRow(data), [data]);
   const { status, viewerId, members } = useViewer();
-  const router = useRouter();
-  const pathname = usePathname();
+  const { openDetails } = usePanelNav();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("e");
 
@@ -146,14 +147,7 @@ export function useLedgerView({ applyFilters = true }: { applyFilters?: boolean 
     });
   }, [allRows, members, slots, viewerId, selectedId, applied, applyFilters, participants]);
 
-  const select = useCallback(
-    (id: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("e", id);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    },
-    [router, pathname, searchParams]
-  );
+  const select = useCallback((id: string) => openDetails(id), [openDetails]);
 
   return {
     items,
