@@ -1,10 +1,12 @@
 "use client";
 
-// Activity | Balances, driven by ?tab= (decision D18). The server page reads the
-// same param to choose what to render, so a refresh or a shared link lands on
-// the same tab. Other params (?e=, ?panel=) are kept when switching.
+// Activity | Balances, driven by ?tab= (decision D18), so a refresh or a shared
+// link lands on the same tab. The server page sends both tabs and GroupFrame
+// shows the one ?tab= names. Switching writes the URL with history.replaceState,
+// which Next syncs into useSearchParams without a server round trip, so the
+// switch is instant. Other params (?e=, ?panel=) are kept when switching.
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { SegmentedControl } from "./SegmentedControl";
 
 export type GroupTab = "activity" | "balances";
@@ -20,18 +22,20 @@ export function parseTab(value: string | null | undefined): GroupTab {
 }
 
 export function useGroupTab(): { tab: GroupTab; setTab: (tab: GroupTab) => void } {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const tab = parseTab(searchParams.get("tab"));
 
   function setTab(next: GroupTab) {
     if (next === tab) return;
-    const params = new URLSearchParams(searchParams);
+    // Read the live URL, not searchParams: a panel change may have just rewritten it.
+    const params = new URLSearchParams(window.location.search);
     if (next === "activity") params.delete("tab");
     else params.set("tab", next);
     const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    // `null` state: Next's patched replaceState ignores calls that pass its own
+    // internal state object, and then useSearchParams wouldn't see the change.
+    window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
   }
   return { tab, setTab };
 }

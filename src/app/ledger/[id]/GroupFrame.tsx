@@ -20,10 +20,12 @@
 //   balances  T16  the whole Balances tab.
 //
 // `summary`, `toolbar`, `ledger` and `panel` show on the Activity tab,
-// `balances` on the Balances tab. The page passes only the tab it rendered.
+// `balances` on the Balances tab. The page passes both tabs; the frame mounts
+// only the one ?tab= names, read on the client so switching needs no server trip.
 
 import { useState, type ReactNode } from "react";
 import { GroupHeader } from "@/src/components/glow/GroupHeader";
+import { useGroupTab } from "@/src/components/glow/GroupTabs";
 import { useFilters } from "@/src/components/glow/FilterProvider";
 import { PhoneActionBar } from "@/src/components/glow/PhoneActionBar";
 import { ShortcutFooter } from "@/src/components/glow/ShortcutFooter";
@@ -45,8 +47,6 @@ export type GroupFrameProps = {
   emoji: string;
   baseCurrency: string;
   users: User[];
-  /** The tab the server rendered (from ?tab=). */
-  tab: "activity" | "balances";
   summary?: ReactNode;
   toolbar?: ReactNode;
   ledger?: ReactNode;
@@ -58,13 +58,13 @@ export default function GroupFrame({
   ledgerId,
   title,
   emoji,
-  tab,
   summary,
   toolbar,
   ledger,
   panel,
   balances
 }: GroupFrameProps) {
+  const { tab } = useGroupTab();
   const [viewerOpen, setViewerOpen] = useState(false);
   const { promptOpen, dismissPrompt } = useViewer();
   const effectiveViewerOpen = viewerOpen || promptOpen;

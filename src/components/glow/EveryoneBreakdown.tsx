@@ -116,10 +116,12 @@ export function EveryoneBreakdown() {
   );
   const panelId = (id: string, layout: string) => `${baseId}-${layout}-${id}`;
 
+  // The 740px basis is about the desktop grid's natural width, so the card takes
+  // its own row instead of squeezing beside the settle-up plan and scrolling.
   return (
     <section
       aria-labelledby="everyone-title"
-      className="flex min-w-0 flex-[2_1_560px] flex-col rounded-card bg-surface px-3.5 pb-1 pt-3.5 shadow-card sm:rounded-hero sm:px-5 sm:pb-2 sm:pt-[18px]"
+      className="flex min-w-0 flex-[2_1_740px] flex-col rounded-card bg-surface px-3.5 pb-1 pt-3.5 shadow-card sm:rounded-hero sm:px-5 sm:pb-2 sm:pt-[18px]"
     >
       <div className="flex flex-col pb-2">
         <h2 id="everyone-title" className="m-0 text-[length:var(--text-card-title)] font-extrabold sm:text-[18px]">
@@ -224,7 +226,7 @@ export function EveryoneBreakdown() {
                   aria-expanded={isOpen}
                   aria-controls={id}
                   onClick={() => setOpen(flip(open, row.memberId))}
-                  className={`${GRID} min-h-14 w-full cursor-pointer border-0 bg-transparent py-1.5 text-left text-inherit focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
+                  className={`${GRID} min-h-16 w-full cursor-pointer border-0 bg-transparent py-2.5 text-left text-inherit focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
                 >
                   <span className="flex min-w-0 items-center gap-2.5 font-bold">
                     {avatar(row.memberId, 32)}
@@ -236,24 +238,25 @@ export function EveryoneBreakdown() {
                   <span className="text-right">
                     <Money cents={row.shareCents} currency={currency} />
                   </span>
-                  <span className="flex flex-col text-right">
+                  <span className="flex flex-col items-end gap-1">
                     {cells.length === 0 ? (
                       <span className="text-text-muted">none</span>
                     ) : (
                       cells.map((c) => (
                         <span key={c.kind} className="whitespace-nowrap">
-                          {c.kind} <Money cents={c.cents} currency={currency} />
+                          <span className={`${CELL_LABEL} text-text-muted`}>{c.kind}</span>{" "}
+                          <Money cents={c.cents} currency={currency} />
                         </span>
                       ))
                     )}
                   </span>
-                  <span className="text-right font-bold">
+                  <span className="whitespace-nowrap text-right">
                     {row.netKind === "square" ? (
                       <span className="text-text-muted">{netLabel("square", false)}</span>
                     ) : (
                       <span className={row.netKind === "back" ? "text-positive" : "text-negative"}>
-                        {netLabel(row.netKind, isViewer(row.memberId))}{" "}
-                        <Money cents={Math.abs(row.netCents)} currency={currency} />
+                        <span className={CELL_LABEL}>{netLabel(row.netKind, isViewer(row.memberId))}</span>{" "}
+                        <Money cents={Math.abs(row.netCents)} currency={currency} className="font-bold" />
                       </span>
                     )}
                   </span>
@@ -279,8 +282,13 @@ export function EveryoneBreakdown() {
 }
 
 // Person · Paid · Share · Payments · Net · chevron (docs/01 "Balances, desktop").
+// Money columns never shrink below their content, so a long amount can't run
+// into its neighbour; on a narrow card the grid scrolls sideways instead.
 const GRID =
-  "grid grid-cols-[minmax(150px,1.5fr)_repeat(3,minmax(0,1fr))_minmax(0,1.3fr)_20px] items-center gap-3";
+  "grid grid-cols-[minmax(120px,1.3fr)_repeat(4,minmax(max-content,1fr))_20px] items-center gap-x-5";
+
+/** "received", "gets back": the small word before an amount in the desktop grid. */
+const CELL_LABEL = "text-[length:var(--text-meta)]";
 
 function Total({
   label,
